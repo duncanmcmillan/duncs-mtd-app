@@ -1,6 +1,6 @@
-# DuncsMtdApp
+# duncs-mtd-app
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.2.
+HMRC MTD App — built with [Angular CLI](https://github.com/angular/angular-cli) version 21.1.2.
 
 ## Development server
 
