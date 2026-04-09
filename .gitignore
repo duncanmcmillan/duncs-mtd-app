@@ -48,6 +48,9 @@ __screenshots__/
 # TypeScript cache
 *.tsbuildinfo
 
+# Claude Code
+.claude/
+
 # System files
 .DS_Store
 Thumbs.db
