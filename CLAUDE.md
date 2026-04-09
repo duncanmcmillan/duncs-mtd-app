@@ -34,3 +34,24 @@ This is an **Angular 21** SPA using the modern **standalone component** architec
 ## TypeScript
 
 Strict mode is enabled. Angular-specific strict options are on: `strictTemplates`, `strictInjectionParameters`. Target is ES2022.
+
+## Stack
+
+- State management: NgRx Signal Store
+- UI: Angular Material with custom theme
+- API: REST with HttpClient + `httpResource()`
+- Testing: Vitest (unit), Playwright (e2e)
+
+## Conventions
+
+- Feature-based folder structure: `feature-name/{component,service,store,model,routes}`
+- All components use `OnPush` change detection
+- API calls through services, never directly in components
+- Barrel exports (`index.ts`) for every feature folder
+
+## Avoid
+
+- No NgModules, no CommonModule imports
+- No constructor injection
+- No `*ngIf`/`*ngFor` — use `@if`/`@for`
+- No `subscribe()` in components
