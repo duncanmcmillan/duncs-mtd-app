@@ -79,6 +79,32 @@ npm run build -- --base-href ./
 
 This outputs the app to `dist/` which is committed to version control so Electron can load it without a local dev server.
 
+### IPC (Inter-Process Communication)
+
+Electron separates the **main process** (Node.js, full OS access) from the **renderer process** (the Angular app, sandboxed). They communicate via IPC.
+
+**Example ping/pong flow:**
+
+1. `preload.js` exposes a `ping` function to the renderer via `contextBridge`:
+   ```js
+   ping: () => ipcRenderer.invoke('ping')
+   ```
+2. `main.js` registers a handler in `whenReady`:
+   ```js
+   ipcMain.handle('ping', () => 'pong')
+   ```
+3. The Angular component calls it and logs the response:
+   ```ts
+   const response = await eWin.versions.ping(); // → 'pong'
+   console.log(response);
+   ```
+
+This pattern (expose via `contextBridge` → invoke via `ipcRenderer` → handle via `ipcMain`) is the secure, recommended way to call main-process code from Angular.
+
+### Debugging
+
+`main.js` calls `win.webContents.openDevTools()` on launch, opening Chrome DevTools automatically. Use the **Console** tab to inspect renderer logs and errors.
+
 ### Running the desktop app
 
 ```bash
