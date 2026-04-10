@@ -6,6 +6,7 @@ type ElectronWindow = Window & {
 };
 
 const eWin = window as unknown as ElectronWindow;
+const isElectron = !!eWin.versions;
 
 @Component({
   selector: 'app-root',
@@ -15,9 +16,12 @@ const eWin = window as unknown as ElectronWindow;
 })
 export class App implements AfterViewInit {
   protected readonly title = signal('duncs-mtd-app');
-  protected readonly info = `Node: ${eWin.versions.node()}, Chrome: ${eWin.versions.chrome()}, Electron: ${eWin.versions.electron()}`;
+  protected readonly info = isElectron
+    ? `Node: ${eWin.versions.node()}  Chrome: ${eWin.versions.chrome()}  Electron: ${eWin.versions.electron()}`
+    : 'Browser';
 
   async ngAfterViewInit() {
+    if (!isElectron) return;
     const response = await eWin.versions.ping();
     console.log(response);
   }
