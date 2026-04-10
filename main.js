@@ -1,9 +1,12 @@
 const { app, BrowserWindow } = require('electron/main')
-
+const path = require('node:path')
 const createWindow = () => {
   const win = new BrowserWindow({
-    width: 200,
-    height: 200
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js')
+    }
   })
 
   win.loadFile('dist/duncs-mtd-app/browser/index.html')
