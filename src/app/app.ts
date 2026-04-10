@@ -1,7 +1,11 @@
-import { Component, signal } from '@angular/core';
+import { AfterViewInit, Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-type ElectronWindow = Window & { versions: { node: () => string; chrome: () => string; electron: () => string } };
+type ElectronWindow = Window & {
+  versions: { node: () => string; chrome: () => string; electron: () => string; ping: () => Promise<string> };
+};
+
+const eWin = window as unknown as ElectronWindow;
 
 @Component({
   selector: 'app-root',
@@ -9,7 +13,12 @@ type ElectronWindow = Window & { versions: { node: () => string; chrome: () => s
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App {
+export class App implements AfterViewInit {
   protected readonly title = signal('duncs-mtd-app');
-  protected readonly info = `Node: ${(window as unknown as ElectronWindow).versions.node()}, Chrome: ${(window as unknown as ElectronWindow).versions.chrome()}, Electron: ${(window as unknown as ElectronWindow).versions.electron()}`;
+  protected readonly info = `Node: ${eWin.versions.node()}, Chrome: ${eWin.versions.chrome()}, Electron: ${eWin.versions.electron()}`;
+
+  async ngAfterViewInit() {
+    const response = await eWin.versions.ping();
+    console.log(response);
+  }
 }
