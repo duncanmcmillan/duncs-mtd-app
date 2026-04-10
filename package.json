@@ -4,11 +4,12 @@
   "main": "main.js",
   "scripts": {
     "ng": "ng",
-    "start": "electron-forge start",
-    "start-electron": "electron .",
+    "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "start-electron": "electron .",
+    "forge-start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make"
   },
