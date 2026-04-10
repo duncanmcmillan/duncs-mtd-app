@@ -54,6 +54,39 @@ ng e2e
 
 Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 
+## Electron Build
+
+This project has been integrated with [Electron](https://www.electronjs.org/) to run as a desktop application.
+
+### Key files
+
+- **`main.js`** — Electron entry point. Creates the `BrowserWindow` and loads the compiled Angular app from `dist/duncs-mtd-app/browser/index.html`.
+- **`preload.js`** — Runs in a privileged context before the renderer loads. Uses Electron's `contextBridge` to safely expose Node.js APIs (e.g. `process.versions`) to the Angular app via `window.versions`.
+
+### How it works
+
+1. Electron starts via `main.js`, which opens a browser window pointed at the built Angular app.
+2. `preload.js` is loaded before the renderer and exposes `window.versions` (Node, Chrome, Electron version strings) using `contextBridge.exposeInMainWorld`.
+3. The Angular `App` component reads `window.versions` and displays the version info in the UI.
+
+### Build process
+
+Because Electron loads the app via `file://`, the Angular build must use a relative `base-href`:
+
+```bash
+npm run build -- --base-href ./
+```
+
+This outputs the app to `dist/` which is committed to version control so Electron can load it without a local dev server.
+
+### Running the desktop app
+
+```bash
+npm run start-electron
+```
+
+This runs `electron .`, which reads `main.js` as the entry point (set via `"main": "main.js"` in `package.json`).
+
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
