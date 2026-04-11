@@ -49,6 +49,28 @@ Strict mode is enabled. Angular-specific strict options are on: `strictTemplates
 - API calls through services, never directly in components
 - Barrel exports (`index.ts`) for every feature folder
 
+## API calls and error handling
+
+All HTTP calls go through `HmrcApiService` (`get<T>`, `post<T>`) — never use `HttpClient` directly in components or stores.
+
+**Error flow:** services throw, stores catch and translate.
+- Services throw `Error` (or let `HttpErrorResponse` propagate) — no swallowing.
+- Every `async` store method wraps its service call in `try/catch`.
+- Use `extractErrorMessage(e, 'Fallback message')` (from `src/app/core`) to convert any caught value into a string.
+- Set `{ status: 'error', error: message, isLoading: false }` on failure.
+- Sign-out / cleanup methods should still `try/catch` but clear local state regardless of IPC errors.
+
+```typescript
+import { extractErrorMessage } from '../../core';
+
+try {
+  await someService.doWork();
+  patchState(store, { isLoading: false });
+} catch (e: unknown) {
+  patchState(store, { status: 'error', error: extractErrorMessage(e, 'Operation failed'), isLoading: false });
+}
+```
+
 ## Vitest
 
 Tests run via Angular's build wrapper — always use `npm test`, not `npx vitest run` (the latter lacks jsdom).
