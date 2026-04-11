@@ -1,0 +1,14 @@
+<div class="obligations-view">
+  <header class="view-header">
+    <span class="view-label">Tab 3 — HMRC obligation tracking and deadline management</span>
+    <h1 class="view-title">Obligations</h1>
+  </header>
+
+  @if (store.isLoading()) {
+    <div class="loading">Loading…</div>
+  }
+
+  @if (store.hasError()) {
+    <div class="error">{{ store.error() }}</div>
+  }
+</div>

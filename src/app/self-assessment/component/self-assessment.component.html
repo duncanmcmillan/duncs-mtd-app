@@ -1,0 +1,14 @@
+<div class="self-assessment-view">
+  <header class="view-header">
+    <span class="view-label">Tab 2 — End of Period Statement and Final Declaration</span>
+    <h1 class="view-title">SelfAssessment</h1>
+  </header>
+
+  @if (store.isLoading()) {
+    <div class="loading">Loading…</div>
+  }
+
+  @if (store.hasError()) {
+    <div class="error">{{ store.error() }}</div>
+  }
+</div>

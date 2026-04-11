@@ -1,21 +1,16 @@
 <nav class="top-nav">
   <span class="nav-brand">MTD <span>App</span></span>
-  <a class="nav-item active" href="#">Dashboard</a>
-  <a class="nav-item" href="#">Submissions</a>
-  <a class="nav-item" href="#">Transactions</a>
-  <a class="nav-item" href="#">Reports</a>
+  <a class="nav-item" routerLink="/obligations" routerLinkActive="active">Obligations</a>
+  <a class="nav-item" routerLink="/quarterly" routerLinkActive="active">Quarterly</a>
+  <a class="nav-item" routerLink="/self-assessment" routerLinkActive="active">Self Assessment</a>
+  <a class="nav-item" routerLink="/records" routerLinkActive="active">Records</a>
+  <a class="nav-item" routerLink="/adjustments" routerLinkActive="active">Adjustments</a>
+  <a class="nav-item" routerLink="/data-entry" routerLinkActive="active">Data Entry</a>
   <span class="nav-spacer"></span>
+  <a class="nav-item" routerLink="/auth" routerLinkActive="active">Auth</a>
   <span class="nav-meta">{{ info }}</span>
 </nav>
 
 <main class="app-content">
   <router-outlet />
-
-  <!-- Shown until routes are populated -->
-  <div class="placeholder">
-    <div class="placeholder-dot"></div>
-    <div class="placeholder-label">Making Tax Digital</div>
-    <div class="placeholder-title">{{ title() }}</div>
-    <div class="placeholder-sub">Add routes in app.routes.ts to get started</div>
-  </div>
 </main>

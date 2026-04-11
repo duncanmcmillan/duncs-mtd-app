@@ -1,0 +1,14 @@
+<div class="data-entry-view">
+  <header class="view-header">
+    <span class="view-label">Tab 6 — Data entry methods: manual, CSV import, bank feed</span>
+    <h1 class="view-title">DataEntry</h1>
+  </header>
+
+  @if (store.isLoading()) {
+    <div class="loading">Loading…</div>
+  }
+
+  @if (store.hasError()) {
+    <div class="error">{{ store.error() }}</div>
+  }
+</div>

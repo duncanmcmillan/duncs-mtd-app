@@ -1,4 +1,26 @@
+@use '@angular/material' as mat;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600&family=Inter+Tight:wght@100;200;300;400;500;600&display=swap');
+
+/* ─────────────────────────────────────────────
+   ANGULAR MATERIAL M3 THEME
+───────────────────────────────────────────── */
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$orange-palette,
+      theme-type: light,
+    ),
+    typography: (
+      brand-family: 'Inter Tight',
+      plain-family: 'Inter',
+      bold-weight: 400,
+      medium-weight: 300,
+      regular-weight: 300,
+    ),
+    density: -1,
+  ));
+}
 
 /* ─────────────────────────────────────────────
    DESIGN TOKENS
