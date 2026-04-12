@@ -1,0 +1,27 @@
+.privacy-settings {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+h2 {
+  margin-top: 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+ul {
+  padding-left: 1.5rem;
+}
+
+.delete-section {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.error-message {
+  color: var(--mat-sys-error);
+}

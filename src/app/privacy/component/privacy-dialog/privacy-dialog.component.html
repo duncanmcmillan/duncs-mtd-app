@@ -1,0 +1,41 @@
+<h2 mat-dialog-title id="privacy-dialog-title">Privacy Notice</h2>
+
+<mat-dialog-content aria-labelledby="privacy-dialog-title">
+  <p>
+    Before you use this application, please read how it handles your data.
+  </p>
+
+  <h3>What data is collected</h3>
+  <ul>
+    <li>Your HMRC OAuth access and refresh tokens (stored encrypted on this device)</li>
+    <li>Your HMRC client ID and client secret (stored encrypted on this device)</li>
+    <li>No personal data is sent to any server other than HMRC's own APIs over TLS</li>
+  </ul>
+
+  <h3>Lawful basis</h3>
+  <p>
+    Processing is carried out under <strong>Article 6(1)(b) UK GDPR</strong> — performance of a
+    contract. The app processes credentials solely to submit Making Tax Digital returns on your
+    behalf as required by HMRC.
+  </p>
+
+  <h3>Data retention &amp; deletion</h3>
+  <p>
+    Tokens are cleared when you sign out. You can delete all stored data at any time via
+    <strong>Settings &rarr; Privacy &rarr; Delete All My Data</strong>.
+  </p>
+
+  <h3>ICO registration</h3>
+  <p>
+    If you use this application to process clients' personal data commercially you may need to
+    register with the Information Commissioner's Office (ICO). Visit
+    <strong>ico.org.uk/registration</strong> for guidance.
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="quit()" aria-label="Quit the application">Quit</button>
+  <button mat-flat-button color="primary" (click)="agree()" aria-label="Agree to the privacy notice and continue">
+    I Agree &amp; Continue
+  </button>
+</mat-dialog-actions>

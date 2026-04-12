@@ -23,6 +23,18 @@ contextBridge.exposeInMainWorld('accessibility', {
     ipcRenderer.removeAllListeners('a11y:preferences-changed'),
 });
 
+// ── GDPR / privacy bridge ───────────────────────────────────────────────────
+contextBridge.exposeInMainWorld('gdpr', {
+  /** Returns `{ consented: boolean }` — reads `gdpr-consent.json` from userData. */
+  checkConsent: () => ipcRenderer.invoke('gdpr:check-consent'),
+
+  /** Writes consent record `{ consented, version, date }` to `gdpr-consent.json`. */
+  setConsent: () => ipcRenderer.invoke('gdpr:set-consent'),
+
+  /** Deletes tokens, config, and consent files from userData. */
+  deleteAllData: () => ipcRenderer.invoke('gdpr:delete-all-data'),
+});
+
 // ── HMRC API bridge ────────────────────────────────────────────────────────
 contextBridge.exposeInMainWorld('hmrc', {
   /** Open system browser with HMRC auth URL, resolves with { code, state } */

@@ -30,4 +30,8 @@ export const routes: Routes = [
     path: 'auth',
     loadChildren: () => import('./auth/auth.routes').then(m => m.AUTH_ROUTES),
   },
+  {
+    path: 'privacy',
+    loadChildren: () => import('./privacy/routes/privacy.routes').then(m => m.PRIVACY_ROUTES),
+  },
 ];
