@@ -8,6 +8,21 @@ contextBridge.exposeInMainWorld('versions', {
   ping:      () => ipcRenderer.invoke('ping'),
 });
 
+// ── Accessibility bridge ────────────────────────────────────────────────────
+contextBridge.exposeInMainWorld('accessibility', {
+  /** Query current platform accessibility preferences (AT active, high contrast, inverted). */
+  getPreferences: () =>
+    ipcRenderer.invoke('a11y:get-preferences'),
+
+  /** Register a callback invoked whenever native preferences change. */
+  onPreferencesChanged: (callback) =>
+    ipcRenderer.on('a11y:preferences-changed', (_event, prefs) => callback(prefs)),
+
+  /** Remove all onPreferencesChanged listeners. */
+  removePreferencesChangedListener: () =>
+    ipcRenderer.removeAllListeners('a11y:preferences-changed'),
+});
+
 // ── HMRC API bridge ────────────────────────────────────────────────────────
 contextBridge.exposeInMainWorld('hmrc', {
   /** Open system browser with HMRC auth URL, resolves with { code, state } */

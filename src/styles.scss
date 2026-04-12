@@ -85,3 +85,40 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ─────────────────────────────────────────────
+   ACCESSIBILITY — FOCUS & OS PREFERENCES
+   EN 301 549 Clause 11 / WCAG 2.1 AA baseline
+───────────────────────────────────────────── */
+
+/* Global keyboard focus indicator — 2px orange ring on all focusable elements */
+:focus-visible {
+  outline: 2px solid var(--orange-600);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Suppress focus ring for pointer (mouse/touch) interactions */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Disable animations and transitions when the user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Windows Forced Colors (High Contrast) mode — replace custom colours with system values */
+@media (forced-colors: active) {
+  :root {
+    --color-success: CanvasText;
+    --color-warning: CanvasText;
+    --color-error:   CanvasText;
+    --color-info:    CanvasText;
+  }
+}

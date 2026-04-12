@@ -92,6 +92,36 @@ All exported functions, classes, methods, interfaces, and types must have JSDoc.
 - Keep descriptions concise — one sentence is enough for self-evident behaviour
 - Do not add JSDoc to private implementation details or test files
 
+## Accessibility (EN 301 549 / WCAG 2.1 AA)
+
+This app targets **EN 301 549 Clause 11** compliance (WCAG 2.1 AA applied to software UIs via WCAG2ICT). Chromium exposes the DOM accessibility tree to platform AT APIs (UIA on Windows, NSAccessibility on macOS) automatically, so correct semantics and ARIA usage are the primary requirements.
+
+**Required in every component:**
+- All interactive elements must be keyboard-operable and have visible `:focus-visible` styles (global ring defined in `styles.scss`)
+- Never convey information by colour alone — pair colour with text, icons, or patterns
+- Provide `aria-label` on icon-only controls (buttons, links) and on landmark elements with ambiguous names
+- Announce loading and status changes with `aria-live="polite"` (or `"assertive"` for urgent updates)
+- Meaningful images need `alt` text; decorative images and icons need `aria-hidden="true"`
+
+**OS preferences — `AccessibilityService` (`src/app/core`):**
+
+Import and inject to read OS preferences as Angular signals:
+```typescript
+readonly a11y = inject(AccessibilityService);
+// a11y.prefersReducedMotion(), a11y.prefersHighContrast(),
+// a11y.forcedColors(), a11y.prefersDarkMode(), a11y.screenReaderActive()
+```
+
+- `prefers-reduced-motion` — already handled globally in `styles.scss`; avoid JS animations when `a11y.prefersReducedMotion()` is true
+- `forced-colors` — avoid hardcoded hex colours in component styles; use CSS custom properties so Forced Colors mode can override them
+- `screenReaderActive` — use to opt into more verbose live-region announcements when a screen reader is running (Electron only)
+
+**Navigation patterns:**
+- Skip link (`<a class="skip-link" href="#main-content">`) at the top of the shell
+- `<nav aria-label="...">` for every navigation region
+- `aria-current="page"` on the active link (use `routerLinkActive` template ref: `[attr.aria-current]="rla.isActive ? 'page' : null"`)
+- `<main id="main-content" tabindex="-1">` as the skip-link target
+
 ## Avoid
 
 - No NgModules, no CommonModule imports

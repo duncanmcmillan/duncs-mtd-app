@@ -5,6 +5,28 @@
   overflow: hidden;
 }
 
+/* ── Skip link (visible only on keyboard focus) ── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 8px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--neutral-900);
+  color: var(--neutral-0);
+  font-size: 14px;
+  font-weight: 400;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+  transition: top 0.1s ease;
+
+  &:focus-visible {
+    top: 0;
+    outline: 2px solid var(--orange-400);
+    outline-offset: 2px;
+  }
+}
+
 /* ── Top nav ── */
 .top-nav {
   display: flex;
