@@ -232,6 +232,18 @@ See [ico.org.uk/registration](https://ico.org.uk/registration) for guidance and 
 A privacy notice dialog is shown on first launch. The user must accept before the app loads.
 The notice can be reviewed at any time via **Settings → Privacy**.
 
+### Testing checklist
+
+Manual steps to verify the GDPR features are working correctly:
+
+- [ ] `npm run build` — passes with no TypeScript or template errors
+- [ ] `npm test` — all spec files pass (including `privacy.service.spec.ts`, `privacy-dialog.component.spec.ts`, `privacy-settings.component.spec.ts`)
+- [ ] Delete `userData/gdpr-consent.json` manually → privacy notice dialog appears on next launch
+- [ ] Click **I Agree & Continue** → dialog closes and the app loads normally; re-launch → no dialog shown
+- [ ] Navigate to **/privacy** → settings page renders with the full privacy notice and a **Delete All My Data** button
+- [ ] Click **Delete All My Data** → `hmrc-tokens.enc`, `hmrc-config.enc`, and `gdpr-consent.json` are removed from `userData`; user is redirected to `/auth`
+- [ ] After deletion, re-launch the app → privacy notice dialog appears again (consent was cleared)
+
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
