@@ -71,6 +71,42 @@ try {
 }
 ```
 
+## Electron IPC bridge pattern
+
+Every Electron-backed service follows this exact pattern:
+
+```typescript
+/** Shape of the XYZ IPC bridge exposed by `preload.js`. */
+type XyzBridge = { doThing: () => Promise<void> };
+
+const bridge = (window as unknown as { xyz?: XyzBridge }).xyz ?? null;
+
+@Injectable({ providedIn: 'root' })
+export class XyzService {
+  readonly isElectron = !!bridge;
+
+  async doThing(): Promise<void> {
+    if (!bridge) return;   // no-op in browser / test
+    await bridge.doThing();
+  }
+}
+```
+
+- Define the bridge type locally in the service file (not in a shared types file).
+- Guard every method with `if (!bridge) return` so the service is safe in browser / test environments.
+- Expose new IPC channels in `preload.js` and handle them in `main.js`; never call `ipcRenderer` from Angular code directly.
+
+## GDPR / privacy
+
+A **consent gate** runs in `App.ngAfterViewInit` (Electron only). Never remove or bypass this check.
+
+**Invariant:** if you add a new file to `userData` in `main.js` that stores personal data, you **must** also delete it in the `gdpr:delete-all-data` IPC handler.
+
+Current personal-data files tracked by the deletion handler:
+- `hmrc-tokens.enc` — OAuth tokens
+- `hmrc-config.enc` — HMRC client credentials
+- `gdpr-consent.json` — consent record
+
 ## Vitest
 
 Tests run via Angular's build wrapper — always use `npm test`, not `npx vitest run` (the latter lacks jsdom).
@@ -81,6 +117,18 @@ Tests run via Angular's build wrapper — always use `npm test`, not `npx vitest
 - Always call `httpController.verify()` in `afterEach` to catch unexpected requests
 - Access `protected` members in tests via `(component as unknown as { member: Type }).member`
 - Every new service, store, and component must have a corresponding `.spec.ts` covering: creation, initial state, public methods, and template elements
+- Components that import Angular Material (CDK `BreakpointObserver`) need a `matchMedia` polyfill at the top of the spec file — jsdom does not implement `mql.addListener`:
+  ```typescript
+  import { vi } from 'vitest';
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false, media: query, onchange: null,
+      addListener: vi.fn(), removeListener: vi.fn(),
+      addEventListener: vi.fn(), removeEventListener: vi.fn(), dispatchEvent: vi.fn(),
+    })),
+  });
+  ```
 
 ## JSDoc
 

@@ -177,6 +177,73 @@ Manual steps to verify the accessibility baseline is working correctly:
 - [ ] Start a screen reader (NVDA or JAWS on Windows; VoiceOver on macOS) — confirm `AccessibilityService.screenReaderActive` becomes `true` in DevTools
 - [ ] Run `npm test` — confirm the `AccessibilityService` unit tests pass
 
+## Privacy & Data (UK GDPR)
+
+This application processes clients' personal tax data (NINO, OAuth tokens, HMRC credentials) and
+is therefore subject to UK GDPR.
+
+### Lawful basis
+
+Processing is carried out under **Article 6(1)(b) UK GDPR** — performance of a contract.
+Data is used solely to submit Making Tax Digital returns on behalf of the operator's clients as
+required by HMRC.
+
+### What is stored locally
+
+| Data | Storage | Location |
+|------|---------|----------|
+| OAuth access & refresh tokens | Encrypted via OS keychain (`safeStorage`) | `userData/hmrc-tokens.enc` |
+| HMRC client ID & secret | Encrypted via OS keychain (`safeStorage`) | `userData/hmrc-config.enc` |
+| Consent record | Plain JSON (not sensitive) | `userData/gdpr-consent.json` |
+
+No personal data is transmitted to any third-party server. All HMRC API calls are made over TLS.
+
+### Data retention
+
+- Tokens are cleared when the user signs out (`hmrc:clear-tokens` IPC handler).
+- Config credentials remain until the user explicitly deletes them or uses **Delete All My Data**.
+
+### `userData` location per OS
+
+| Platform | Path |
+|----------|------|
+| Windows | `%APPDATA%\duncs-mtd-app\` |
+| macOS | `~/Library/Application Support/duncs-mtd-app/` |
+| Linux | `~/.config/duncs-mtd-app/` |
+
+### Right to erasure (Article 17 UK GDPR)
+
+Users can delete all locally stored data in-app:
+
+1. Navigate to **Privacy** in the top navigation bar.
+2. Click **Delete All My Data**.
+3. This deletes `hmrc-tokens.enc`, `hmrc-config.enc`, and `gdpr-consent.json` and signs the user out.
+
+Alternatively, delete the files manually from the `userData` path listed above.
+
+### ICO registration
+
+If you process clients' personal data commercially (as an accountant or tax agent) you may be
+required to register with the Information Commissioner's Office.
+See [ico.org.uk/registration](https://ico.org.uk/registration) for guidance and fees.
+
+### Privacy notice
+
+A privacy notice dialog is shown on first launch. The user must accept before the app loads.
+The notice can be reviewed at any time via **Settings → Privacy**.
+
+### Testing checklist
+
+Manual steps to verify the GDPR features are working correctly:
+
+- [ ] `npm run build` — passes with no TypeScript or template errors
+- [ ] `npm test` — all spec files pass (including `privacy.service.spec.ts`, `privacy-dialog.component.spec.ts`, `privacy-settings.component.spec.ts`)
+- [ ] Delete `userData/gdpr-consent.json` manually → privacy notice dialog appears on next launch
+- [ ] Click **I Agree & Continue** → dialog closes and the app loads normally; re-launch → no dialog shown
+- [ ] Navigate to **/privacy** → settings page renders with the full privacy notice and a **Delete All My Data** button
+- [ ] Click **Delete All My Data** → `hmrc-tokens.enc`, `hmrc-config.enc`, and `gdpr-consent.json` are removed from `userData`; user is redirected to `/auth`
+- [ ] After deletion, re-launch the app → privacy notice dialog appears again (consent was cleared)
+
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

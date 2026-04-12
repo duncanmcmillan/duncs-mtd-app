@@ -4,8 +4,9 @@ const fs = require('node:fs');
 const { URL } = require('node:url');
 
 // ── Paths ──────────────────────────────────────────────────────────────────
-const TOKEN_PATH  = () => path.join(app.getPath('userData'), 'hmrc-tokens.enc');
-const CONFIG_PATH = () => path.join(app.getPath('userData'), 'hmrc-config.enc');
+const TOKEN_PATH   = () => path.join(app.getPath('userData'), 'hmrc-tokens.enc');
+const CONFIG_PATH  = () => path.join(app.getPath('userData'), 'hmrc-config.enc');
+const CONSENT_PATH = () => path.join(app.getPath('userData'), 'gdpr-consent.json');
 
 // ── OAuth callback state ───────────────────────────────────────────────────
 let oauthResolve = null;
@@ -212,6 +213,34 @@ app.whenReady().then(() => {
   // ── Config: clear stored credentials ─────────────────────────────────
   ipcMain.handle('hmrc:clear-config', () => {
     safeDelete(CONFIG_PATH());
+  });
+
+  // ── GDPR: check whether the user has accepted the privacy notice ──────
+  ipcMain.handle('gdpr:check-consent', () => {
+    const consentPath = CONSENT_PATH();
+    if (!fs.existsSync(consentPath)) return { consented: false };
+    try {
+      const data = JSON.parse(fs.readFileSync(consentPath, 'utf8'));
+      return { consented: !!data.consented };
+    } catch {
+      return { consented: false };
+    }
+  });
+
+  // ── GDPR: record the user's consent ──────────────────────────────────
+  ipcMain.handle('gdpr:set-consent', () => {
+    fs.writeFileSync(CONSENT_PATH(), JSON.stringify({
+      consented: true,
+      version: '1.0',
+      date: new Date().toISOString(),
+    }), 'utf8');
+  });
+
+  // ── GDPR: delete all locally stored personal data ─────────────────────
+  ipcMain.handle('gdpr:delete-all-data', () => {
+    safeDelete(TOKEN_PATH());
+    safeDelete(CONFIG_PATH());
+    safeDelete(CONSENT_PATH());
   });
 
   createWindow();

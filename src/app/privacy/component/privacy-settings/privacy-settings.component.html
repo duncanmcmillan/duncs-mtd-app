@@ -1,0 +1,57 @@
+<section class="privacy-settings" aria-labelledby="privacy-heading">
+  <h1 id="privacy-heading">Privacy &amp; Data</h1>
+
+  <div class="privacy-notice">
+    <h2>What data is collected</h2>
+    <ul>
+      <li>Your HMRC OAuth access and refresh tokens (stored encrypted on this device)</li>
+      <li>Your HMRC client ID and client secret (stored encrypted on this device)</li>
+      <li>No personal data is sent to any server other than HMRC's own APIs over TLS</li>
+    </ul>
+
+    <h2>Lawful basis</h2>
+    <p>
+      Processing is carried out under <strong>Article 6(1)(b) UK GDPR</strong> — performance of a
+      contract. The app processes credentials solely to submit Making Tax Digital returns on your
+      behalf as required by HMRC.
+    </p>
+
+    <h2>Data retention</h2>
+    <p>
+      Tokens are cleared automatically when you sign out. Config credentials remain until you
+      explicitly clear them or delete all data below.
+    </p>
+
+    <h2>Your rights</h2>
+    <p>
+      You have the right to erasure under Article 17 UK GDPR. Use the button below to delete all
+      data held on this device. This action cannot be undone.
+    </p>
+
+    <h2>ICO registration</h2>
+    <p>
+      If you process clients' personal data commercially you may need to register with the
+      Information Commissioner's Office (ICO). Visit
+      <strong>ico.org.uk/registration</strong> for guidance.
+    </p>
+  </div>
+
+  <div class="delete-section" aria-live="polite">
+    @if (error()) {
+      <p class="error-message" role="alert">{{ error() }}</p>
+    }
+
+    @if (isLoading()) {
+      <mat-spinner diameter="24" aria-label="Deleting data…"></mat-spinner>
+    } @else {
+      <button
+        mat-flat-button
+        color="warn"
+        [disabled]="deleted()"
+        (click)="deleteAllData()"
+        aria-label="Delete all locally stored data and sign out">
+        Delete All My Data
+      </button>
+    }
+  </div>
+</section>
