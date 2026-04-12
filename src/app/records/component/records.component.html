@@ -1,0 +1,14 @@
+<div class="records-view">
+  <header class="view-header">
+    <span class="view-label">Tab 4 — Digital record keeping for income and expenses</span>
+    <h1 class="view-title">Records</h1>
+  </header>
+
+  @if (store.isLoading()) {
+    <div class="loading">Loading…</div>
+  }
+
+  @if (store.hasError()) {
+    <div class="error">{{ store.error() }}</div>
+  }
+</div>

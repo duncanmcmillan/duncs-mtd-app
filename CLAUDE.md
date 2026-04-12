@@ -49,6 +49,49 @@ Strict mode is enabled. Angular-specific strict options are on: `strictTemplates
 - API calls through services, never directly in components
 - Barrel exports (`index.ts`) for every feature folder
 
+## API calls and error handling
+
+All HTTP calls go through `HmrcApiService` (`get<T>`, `post<T>`) — never use `HttpClient` directly in components or stores.
+
+**Error flow:** services throw, stores catch and translate.
+- Services throw `Error` (or let `HttpErrorResponse` propagate) — no swallowing.
+- Every `async` store method wraps its service call in `try/catch`.
+- Use `extractErrorMessage(e, 'Fallback message')` (from `src/app/core`) to convert any caught value into a string.
+- Set `{ status: 'error', error: message, isLoading: false }` on failure.
+- Sign-out / cleanup methods should still `try/catch` but clear local state regardless of IPC errors.
+
+```typescript
+import { extractErrorMessage } from '../../core';
+
+try {
+  await someService.doWork();
+  patchState(store, { isLoading: false });
+} catch (e: unknown) {
+  patchState(store, { status: 'error', error: extractErrorMessage(e, 'Operation failed'), isLoading: false });
+}
+```
+
+## Vitest
+
+Tests run via Angular's build wrapper — always use `npm test`, not `npx vitest run` (the latter lacks jsdom).
+
+- Test files live alongside source: `feature.spec.ts` next to `feature.ts`
+- Use Angular `TestBed` for all component/service/store tests
+- Provide HTTP mocking with `provideHttpClient()` + `provideHttpClientTesting()` and `HttpTestingController`
+- Always call `httpController.verify()` in `afterEach` to catch unexpected requests
+- Access `protected` members in tests via `(component as unknown as { member: Type }).member`
+- Every new service, store, and component must have a corresponding `.spec.ts` covering: creation, initial state, public methods, and template elements
+
+## JSDoc
+
+All exported functions, classes, methods, interfaces, and types must have JSDoc.
+
+- Files: `@fileoverview` block at the top describing the file's purpose
+- Interfaces/types: document each field with an inline `/** ... */` comment
+- Methods: `@param`, `@returns`, and `@throws` where applicable
+- Keep descriptions concise — one sentence is enough for self-evident behaviour
+- Do not add JSDoc to private implementation details or test files
+
 ## Avoid
 
 - No NgModules, no CommonModule imports

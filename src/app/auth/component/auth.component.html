@@ -1,0 +1,119 @@
+<div class="auth-view">
+
+  <header class="view-header">
+    <span class="view-label">HMRC Connection</span>
+    <h1 class="view-title">Authentication</h1>
+  </header>
+
+  @if (!store.isAuthenticated()) {
+    <!-- ── Sign In Form ── -->
+    <div class="auth-card">
+      <div class="card-section">
+        <span class="field-label">Environment</span>
+        <div class="env-toggle">
+          <button
+            class="env-btn"
+            [class.active]="store.environment() === 'sandbox'"
+            (click)="setEnvironment('sandbox')">
+            Sandbox
+          </button>
+          <button
+            class="env-btn"
+            [class.active]="store.environment() === 'live'"
+            (click)="setEnvironment('live')">
+            Live
+          </button>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="field">
+          <label class="field-label" for="clientId">Client ID</label>
+          <input
+            id="clientId"
+            class="input"
+            type="text"
+            placeholder="Your HMRC developer app client ID"
+            [value]="clientId()"
+            (input)="clientId.set($any($event.target).value)" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="clientSecret">Client Secret</label>
+          <input
+            id="clientSecret"
+            class="input"
+            type="password"
+            placeholder="Your HMRC developer app client secret"
+            [value]="clientSecret()"
+            (input)="clientSecret.set($any($event.target).value)" />
+          <span class="field-hint">Stored encrypted on this device. Never sent to any server.</span>
+        </div>
+      </div>
+
+      @if (store.error()) {
+        <div class="auth-error">
+          <span class="error-icon">✕</span>
+          {{ store.error() }}
+        </div>
+      }
+
+      @if (!isElectron) {
+        <div class="auth-warning">
+          OAuth requires the Electron app. Run <code>npm run start-electron</code>.
+        </div>
+      }
+
+      <div class="card-footer">
+        <button
+          class="btn btn-primary"
+          [disabled]="store.isLoading() || !clientId() || !clientSecret()"
+          (click)="signIn()">
+          @if (store.isAuthenticating()) {
+            Connecting…
+          } @else {
+            Connect to HMRC
+          }
+        </button>
+      </div>
+    </div>
+
+  } @else {
+    <!-- ── Authenticated State ── -->
+    <div class="auth-card auth-card--connected">
+      <div class="status-row">
+        <span class="status-dot"></span>
+        <span class="status-text">Connected to HMRC</span>
+        <span class="env-badge" [class.live]="store.environment() === 'live'">
+          {{ store.environment() }}
+        </span>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">Client ID</span>
+          <span class="meta-value">{{ store.clientId() || '—' }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Token Expires</span>
+          <span class="meta-value">{{ formatExpiry(store.tokenExpiresAt()) }}</span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn btn-secondary" [disabled]="store.isLoading()" (click)="signOut()">
+          Disconnect
+        </button>
+      </div>
+    </div>
+  }
+
+  <div class="auth-help">
+    <span class="help-label">Setup</span>
+    <p>Register your app at
+      <strong>developer.service.hmrc.gov.uk</strong> and add
+      <code>mtd-app://oauth/callback</code> as a redirect URI.
+      Subscribe to the <strong>Income Tax (Making Tax Digital)</strong> API.
+    </p>
+  </div>
+
+</div>
