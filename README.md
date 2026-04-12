@@ -113,6 +113,59 @@ npm run start-electron
 
 This runs `electron .`, which reads `main.js` as the entry point (set via `"main": "main.js"` in `package.json`).
 
+## Accessibility
+
+This application targets **EN 301 549 Clause 11** compliance — the European standard that transposes WCAG 2.1 AA requirements into software UI contexts. [WCAG2ICT](https://www.w3.org/TR/wcag2ict/) is used as interpretive guidance when applying web-oriented success criteria to the desktop context.
+
+### Platform accessibility API exposure
+
+Electron renders the Angular app via Chromium, which automatically builds and exposes the DOM accessibility tree to the host platform's native AT API:
+
+| Platform | API | Assistive technologies |
+|----------|-----|------------------------|
+| Windows  | UI Automation (UIA) | NVDA, JAWS, Narrator |
+| macOS    | NSAccessibility | VoiceOver |
+
+Semantic HTML, ARIA roles, and correct focus management are therefore sufficient to surface the UI to platform-native screen readers and other AT — no custom bindings are required.
+
+### OS-level accessibility preferences
+
+The app detects and responds to the following OS accessibility settings at runtime via `AccessibilityService` (`src/app/core`):
+
+| Preference | CSS media query | Effect |
+|-----------|----------------|--------|
+| Reduced motion | `prefers-reduced-motion: reduce` | All transitions and animations disabled (`global styles.scss`) |
+| High contrast | `prefers-contrast: more` | Higher contrast ratios applied |
+| Forced Colors | `forced-colors: active` | Windows High Contrast mode; custom colours replaced by system values |
+| Dark mode | `prefers-color-scheme: dark` | Available via `AccessibilityService.prefersDarkMode` signal |
+| Screen reader active | Electron `app.accessibilitySupportEnabled` | Available via `AccessibilityService.screenReaderActive` signal |
+
+The `AccessibilityService` exposes each preference as a read-only Angular signal. Inject it into any component or service that needs to adapt its behaviour:
+
+```typescript
+import { AccessibilityService } from '../core';
+
+readonly a11y = inject(AccessibilityService);
+
+// In template: @if (a11y.screenReaderActive()) { ... }
+// Or read the full snapshot: this.a11y.preferences()
+```
+
+### IPC flow (Electron)
+
+Native AT and theme preferences are bridged from the main process:
+
+1. `main.js` registers an `a11y:get-preferences` IPC handler that reads `app.accessibilitySupportEnabled`, `nativeTheme.shouldUseHighContrastColors`, and `nativeTheme.shouldUseInvertedColorScheme`.
+2. `main.js` pushes `a11y:preferences-changed` events to all renderer windows when `nativeTheme` updates or `accessibility-support-changed` fires.
+3. `preload.js` exposes `window.accessibility.getPreferences()` and `window.accessibility.onPreferencesChanged()` to the Angular renderer.
+4. `AccessibilityService.initElectronBridge()` queries on startup and subscribes to changes.
+
+### Keyboard navigation
+
+- A **skip link** (`Skip to main content`) is rendered at the top of every page and becomes visible on keyboard focus, allowing keyboard users to bypass the navigation bar.
+- All navigation links carry `aria-current="page"` when active.
+- The `<main id="main-content">` landmark is the skip link target and receives `tabindex="-1"` so focus can be programmatically moved to it.
+
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

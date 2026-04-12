@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, safeStorage } = require('electron/main');
+const { app, BrowserWindow, ipcMain, shell, safeStorage, nativeTheme } = require('electron/main');
 const path = require('node:path');
 const fs = require('node:fs');
 const { URL } = require('node:url');
@@ -66,6 +66,25 @@ if (!gotLock) {
   });
 }
 
+// ── Accessibility helpers ───────────────────────────────────────────────────
+
+/** Builds the current accessibility preference snapshot from Electron APIs. */
+function getA11yPreferences() {
+  return {
+    accessibilitySupport: app.accessibilitySupportEnabled,
+    highContrast:         nativeTheme.shouldUseHighContrastColors,
+    invertedColors:       nativeTheme.shouldUseInvertedColorScheme,
+  };
+}
+
+/** Pushes the current accessibility preferences to all renderer windows. */
+function pushA11yPreferences() {
+  const prefs = getA11yPreferences();
+  BrowserWindow.getAllWindows().forEach(win => {
+    win.webContents.send('a11y:preferences-changed', prefs);
+  });
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 function safeWrite(filePath, data) {
   if (!safeStorage.isEncryptionAvailable()) throw new Error('Encryption not available');
@@ -105,6 +124,13 @@ app.whenReady().then(() => {
 
   // Legacy ping
   ipcMain.handle('ping', () => 'pong');
+
+  // ── Accessibility: query platform AT and theme preferences ────────────
+  ipcMain.handle('a11y:get-preferences', () => getA11yPreferences());
+
+  // Push updated preferences to all renderers when OS settings change
+  nativeTheme.on('updated', pushA11yPreferences);
+  app.on('accessibility-support-changed', pushA11yPreferences);
 
   // ── OAuth: open system browser and wait for callback ──────────────────
   ipcMain.handle('hmrc:start-oauth', (_event, { authUrl }) => {
