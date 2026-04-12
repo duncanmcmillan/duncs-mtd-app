@@ -166,6 +166,17 @@ Native AT and theme preferences are bridged from the main process:
 - All navigation links carry `aria-current="page"` when active.
 - The `<main id="main-content">` landmark is the skip link target and receives `tabindex="-1"` so focus can be programmatically moved to it.
 
+### Testing checklist
+
+Manual steps to verify the accessibility baseline is working correctly:
+
+- [ ] Press `Tab` on the app — confirm the skip link appears and, when activated, moves focus to `<main>`
+- [ ] Keyboard-navigate through all nav links — confirm `aria-current="page"` is set on the active link and absent on others
+- [ ] Enable **Reduce Motion** in OS settings (macOS: Accessibility → Display; Windows: Settings → Ease of Access → Display) — confirm all CSS transitions are disabled
+- [ ] Enable **Windows High Contrast** or macOS **Increase Contrast** — confirm `forced-colors` tokens apply and no information is lost
+- [ ] Start a screen reader (NVDA or JAWS on Windows; VoiceOver on macOS) — confirm `AccessibilityService.screenReaderActive` becomes `true` in DevTools
+- [ ] Run `npm test` — confirm the `AccessibilityService` unit tests pass
+
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
