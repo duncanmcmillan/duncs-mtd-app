@@ -3,6 +3,10 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   { path: '', redirectTo: 'obligations', pathMatch: 'full' },
   {
+    path: 'business-sources',
+    loadChildren: () => import('./business-sources/business-sources.routes').then(m => m.BUSINESS_SOURCES_ROUTES),
+  },
+  {
     path: 'obligations',
     loadChildren: () => import('./obligations/obligations.routes').then(m => m.OBLIGATIONS_ROUTES),
   },

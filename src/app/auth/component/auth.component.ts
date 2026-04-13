@@ -7,7 +7,7 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@ang
 import { FormsModule } from '@angular/forms';
 import { AuthStore } from '../store/auth.store';
 import { AuthService } from '../service/auth.service';
-import { ApiEnvironment } from '../../core';
+import { ApiEnvironment, AppStore } from '../../core';
 
 /**
  * Standalone view component for the `/auth` route.
@@ -27,6 +27,9 @@ export class AuthComponent implements OnInit {
   /** The auth feature store providing reactive state. */
   protected readonly store = inject(AuthStore);
 
+  /** Root app store; used to read and write the user's NINO. */
+  protected readonly appStore = inject(AppStore);
+
   /** Whether the app is running inside the Electron shell. */
   protected readonly isElectron = inject(AuthService).isElectron;
 
@@ -39,6 +42,9 @@ export class AuthComponent implements OnInit {
    */
   protected clientSecret = signal('');
 
+  /** The user's National Insurance number; required for all HMRC MTD API calls. */
+  protected nino = signal('');
+
   /**
    * Initialises the component by restoring any saved session and
    * pre-filling the client ID from secure storage.
@@ -46,6 +52,7 @@ export class AuthComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     await this.store.init();
     this.clientId.set(this.store.clientId());
+    this.nino.set(this.appStore.nino() ?? '');
   }
 
   /**
@@ -67,6 +74,15 @@ export class AuthComponent implements OnInit {
       environment:  this.store.environment(),
     });
     this.clientSecret.set('');
+  }
+
+  /**
+   * Saves the NINO entered by the user into the root app store.
+   * The NINO is required for all HMRC MTD API calls.
+   */
+  protected saveNino(): void {
+    const value = this.nino().trim().toUpperCase();
+    if (value) this.appStore.setNino(value);
   }
 
   /**

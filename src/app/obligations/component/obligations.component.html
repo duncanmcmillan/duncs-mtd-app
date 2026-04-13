@@ -1,14 +1,63 @@
 <div class="obligations-view">
   <header class="view-header">
-    <span class="view-label">Tab 3 — HMRC obligation tracking and deadline management</span>
+    <span class="view-label">MTD ITSA · Quarterly obligations</span>
     <h1 class="view-title">Obligations</h1>
   </header>
 
   @if (store.isLoading()) {
-    <div class="loading">Loading…</div>
+    <p class="status" aria-live="polite" aria-busy="true">Loading obligations…</p>
   }
 
   @if (store.hasError()) {
-    <div class="error">{{ store.error() }}</div>
+    <p class="status status--error" role="alert">{{ store.error() }}</p>
+  }
+
+  @if (store.obligationRows().length > 0) {
+    <table class="obligations-table" aria-label="HMRC reporting obligations">
+      <thead>
+        <tr>
+          <th scope="col">Period</th>
+          <th scope="col">Due date</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of store.obligationRows(); track row.periodStartDate + (row.businessId ?? '')) {
+          <tr>
+            <td class="cell-period">
+              {{ row.periodStartDate | date:'d MMM yyyy' }}&nbsp;–&nbsp;{{ row.periodEndDate | date:'d MMM yyyy' }}
+            </td>
+            <td class="cell-due">{{ row.dueDate | date:'d MMM yyyy' }}</td>
+            <td class="cell-status">
+              @if (row.status === 'fulfilled') {
+                <span class="badge badge--fulfilled">Fulfilled</span>
+                @if (row.receivedDate) {
+                  <span class="badge-detail">{{ row.receivedDate | date:'d MMM yyyy' }}</span>
+                }
+              } @else {
+                @let days = daysUntilDue(row.dueDate);
+                <span class="badge" [class.badge--open]="days > 0" [class.badge--overdue]="days <= 0">
+                  {{ days > 0 ? 'Open' : 'Overdue' }}
+                </span>
+                <span class="badge-detail" [class.badge-detail--urgent]="days >= 0 && days <= 7">
+                  @if (days > 1) { {{ days }} days left }
+                  @else if (days === 1) { Due tomorrow }
+                  @else if (days === 0) { Due today }
+                  @else { {{ -days }} days overdue }
+                </span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (!store.isLoading() && !store.hasError() && store.rawResponse() && store.obligationRows().length === 0) {
+    <p class="status">No obligations found for this period.</p>
+  }
+
+  @if (!store.isLoading() && !store.hasError() && !store.rawResponse()) {
+    <p class="status">Not authenticated — sign in to load obligations.</p>
   }
 </div>

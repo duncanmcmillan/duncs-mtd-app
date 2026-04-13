@@ -99,6 +99,30 @@
         </div>
       </div>
 
+      <div class="card-section">
+        <div class="field">
+          <label class="field-label" for="nino">National Insurance Number (NINO)</label>
+          <div class="nino-row">
+            <input
+              id="nino"
+              class="input"
+              type="text"
+              placeholder="e.g. AA999999A"
+              [value]="nino()"
+              (input)="nino.set($any($event.target).value)"
+              (keydown.enter)="saveNino()" />
+            <button class="btn btn-primary" [disabled]="!nino().trim()" (click)="saveNino()">
+              Save
+            </button>
+          </div>
+          @if (appStore.nino()) {
+            <span class="field-hint">NINO set: {{ appStore.nino() }}</span>
+          } @else {
+            <span class="field-hint field-hint--warn">NINO required to fetch obligations and other data.</span>
+          }
+        </div>
+      </div>
+
       <div class="card-footer">
         <button class="btn btn-secondary" [disabled]="store.isLoading()" (click)="signOut()">
           Disconnect
