@@ -44,21 +44,20 @@ export interface TaxPeriod {
   end: string;
 }
 
-/** Whether an HMRC obligation has been fulfilled or remains open. */
-export type ObligationStatus = 'Open' | 'Fulfilled';
+/** Whether an HMRC obligation has been fulfilled or remains open (v3 lowercase). */
+export type ObligationStatus = 'open' | 'fulfilled';
 
 /**
- * A single HMRC reporting obligation (quarterly update, EOPS, or Final Declaration).
+ * A single HMRC reporting obligation period as returned by the
+ * Obligations API v3 income-and-expenditure endpoint.
  */
 export interface Obligation {
-  /** HMRC period key identifying this obligation. */
-  periodKey: string;
   /** ISO date for the start of the obligation period. */
-  start: string;
+  periodStartDate: string;
   /** ISO date for the end of the obligation period. */
-  end: string;
+  periodEndDate: string;
   /** ISO date by which the obligation must be fulfilled. */
-  due: string;
+  dueDate: string;
   /** Whether this obligation is open or has been fulfilled. */
   status: ObligationStatus;
   /** ISO date when HMRC received the submission (fulfilled obligations only). */
@@ -66,15 +65,37 @@ export interface Obligation {
 }
 
 /**
- * Response envelope from the HMRC Obligations API.
+ * Response from `GET /obligations/details/{nino}/income-and-expenditure` (API v3).
  */
 export interface ObligationsResponse {
   obligations: Array<{
-    /** Identifies the income source type and reference number. */
-    identification?: { incomeSourceType: string; referenceNumber: string };
-    /** The list of obligation periods for this source. */
+    /** The type of income source for this set of obligations. */
+    typeOfBusiness?: string;
+    /** HMRC income source identifier. */
+    businessId?: string;
+    /** The obligation periods for this source. */
     obligationDetails: Obligation[];
   }>;
+}
+
+/**
+ * A single business income source as returned by the Business Details API v2.
+ */
+export interface BusinessSourceItem {
+  /** HMRC-assigned income source identifier. */
+  businessId: string;
+  /** The type of income source. */
+  typeOfBusiness: 'self-employment' | 'uk-property' | 'foreign-property' | 'property-unspecified';
+  /** Trading name (self-employment sources only). */
+  tradingName?: string;
+}
+
+/**
+ * Response from `GET /individuals/business/details/{nino}/list` (API v2).
+ */
+export interface BusinessSourcesResponse {
+  /** All income sources registered for this taxpayer. */
+  listOfBusinesses: BusinessSourceItem[];
 }
 
 /** Which HMRC API environment to target. */

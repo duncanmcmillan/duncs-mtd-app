@@ -7,6 +7,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ApiEnvironment, HmrcTokens } from '../models';
+import { FraudPreventionService } from './fraud-prevention.service';
 
 /** Shape of the Electron IPC bridge exposed via preload.js. */
 type ElectronBridge = {
@@ -43,6 +44,7 @@ const BASE_URLS: Record<ApiEnvironment, string> = {
 @Injectable({ providedIn: 'root' })
 export class HmrcApiService {
   private readonly http = inject(HttpClient);
+  private readonly fraudPrevention = inject(FraudPreventionService);
 
   /** The currently active API environment (sandbox or live). */
   readonly environment = signal<ApiEnvironment>('sandbox');
@@ -66,10 +68,12 @@ export class HmrcApiService {
    * @param accessToken - A valid HMRC OAuth access token.
    * @returns The parsed JSON response body.
    */
-  async get<T>(path: string, accessToken: string): Promise<T> {
+  async get<T>(path: string, accessToken: string, apiVersion = '1.0'): Promise<T> {
+    const fraudHeaders = await this.fraudPrevention.getHeaders();
     const headers = new HttpHeaders({
       Authorization: `Bearer ${accessToken}`,
-      Accept: 'application/vnd.hmrc.1.0+json',
+      Accept: `application/vnd.hmrc.${apiVersion}+json`,
+      ...fraudHeaders,
     });
     return firstValueFrom(
       this.http.get<T>(`${this.baseUrl}${path}`, { headers })
@@ -83,11 +87,13 @@ export class HmrcApiService {
    * @param accessToken - A valid HMRC OAuth access token.
    * @returns The parsed JSON response body.
    */
-  async post<T>(path: string, body: unknown, accessToken: string): Promise<T> {
+  async post<T>(path: string, body: unknown, accessToken: string, apiVersion = '1.0'): Promise<T> {
+    const fraudHeaders = await this.fraudPrevention.getHeaders();
     const headers = new HttpHeaders({
       Authorization: `Bearer ${accessToken}`,
-      Accept: 'application/vnd.hmrc.1.0+json',
+      Accept: `application/vnd.hmrc.${apiVersion}+json`,
       'Content-Type': 'application/json',
+      ...fraudHeaders,
     });
     return firstValueFrom(
       this.http.post<T>(`${this.baseUrl}${path}`, body, { headers })

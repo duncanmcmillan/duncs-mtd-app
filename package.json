@@ -9,6 +9,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "start-electron": "electron .",
+    "dev": "ng build && electron .",
     "forge-start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make"

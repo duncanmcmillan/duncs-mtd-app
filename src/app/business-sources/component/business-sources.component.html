@@ -1,0 +1,37 @@
+<div class="view">
+
+  <header class="view-header">
+    <span class="view-label">Income Sources</span>
+    <h1 class="view-title">Business Sources</h1>
+  </header>
+
+  @if (store.isLoading()) {
+    <p class="status" aria-live="polite">Loading business sources…</p>
+  } @else if (store.hasError()) {
+    <p class="status status--error" role="alert">{{ store.error() }}</p>
+  } @else if (store.businesses() === null) {
+    <p class="status status--empty">Sign in and set your NINO on the Auth tab to load business sources.</p>
+  } @else if (store.isEmpty()) {
+    <div class="empty-state">
+      <p>No business income sources found for this NINO.</p>
+      <p class="hint">
+        Business sources must be registered through
+        <strong>HMRC's online service</strong> before they appear here.
+        Once registered, return to this tab to see them listed.
+      </p>
+    </div>
+  } @else {
+    <ul class="source-list" aria-label="Business income sources">
+      @for (biz of store.businesses(); track biz.businessId) {
+        <li class="source-card">
+          <div class="source-type">{{ biz.typeOfBusiness }}</div>
+          @if (biz.tradingName) {
+            <div class="source-name">{{ biz.tradingName }}</div>
+          }
+          <div class="source-id">ID: {{ biz.businessId }}</div>
+        </li>
+      }
+    </ul>
+  }
+
+</div>

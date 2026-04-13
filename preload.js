@@ -35,6 +35,12 @@ contextBridge.exposeInMainWorld('gdpr', {
   deleteAllData: () => ipcRenderer.invoke('gdpr:delete-all-data'),
 });
 
+// ── Fraud prevention bridge ─────────────────────────────────────────────────
+contextBridge.exposeInMainWorld('fraudPrevention', {
+  /** Returns device/OS info needed to build HMRC fraud prevention headers. */
+  getDeviceInfo: () => ipcRenderer.invoke('hmrc:fraud-prevention-info'),
+});
+
 // ── HMRC API bridge ────────────────────────────────────────────────────────
 contextBridge.exposeInMainWorld('hmrc', {
   /** Open system browser with HMRC auth URL, resolves with { code, state } */

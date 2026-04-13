@@ -3,6 +3,7 @@
 <nav class="top-nav" aria-label="Main navigation">
   <span class="nav-brand">MTD <span>App</span></span>
   <a class="nav-item" routerLink="/obligations" routerLinkActive="active" #rlaObl="routerLinkActive" [attr.aria-current]="rlaObl.isActive ? 'page' : null">Obligations</a>
+  <a class="nav-item" routerLink="/business-sources" routerLinkActive="active" #rlaBiz="routerLinkActive" [attr.aria-current]="rlaBiz.isActive ? 'page' : null">Sources</a>
   <a class="nav-item" routerLink="/quarterly" routerLinkActive="active" #rlaQtr="routerLinkActive" [attr.aria-current]="rlaQtr.isActive ? 'page' : null">Quarterly</a>
   <a class="nav-item" routerLink="/self-assessment" routerLinkActive="active" #rlaSA="routerLinkActive" [attr.aria-current]="rlaSA.isActive ? 'page' : null">Self Assessment</a>
   <a class="nav-item" routerLink="/records" routerLinkActive="active" #rlaRec="routerLinkActive" [attr.aria-current]="rlaRec.isActive ? 'page' : null">Records</a>

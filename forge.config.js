@@ -4,6 +4,21 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    // Declare the custom protocol so macOS knows this app handles mtd-app:// URLs.
+    // Without this in Info.plist, setAsDefaultProtocolClient() silently fails and
+    // macOS never routes the OAuth redirect here.
+    extendInfo: {
+      CFBundleURLTypes: [{
+        CFBundleURLSchemes: ['mtd-app'],
+        CFBundleURLName: 'com.electron.duncs-mtd-app',
+        CFBundleTypeRole: 'Viewer',
+      }],
+    },
+    // Ad-hoc signing (identity: '-') gives the app a unique code identity so
+    // macOS allows safeStorage / Keychain access without a paid Developer ID.
+    osxSign: {
+      identity: '-',
+    },
   },
   rebuildConfig: {},
   makers: [

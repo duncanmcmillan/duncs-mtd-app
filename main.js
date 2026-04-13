@@ -1,12 +1,15 @@
 const { app, BrowserWindow, ipcMain, shell, safeStorage, nativeTheme } = require('electron/main');
 const path = require('node:path');
 const fs = require('node:fs');
+const os = require('node:os');
+const { randomUUID } = require('node:crypto');
 const { URL } = require('node:url');
 
 // ── Paths ──────────────────────────────────────────────────────────────────
-const TOKEN_PATH   = () => path.join(app.getPath('userData'), 'hmrc-tokens.enc');
-const CONFIG_PATH  = () => path.join(app.getPath('userData'), 'hmrc-config.enc');
-const CONSENT_PATH = () => path.join(app.getPath('userData'), 'gdpr-consent.json');
+const TOKEN_PATH     = () => path.join(app.getPath('userData'), 'hmrc-tokens.enc');
+const CONFIG_PATH    = () => path.join(app.getPath('userData'), 'hmrc-config.enc');
+const CONSENT_PATH   = () => path.join(app.getPath('userData'), 'gdpr-consent.json');
+const DEVICE_ID_PATH = () => path.join(app.getPath('userData'), 'hmrc-device-id.txt');
 
 // ── OAuth callback state ───────────────────────────────────────────────────
 let oauthResolve = null;
@@ -47,24 +50,22 @@ function handleOAuthCallback(url) {
   }
 }
 
-// macOS: protocol fires via open-url
+// macOS (packaged app): protocol fires via Apple Event → open-url on running instance
 app.on('open-url', (event, url) => {
   event.preventDefault();
+  console.log('[main] open-url fired:', url);
   handleOAuthCallback(url);
 });
 
-// Windows/Linux: app is re-launched with URL as argv
+// Windows/Linux: app is re-launched with URL as argv.
+// Also handles macOS dev mode where macOS can't route via Apple Events to the running
+// electron binary (no .app bundle), so it launches a second instance instead.
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
+  // We are the second instance — extract URL from argv and quit immediately.
+  // On macOS, open-url may also fire; both paths call handleOAuthCallback which
+  // is a no-op here since oauthResolve is null (first instance owns the promise).
   app.quit();
-} else {
-  app.on('second-instance', (_event, argv) => {
-    const url = argv.find(a => a.startsWith('mtd-app://'));
-    if (url) handleOAuthCallback(url);
-
-    const win = BrowserWindow.getAllWindows()[0];
-    if (win) { if (win.isMinimized()) win.restore(); win.focus(); }
-  });
 }
 
 // ── Accessibility helpers ───────────────────────────────────────────────────
@@ -84,6 +85,31 @@ function pushA11yPreferences() {
   BrowserWindow.getAllWindows().forEach(win => {
     win.webContents.send('a11y:preferences-changed', prefs);
   });
+}
+
+// ── Fraud prevention helpers ───────────────────────────────────────────────
+
+/** Returns a persistent device UUID, creating one on first run. */
+function getOrCreateDeviceId() {
+  const p = DEVICE_ID_PATH();
+  if (fs.existsSync(p)) return fs.readFileSync(p, 'utf8').trim();
+  const id = randomUUID();
+  fs.writeFileSync(p, id, 'utf8');
+  return id;
+}
+
+/** Collects non-loopback IPs and MAC addresses from all network interfaces. */
+function getNetworkInfo() {
+  const ips = new Set();
+  const macs = new Set();
+  for (const addrs of Object.values(os.networkInterfaces())) {
+    for (const addr of addrs) {
+      if (addr.internal) continue;
+      if (addr.family === 'IPv4') ips.add(addr.address);
+      if (addr.mac && addr.mac !== '00:00:00:00:00:00') macs.add(addr.mac.toLowerCase());
+    }
+  }
+  return { ips: [...ips], macs: [...macs] };
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -121,7 +147,21 @@ const createWindow = () => {
 };
 
 // ── IPC Handlers ───────────────────────────────────────────────────────────
+if (gotLock) app.on('second-instance', (_event, argv) => {
+  // macOS dev mode: macOS launches a new electron process with the URL in argv.
+  // That process quits immediately above; we receive its argv here.
+  console.log('[main] second-instance fired, argv:', argv);
+  const url = argv.find(a => a.startsWith('mtd-app://'));
+  if (url) handleOAuthCallback(url);
+
+  const win = BrowserWindow.getAllWindows()[0];
+  if (win) { if (win.isMinimized()) win.restore(); win.focus(); }
+});
+
 app.whenReady().then(() => {
+  // Bail out if we somehow reach this in the secondary instance (shouldn't happen
+  // after the gotLock guard above, but be safe).
+  if (!gotLock) return;
 
   // Legacy ping
   ipcMain.handle('ping', () => 'pong');
@@ -236,11 +276,28 @@ app.whenReady().then(() => {
     }), 'utf8');
   });
 
+  // ── Fraud prevention: collect device/OS info for HMRC headers ────────
+  ipcMain.handle('hmrc:fraud-prevention-info', () => {
+    const { ips, macs } = getNetworkInfo();
+    const userInfo = os.userInfo();
+    const type = os.type(); // 'Darwin' | 'Windows_NT' | 'Linux'
+    return {
+      deviceId: getOrCreateDeviceId(),
+      ips,
+      macs,
+      userId:    userInfo.username,
+      osFamily:  type === 'Darwin' ? 'Mac OS X' : type === 'Windows_NT' ? 'Windows' : type,
+      osVersion: os.release(),
+    };
+  });
+
   // ── GDPR: delete all locally stored personal data ─────────────────────
   ipcMain.handle('gdpr:delete-all-data', () => {
     safeDelete(TOKEN_PATH());
     safeDelete(CONFIG_PATH());
     safeDelete(CONSENT_PATH());
+    // Device ID is a pseudonymous identifier — delete on full data erasure
+    safeDelete(DEVICE_ID_PATH());
   });
 
   createWindow();
