@@ -1,5 +1,8 @@
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = {
   packagerConfig: {
@@ -14,10 +17,45 @@ module.exports = {
         CFBundleTypeRole: 'Viewer',
       }],
     },
-    // Ad-hoc signing (identity: '-') gives the app a unique code identity so
-    // macOS allows safeStorage / Keychain access without a paid Developer ID.
-    osxSign: {
-      identity: '-',
+  },
+  hooks: {
+    /**
+     * Re-sign the packaged .app with ad-hoc identity after the FusesPlugin has
+     * modified the Electron binaries.  @electron/osx-sign (used by packagerConfig.osxSign)
+     * runs before Fuses modifies the binary, so its signature is immediately stale.
+     * Instead we sign here — after all plugins — working inside-out:
+     *   1. frameworks (Electron Framework, Squirrel, …)
+     *   2. helper .app bundles
+     *   3. outer .app bundle
+     * This ensures every nested binary shares the same ad-hoc Team ID (none), which
+     * is what macOS / DYLD require to load them together at runtime.
+     */
+    postPackage: async (_forgeConfig, options) => {
+      if (process.platform !== 'darwin') return;
+
+      for (const outputPath of options.outputPaths) {
+        const appPath = fs.readdirSync(outputPath)
+          .map(f => path.join(outputPath, f))
+          .find(f => f.endsWith('.app'));
+        if (!appPath) continue;
+
+        const frameworksDir = path.join(appPath, 'Contents', 'Frameworks');
+
+        // Sign every .framework inside-out
+        if (fs.existsSync(frameworksDir)) {
+          for (const entry of fs.readdirSync(frameworksDir)) {
+            const full = path.join(frameworksDir, entry);
+            if (entry.endsWith('.framework') || entry.endsWith('.app')) {
+              execSync(`codesign --force --deep -s - "${full}"`, { stdio: 'inherit' });
+            }
+          }
+        }
+
+        // Sign the outer bundle last
+        execSync(`codesign --force -s - "${appPath}"`, { stdio: 'inherit' });
+
+        console.log(`[forge] Ad-hoc signed: ${appPath}`);
+      }
     },
   },
   rebuildConfig: {},
