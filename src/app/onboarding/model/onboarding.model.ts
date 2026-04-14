@@ -5,7 +5,7 @@
  */
 
 /** Identifies a discrete onboarding step. */
-export type OnboardingStepId = 'AUTH_TAB' | 'NAVIGATE_TO_SOURCES';
+export type OnboardingStepId = 'AUTH_TAB' | 'NAVIGATE_TO_SOURCES' | 'QUARTERLY_TAB';
 
 /**
  * A single onboarding step with its unique identifier and display message.
@@ -29,6 +29,10 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'NAVIGATE_TO_SOURCES',
     message: `Go to the 'Source' Tab.`,
+  },
+  {
+    id: 'QUARTERLY_TAB',
+    message: `Use this tab to enter details of both income and expenses for all your quarterly income sources. You can save drafts and come back to them later, and when happy commit them to HMRC.`,
   },
 ];
 

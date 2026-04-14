@@ -1,14 +1,284 @@
 <div class="quarterly-view">
+
+  <!-- Page header -->
   <header class="view-header">
-    <span class="view-label">Tab 1 — quarterly income and expense input per business source</span>
-    <h1 class="view-title">Quarterly</h1>
+    <span class="view-label">MTD ITSA · Quarterly updates</span>
+    <h1 class="view-title">Quarterly Update</h1>
   </header>
 
+  <!-- Global loading state -->
   @if (store.isLoading()) {
-    <div class="loading">Loading…</div>
+    <p class="status" aria-live="polite" aria-busy="true">Loading quarterly periods…</p>
   }
 
+  <!-- Global error -->
   @if (store.hasError()) {
-    <div class="error">{{ store.error() }}</div>
+    <p class="status status--error" role="alert">{{ store.error() }}</p>
   }
+
+  <!-- Not authenticated / no drafts -->
+  @if (!store.isLoading() && !store.hasError() && store.draftList().length === 0) {
+    <div class="empty-state">
+      <p class="status">No open quarterly periods found. You may need to sign in or fetch your obligations first.</p>
+      <button class="btn btn--outline seed-btn" type="button" (click)="onLoadTestData()">
+        Load test data
+      </button>
+    </div>
+  }
+
+  <!-- One card per open obligation period -->
+  @for (draft of store.draftList(); track keyFor(draft)) {
+    <article
+      class="period-card"
+      [class.period-card--submitted]="draft.status === 'submitted'"
+      [attr.aria-label]="draft.businessName + ' — ' + (draft.periodStartDate | date:'MMM yyyy') + ' to ' + (draft.periodEndDate | date:'MMM yyyy')"
+    >
+
+      <!-- Card header -->
+      <div class="card-header">
+        <div class="card-header-left">
+          <span class="business-type-badge business-type-badge--{{ draft.businessType }}">
+            @if (draft.businessType === 'self-employment') { Self Employment }
+            @else { UK Property }
+          </span>
+          <h2 class="card-title">
+            Submit Quarterly Update
+            ({{ draft.periodStartDate | date:'MMM' }}–{{ draft.periodEndDate | date:'MMM yyyy' }})
+          </h2>
+          <span
+            class="status-badge"
+            [class.status-badge--submitted]="draft.status === 'submitted'"
+            [class.status-badge--error]="draft.status === 'error'"
+            [class.status-badge--submitting]="draft.status === 'submitting'"
+          >
+            @if (draft.status === 'submitted') { Submitted }
+            @else if (draft.status === 'submitting') { Submitting… }
+            @else if (draft.status === 'error') { Error }
+            @else { Draft (In Progress) }
+          </span>
+        </div>
+        <span class="business-name">{{ draft.businessName }}</span>
+      </div>
+
+      <!-- Period info row -->
+      <div class="period-info">
+        <div class="period-info-item">
+          <span class="period-info-label">Reporting Period</span>
+          <span class="period-info-value">
+            {{ draft.periodStartDate | date:'d MMMM yyyy' }}&nbsp;–&nbsp;{{ draft.periodEndDate | date:'d MMMM yyyy' }}
+          </span>
+        </div>
+        <div class="period-info-item">
+          <span class="period-info-label">Submit By</span>
+          <span class="period-info-value">{{ draft.dueDate | date:'d MMMM yyyy' }}</span>
+        </div>
+      </div>
+
+      <!-- ── Step 1: Review Business Figures ─────────────────────────────── -->
+      <section class="step-section">
+        <div class="step-header">
+          <span class="step-number" aria-hidden="true">1</span>
+          <div>
+            <h3 class="step-title">Review Business Figures</h3>
+            <p class="step-hint">Enter your income and expenses for this reporting period.</p>
+          </div>
+        </div>
+
+        <div class="figures-columns">
+
+          <!-- Income subsection -->
+          <div class="figures-subsection">
+            <h4 class="subsection-title">Income</h4>
+
+            @if (draft.businessType === 'self-employment') {
+              <div class="figure-row">
+                <label
+                  class="figure-label"
+                  [for]="'se-turnover-' + keyFor(draft)"
+                >
+                  Sales / Turnover
+                </label>
+                <input
+                  class="figure-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [id]="'se-turnover-' + keyFor(draft)"
+                  [value]="draft.seIncome.turnover ?? ''"
+                  [attr.aria-label]="'Turnover for ' + draft.businessName"
+                  (input)="onSEIncomeInput(keyFor(draft), 'turnover', $event)"
+                />
+              </div>
+              <div class="figure-row">
+                <label
+                  class="figure-label"
+                  [for]="'se-other-' + keyFor(draft)"
+                >
+                  Other income
+                </label>
+                <input
+                  class="figure-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [id]="'se-other-' + keyFor(draft)"
+                  [value]="draft.seIncome.other ?? ''"
+                  [attr.aria-label]="'Other income for ' + draft.businessName"
+                  (input)="onSEIncomeInput(keyFor(draft), 'other', $event)"
+                />
+              </div>
+            }
+
+            @if (draft.businessType === 'uk-property') {
+              <div class="figure-row">
+                <label
+                  class="figure-label"
+                  [for]="'prop-rent-' + keyFor(draft)"
+                >
+                  Rent income
+                </label>
+                <input
+                  class="figure-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [id]="'prop-rent-' + keyFor(draft)"
+                  [value]="draft.propIncome.rentAmount ?? ''"
+                  [attr.aria-label]="'Rent income for ' + draft.businessName"
+                  (input)="onPropIncomeInput(keyFor(draft), 'rentAmount', $event)"
+                />
+              </div>
+              <div class="figure-row">
+                <label
+                  class="figure-label"
+                  [for]="'prop-other-' + keyFor(draft)"
+                >
+                  Other income
+                </label>
+                <input
+                  class="figure-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [id]="'prop-other-' + keyFor(draft)"
+                  [value]="draft.propIncome.otherIncome ?? ''"
+                  [attr.aria-label]="'Other property income for ' + draft.businessName"
+                  (input)="onPropIncomeInput(keyFor(draft), 'otherIncome', $event)"
+                />
+              </div>
+            }
+
+            <div class="figure-row figure-row--total">
+              <span class="figure-label">Total Income</span>
+              <span class="figure-total">{{ totalIncomeFor(draft) | currency:'GBP':'symbol':'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <!-- Expenses subsection -->
+          <div class="figures-subsection">
+            <h4 class="subsection-title">Expenses</h4>
+            <div class="figure-row figure-row--expenses-summary">
+              <span class="figure-label">Total</span>
+              <span class="figure-total">{{ totalExpensesFor(draft) | currency:'GBP':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="expenses-link-row">
+              <button
+                class="view-details-link"
+                type="button"
+                [attr.aria-label]="'View and edit expense details for ' + draft.businessName"
+                (click)="openExpensesModal(keyFor(draft))"
+              >
+                View details
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── Step 2: Confirm & Finalise ──────────────────────────────────── -->
+      <section class="step-section">
+        <div class="step-header">
+          <span class="step-number" aria-hidden="true">2</span>
+          <h3 class="step-title">Confirm &amp; Finalise</h3>
+        </div>
+
+        <label class="confirm-label">
+          <input
+            type="checkbox"
+            class="confirm-checkbox"
+            [checked]="draft.confirmed"
+            [disabled]="draft.status === 'submitted' || draft.status === 'submitting'"
+            (change)="onConfirmChange(keyFor(draft), $event)"
+          />
+          <span>
+            I confirm that these figures are accurate based on business records,
+            and I am authorised to submit them on behalf of the taxpayer.
+          </span>
+        </label>
+
+        @if (draft.lastSaved) {
+          <p class="last-saved">
+            Draft last saved: {{ draft.lastSaved | date:'HH:mm, d MMMM yyyy' }}
+          </p>
+        }
+      </section>
+
+      <!-- ── Step 3: Submit to HMRC ───────────────────────────────────────── -->
+      <section class="step-section">
+        <div class="step-header">
+          <span class="step-number" aria-hidden="true">3</span>
+          <h3 class="step-title">Submit to HMRC</h3>
+        </div>
+
+        @if (draft.status === 'error' && draft.error) {
+          <p class="status-message status-message--error" role="alert">{{ draft.error }}</p>
+        }
+
+        @if (draft.status === 'submitted') {
+          <p class="status-message status-message--success">
+            Successfully submitted.
+            @if (draft.submissionId) {
+              Submission ID: <code>{{ draft.submissionId }}</code>
+            }
+          </p>
+        }
+
+        @if (draft.status !== 'submitted') {
+          <div class="action-buttons" aria-live="polite">
+            <button
+              class="btn btn--primary"
+              type="button"
+              [disabled]="!draft.confirmed || draft.status === 'submitting'"
+              [attr.aria-busy]="draft.status === 'submitting'"
+              (click)="onSubmit(keyFor(draft))"
+            >
+              @if (draft.status === 'submitting') { Submitting… }
+              @else { Submit Quarterly Update to HMRC }
+            </button>
+
+            <button
+              class="btn btn--outline"
+              type="button"
+              [disabled]="draft.status === 'submitting'"
+              (click)="onSaveDraft(keyFor(draft))"
+            >
+              Save as Draft &amp; Exit
+            </button>
+          </div>
+        }
+      </section>
+
+    </article>
+  }
+
 </div>
+
+<!-- Expenses detail modal (portal pattern — rendered at component root) -->
+@if (store.activeExpensesDraft()) {
+  <app-expenses-modal />
+}

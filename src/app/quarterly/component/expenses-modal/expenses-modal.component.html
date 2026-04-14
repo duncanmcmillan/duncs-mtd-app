@@ -1,0 +1,220 @@
+@if (store.activeExpensesDraft(); as draft) {
+  <!-- Backdrop -->
+  <div class="modal-backdrop" (click)="close()" aria-hidden="true"></div>
+
+  <!-- Panel -->
+  <div
+    class="modal-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Expenses — ' + draft.businessName"
+  >
+    <!-- Header -->
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Expenses</h2>
+        <p class="modal-subtitle">{{ draft.businessName }}</p>
+      </div>
+      <button
+        class="modal-close"
+        type="button"
+        aria-label="Close expenses detail"
+        (click)="close()"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- SE tabs: Allowable / Non-Allowable -->
+    @if (draft.businessType === 'self-employment') {
+      <div class="tab-bar" role="tablist" aria-label="Expense type">
+        <button
+          class="tab-btn"
+          role="tab"
+          [class.tab-btn--active]="activeTab === 'allowable'"
+          [attr.aria-selected]="activeTab === 'allowable'"
+          type="button"
+          (click)="activeTab = 'allowable'"
+        >
+          Allowable Expenses
+        </button>
+        <button
+          class="tab-btn"
+          role="tab"
+          [class.tab-btn--active]="activeTab === 'disallowable'"
+          [attr.aria-selected]="activeTab === 'disallowable'"
+          type="button"
+          (click)="activeTab = 'disallowable'"
+        >
+          Non-Allowable Expenses
+        </button>
+      </div>
+    }
+
+    <!-- Body -->
+    <div class="modal-body">
+
+      <!-- SE — Allowable -->
+      @if (draft.businessType === 'self-employment' && activeTab === 'allowable') {
+        <p class="modal-hint">
+          Enter the allowable portion of each expense category for the period.
+          Or use <strong>Consolidated expenses</strong> for a single total.
+        </p>
+
+        <div class="expense-grid">
+          <div class="expense-row expense-row--header" aria-hidden="true">
+            <span>Category</span>
+            <span>Amount (£)</span>
+          </div>
+
+          @for (row of seExpenseRows; track row.field) {
+            <div class="expense-row">
+              <label
+                class="expense-label"
+                [for]="'se-exp-' + row.field + '-' + draftKey(draft)"
+              >
+                {{ row.label }}
+              </label>
+              <input
+                class="expense-input"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                [id]="'se-exp-' + row.field + '-' + draftKey(draft)"
+                [value]="draft.seExpenses[row.field] ?? ''"
+                (input)="onSEExpenseInput(draftKey(draft), row.field, $event)"
+              />
+            </div>
+          }
+
+          <!-- Consolidated expenses divider -->
+          <div class="expense-divider">
+            <span>Or use a consolidated total</span>
+          </div>
+
+          <div class="expense-row">
+            <label
+              class="expense-label"
+              [for]="'se-consolidated-' + draftKey(draft)"
+            >
+              Consolidated expenses
+            </label>
+            <input
+              class="expense-input"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              [id]="'se-consolidated-' + draftKey(draft)"
+              [value]="draft.seExpenses.consolidatedExpenses ?? ''"
+              (input)="onSEExpenseInput(draftKey(draft), 'consolidatedExpenses', $event)"
+            />
+          </div>
+        </div>
+      }
+
+      <!-- SE — Non-Allowable -->
+      @if (draft.businessType === 'self-employment' && activeTab === 'disallowable') {
+        <p class="modal-hint">
+          Enter the <strong>non-allowable portion</strong> of each expense category.
+          Leave blank if the full amount is allowable.
+        </p>
+
+        <div class="expense-grid">
+          <div class="expense-row expense-row--header" aria-hidden="true">
+            <span>Category</span>
+            <span>Non-Allowable (£)</span>
+          </div>
+
+          @for (row of seDisallowableRows; track row.field) {
+            <div class="expense-row">
+              <label
+                class="expense-label"
+                [for]="'se-dis-' + row.field + '-' + draftKey(draft)"
+              >
+                {{ row.label }}
+              </label>
+              <input
+                class="expense-input"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                [id]="'se-dis-' + row.field + '-' + draftKey(draft)"
+                [value]="draft.seDisallowableExpenses[row.field] ?? ''"
+                (input)="onSEDisallowableInput(draftKey(draft), row.field, $event)"
+              />
+            </div>
+          }
+        </div>
+      }
+
+      <!-- UK Property expenses -->
+      @if (draft.businessType === 'uk-property') {
+        <p class="modal-hint">
+          Enter each expense category for the period.
+          Or use <strong>Consolidated expenses</strong> for a single total.
+        </p>
+
+        <div class="expense-grid">
+          <div class="expense-row expense-row--header" aria-hidden="true">
+            <span>Category</span>
+            <span>Amount (£)</span>
+          </div>
+
+          @for (row of propExpenseRows; track row.field) {
+            <div class="expense-row">
+              <label
+                class="expense-label"
+                [for]="'prop-exp-' + row.field + '-' + draftKey(draft)"
+              >
+                {{ row.label }}
+              </label>
+              <input
+                class="expense-input"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                [id]="'prop-exp-' + row.field + '-' + draftKey(draft)"
+                [value]="draft.propExpenses[row.field] ?? ''"
+                (input)="onPropExpenseInput(draftKey(draft), row.field, $event)"
+              />
+            </div>
+          }
+
+          <div class="expense-divider">
+            <span>Or use a consolidated total</span>
+          </div>
+
+          <div class="expense-row">
+            <label
+              class="expense-label"
+              [for]="'prop-consolidated-' + draftKey(draft)"
+            >
+              Consolidated expenses
+            </label>
+            <input
+              class="expense-input"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              [id]="'prop-consolidated-' + draftKey(draft)"
+              [value]="draft.propExpenses.consolidatedExpenses ?? ''"
+              (input)="onPropExpenseInput(draftKey(draft), 'consolidatedExpenses', $event)"
+            />
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn btn--primary" type="button" (click)="close()">
+        Done
+      </button>
+    </div>
+  </div>
+}
