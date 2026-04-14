@@ -1,0 +1,8 @@
+@if (store.showBanner()) {
+  <div class="onboarding-banner" role="status" aria-live="polite" aria-atomic="true">
+    <p class="onboarding-banner__message">{{ store.currentStep()?.message }}</p>
+    <button class="onboarding-banner__close" aria-label="Dismiss onboarding tip" (click)="dismissStep()">
+      &#215;
+    </button>
+  </div>
+}

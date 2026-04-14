@@ -6,10 +6,11 @@ const { randomUUID } = require('node:crypto');
 const { URL } = require('node:url');
 
 // ── Paths ──────────────────────────────────────────────────────────────────
-const TOKEN_PATH     = () => path.join(app.getPath('userData'), 'hmrc-tokens.enc');
-const CONFIG_PATH    = () => path.join(app.getPath('userData'), 'hmrc-config.enc');
-const CONSENT_PATH   = () => path.join(app.getPath('userData'), 'gdpr-consent.json');
-const DEVICE_ID_PATH = () => path.join(app.getPath('userData'), 'hmrc-device-id.txt');
+const TOKEN_PATH        = () => path.join(app.getPath('userData'), 'hmrc-tokens.enc');
+const CONFIG_PATH       = () => path.join(app.getPath('userData'), 'hmrc-config.enc');
+const CONSENT_PATH      = () => path.join(app.getPath('userData'), 'gdpr-consent.json');
+const DEVICE_ID_PATH    = () => path.join(app.getPath('userData'), 'hmrc-device-id.txt');
+const ONBOARDING_PATH   = () => path.join(app.getPath('userData'), 'onboarding.json');
 
 // ── OAuth callback state ───────────────────────────────────────────────────
 let oauthResolve = null;
@@ -291,6 +292,28 @@ app.whenReady().then(() => {
     };
   });
 
+  // ── Onboarding: load full progress map ───────────────────────────────
+  ipcMain.handle('onboarding:load', () => {
+    if (!fs.existsSync(ONBOARDING_PATH())) return {};
+    return JSON.parse(fs.readFileSync(ONBOARDING_PATH(), 'utf8'));
+  });
+
+  // ── Onboarding: save completed steps for a client ID ─────────────────
+  ipcMain.handle('onboarding:save', (_e, { clientId, completedSteps }) => {
+    const data = fs.existsSync(ONBOARDING_PATH())
+      ? JSON.parse(fs.readFileSync(ONBOARDING_PATH(), 'utf8')) : {};
+    data[clientId] = completedSteps;
+    fs.writeFileSync(ONBOARDING_PATH(), JSON.stringify(data), 'utf8');
+  });
+
+  // ── Onboarding: remove progress entry for a client ID ────────────────
+  ipcMain.handle('onboarding:reset', (_e, { clientId }) => {
+    if (!fs.existsSync(ONBOARDING_PATH())) return;
+    const data = JSON.parse(fs.readFileSync(ONBOARDING_PATH(), 'utf8'));
+    delete data[clientId];
+    fs.writeFileSync(ONBOARDING_PATH(), JSON.stringify(data), 'utf8');
+  });
+
   // ── GDPR: delete all locally stored personal data ─────────────────────
   ipcMain.handle('gdpr:delete-all-data', () => {
     safeDelete(TOKEN_PATH());
@@ -298,6 +321,7 @@ app.whenReady().then(() => {
     safeDelete(CONSENT_PATH());
     // Device ID is a pseudonymous identifier — delete on full data erasure
     safeDelete(DEVICE_ID_PATH());
+    safeDelete(ONBOARDING_PATH());
   });
 
   createWindow();

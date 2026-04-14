@@ -53,7 +53,7 @@ describe('ObligationsService', () => {
   });
 
   it('fetchObligations() — uses default date range when none provided', async () => {
-    const promise = service.fetchObligations('AB123456C', 'tok');
+    const promise = service.fetchObligations('AB123456C', 'tok', 'self-employment');
 
     const req = httpController.expectOne(
       (r) => r.urlWithParams.includes('fromDate=') && r.urlWithParams.includes('toDate='),
