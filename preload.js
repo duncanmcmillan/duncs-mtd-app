@@ -41,6 +41,20 @@ contextBridge.exposeInMainWorld('fraudPrevention', {
   getDeviceInfo: () => ipcRenderer.invoke('hmrc:fraud-prevention-info'),
 });
 
+// ── Onboarding bridge ──────────────────────────────────────────────────────
+contextBridge.exposeInMainWorld('onboarding', {
+  /** Loads the full progress map from `onboarding.json` in userData. */
+  loadProgress: () => ipcRenderer.invoke('onboarding:load'),
+
+  /** Persists completed steps for the given client ID. */
+  saveProgress: (clientId, completedSteps) =>
+    ipcRenderer.invoke('onboarding:save', { clientId, completedSteps }),
+
+  /** Removes the progress entry for the given client ID. */
+  resetProgress: (clientId) =>
+    ipcRenderer.invoke('onboarding:reset', { clientId }),
+});
+
 // ── HMRC API bridge ────────────────────────────────────────────────────────
 contextBridge.exposeInMainWorld('hmrc', {
   /** Open system browser with HMRC auth URL, resolves with { code, state } */
