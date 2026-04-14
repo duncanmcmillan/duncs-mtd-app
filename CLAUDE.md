@@ -49,6 +49,22 @@ Strict mode is enabled. Angular-specific strict options are on: `strictTemplates
 - API calls through services, never directly in components
 - Barrel exports (`index.ts`) for every feature folder
 
+## API service READMEs
+
+Every feature service directory that makes HMRC API calls **must** contain a `README.md` alongside the service file. Keep it up to date whenever the service changes.
+
+**Required sections:**
+- **HMRC API Spec** — link to the HMRC Developer Hub page for the exact API and version in use
+- **Endpoint** — HTTP method, sandbox URL, live URL, API version (the version string passed to `HmrcApiService.get/post`)
+- **Request** — path parameters, query parameters, and request body (if any); for each field note its **source** (e.g. which store/signal/user input it comes from)
+- **Response** — TypeScript interface(s) and an example JSON payload
+- **Payload data sources** — a summary table mapping every piece of request data to where it originates in the app
+
+**Maintenance rules:**
+- When upgrading an API version, update both the service call (`api.get(..., '<version>')`) and the README at the same time.
+- When adding a new query parameter or path segment, add the corresponding row to the README request table.
+- Stub services (no API calls yet) do not need a README until they make their first real HTTP call.
+
 ## API calls and error handling
 
 All HTTP calls go through `HmrcApiService` (`get<T>`, `post<T>`) — never use `HttpClient` directly in components or stores.
