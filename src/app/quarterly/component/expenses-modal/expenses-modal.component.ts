@@ -1,7 +1,7 @@
 /**
  * @fileoverview Modal component for viewing and editing the detailed breakdown
- * of expenses for a quarterly update draft. Supports both self-employment
- * (allowable + non-allowable) and UK property expense categories.
+ * of expenses for a quarterly update draft. Supports self-employment
+ * (allowable + non-allowable), UK property, and foreign property expense categories.
  */
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { QuarterlyStore } from '../../store/quarterly.store';
@@ -10,6 +10,7 @@ import {
   SelfEmploymentExpenses,
   SelfEmploymentDisallowableExpenses,
   UkPropertyExpenses,
+  ForeignPropertyExpenses,
   draftKey,
 } from '../../model/quarterly.model';
 
@@ -72,6 +73,17 @@ const PROP_EXPENSE_ROWS: ExpenseRow<UkPropertyExpenses>[] = [
   { label: 'Other expenses', field: 'other' },
 ];
 
+/** Foreign property expense rows in display order. */
+const FOREIGN_PROP_EXPENSE_ROWS: ExpenseRow<ForeignPropertyExpenses>[] = [
+  { label: 'Premises running costs', field: 'premisesRunningCosts' },
+  { label: 'Repairs and maintenance', field: 'repairsAndMaintenance' },
+  { label: 'Financial costs', field: 'financialCosts' },
+  { label: 'Professional fees', field: 'professionalFees' },
+  { label: 'Cost of services', field: 'costOfServices' },
+  { label: 'Travel costs', field: 'travelCosts' },
+  { label: 'Other expenses', field: 'other' },
+];
+
 /**
  * Full-screen modal overlay for entering the detailed breakdown of
  * quarterly expenses for a single income source draft.
@@ -94,6 +106,8 @@ export class ExpensesModalComponent {
   protected readonly seDisallowableRows = SE_DISALLOWABLE_ROWS;
   /** @internal */
   protected readonly propExpenseRows = PROP_EXPENSE_ROWS;
+  /** @internal */
+  protected readonly foreignPropExpenseRows = FOREIGN_PROP_EXPENSE_ROWS;
 
   /** Currently active tab: `'allowable'` or `'disallowable'` (SE only). */
   protected activeTab: 'allowable' | 'disallowable' = 'allowable';
@@ -148,6 +162,21 @@ export class ExpensesModalComponent {
   ): void {
     const value = parseNullableNumber((event.target as HTMLInputElement).value);
     this.store.patchPropExpenses(key, { [field]: value } as Partial<UkPropertyExpenses>);
+  }
+
+  /**
+   * Handles numeric input changes for foreign property expenses.
+   * @param key - Draft key.
+   * @param field - The foreign property expense field being changed.
+   * @param event - The DOM input event.
+   */
+  protected onForeignPropExpenseInput(
+    key: string,
+    field: keyof ForeignPropertyExpenses,
+    event: Event,
+  ): void {
+    const value = parseNullableNumber((event.target as HTMLInputElement).value);
+    this.store.patchForeignPropExpenses(key, { [field]: value } as Partial<ForeignPropertyExpenses>);
   }
 
   /** Closes the modal via the store. */

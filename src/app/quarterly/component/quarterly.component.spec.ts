@@ -34,8 +34,8 @@ describe('QuarterlyComponent', () => {
     expect(h1.textContent).toContain('Quarterly Update');
   });
 
-  it('shows no period tabs when unauthenticated', () => {
-    const tabs: NodeList = fixture.nativeElement.querySelectorAll('.period-tab');
+  it('shows no source tabs when unauthenticated', () => {
+    const tabs: NodeList = fixture.nativeElement.querySelectorAll('.source-tab');
     expect(tabs.length).toBe(0);
   });
 
@@ -54,13 +54,17 @@ describe('QuarterlyComponent', () => {
     expect(status).toBeTruthy();
   });
 
-  it('selectedKey is null when no drafts are loaded', () => {
-    const key = (component as unknown as { selectedKey: { (): string | null } }).selectedKey;
-    expect(key()).toBeNull();
+  it('selectedPeriod and selectedKey are null when no drafts are loaded', () => {
+    const c = component as unknown as {
+      selectedPeriod: { (): string | null };
+      selectedKey: { (): string | null };
+    };
+    expect(c.selectedPeriod()).toBeNull();
+    expect(c.selectedKey()).toBeNull();
   });
 
-  it('shows no period-tabs nav when unauthenticated', () => {
-    const nav: HTMLElement | null = fixture.nativeElement.querySelector('.period-tabs');
+  it('shows no period-nav when unauthenticated', () => {
+    const nav: HTMLElement | null = fixture.nativeElement.querySelector('.period-nav');
     expect(nav).toBeNull();
   });
 });

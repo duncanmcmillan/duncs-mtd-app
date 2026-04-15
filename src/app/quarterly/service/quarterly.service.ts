@@ -1,7 +1,8 @@
 /**
  * @fileoverview Service for submitting HMRC MTD quarterly updates via the
- * Self Employment Business API v3 and Property Business API v4, and for
- * persisting in-progress drafts to localStorage.
+ * Self Employment Business API v3, Property Business API v4 (UK), and
+ * Property Business API v6 (Foreign), and for persisting in-progress
+ * drafts to localStorage.
  */
 import { Injectable, inject } from '@angular/core';
 import { HmrcApiService } from '../../core';
@@ -12,6 +13,8 @@ import {
   SelfEmploymentDisallowableExpenses,
   UkPropertyIncome,
   UkPropertyExpenses,
+  ForeignPropertyIncome,
+  ForeignPropertyExpenses,
   draftKey,
 } from '../model/quarterly.model';
 
@@ -22,7 +25,7 @@ interface SelfEmploymentSubmitResponse {
 }
 
 /** Response body from the Property Business API periodic summary create endpoint. */
-interface UkPropertySubmitResponse {
+interface PropertySubmitResponse {
   /** HMRC-assigned identifier for the submitted periodic summary. */
   submissionId: string;
 }
@@ -94,11 +97,45 @@ export class QuarterlyService {
     expenses: UkPropertyExpenses,
   ): Promise<string> {
     const body = buildPropertyBody(periodStartDate, periodEndDate, income, expenses);
-    const response = await this.api.post<UkPropertySubmitResponse>(
+    const response = await this.api.post<PropertySubmitResponse>(
       `/individuals/business/property/uk/${nino}/${taxYear}/${businessId}/period`,
       body,
       accessToken,
       '4.0',
+    );
+    return response.submissionId;
+  }
+
+  /**
+   * Submits a foreign property quarterly (periodic summary) update to HMRC.
+   * Creates a new submission via the Property Business API v6.
+   * @param nino - The taxpayer's National Insurance number.
+   * @param businessId - HMRC income source identifier.
+   * @param taxYear - HMRC tax year string, e.g. `'2024-25'`.
+   * @param periodStartDate - ISO start date of the period (YYYY-MM-DD).
+   * @param periodEndDate - ISO end date of the period (YYYY-MM-DD).
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @param income - The foreign property income figures for the period.
+   * @param expenses - The foreign property expense figures for the period.
+   * @returns The HMRC-assigned submission ID.
+   * @throws `HttpErrorResponse` if the API call fails.
+   */
+  async submitForeignProperty(
+    nino: string,
+    businessId: string,
+    taxYear: string,
+    periodStartDate: string,
+    periodEndDate: string,
+    accessToken: string,
+    income: ForeignPropertyIncome,
+    expenses: ForeignPropertyExpenses,
+  ): Promise<string> {
+    const body = buildForeignPropertyBody(periodStartDate, periodEndDate, income, expenses);
+    const response = await this.api.post<PropertySubmitResponse>(
+      `/individuals/business/property/foreign/${nino}/${taxYear}/${businessId}/period`,
+      body,
+      accessToken,
+      '6.0',
     );
     return response.submissionId;
   }
@@ -174,6 +211,39 @@ function buildPropertyBody(
     income: incomeBody,
     expenses: omitNulls(expenses),
   };
+}
+
+/**
+ * Builds the request body for the Foreign Property Business API periodic summary endpoint.
+ * The income is wrapped in a per-country array as required by the HMRC API.
+ * Omits `null` fields so the HMRC API doesn't receive unexpected nulls.
+ */
+function buildForeignPropertyBody(
+  fromDate: string,
+  toDate: string,
+  income: ForeignPropertyIncome,
+  expenses: ForeignPropertyExpenses,
+): object {
+  const incomeBody: Record<string, unknown> = {
+    foreignTaxCreditRelief: income.foreignTaxCreditRelief,
+  };
+  if (income.rentIncome !== null) {
+    incomeBody['rentIncome'] = { rentAmount: income.rentIncome };
+  }
+  if (income.premiumsOfLeaseGrant !== null) incomeBody['premiumsOfLeaseGrant'] = income.premiumsOfLeaseGrant;
+  if (income.otherPropertyIncome !== null) incomeBody['otherPropertyIncome'] = income.otherPropertyIncome;
+  if (income.foreignTaxPaidOrDeducted !== null) incomeBody['foreignTaxPaidOrDeducted'] = income.foreignTaxPaidOrDeducted;
+  if (income.specialWithholdingTaxOrUkTaxPaid !== null) incomeBody['specialWithholdingTaxOrUkTaxPaid'] = income.specialWithholdingTaxOrUkTaxPaid;
+
+  const countryEntry: Record<string, unknown> = {
+    countryCode: income.countryCode,
+    income: incomeBody,
+  };
+  const expensesBody = omitNulls(expenses);
+  if (Object.keys(expensesBody).length > 0) {
+    countryEntry['expenses'] = expensesBody;
+  }
+  return { fromDate, toDate, foreignProperty: [countryEntry] };
 }
 
 /** Removes keys whose value is `null` from an object. */

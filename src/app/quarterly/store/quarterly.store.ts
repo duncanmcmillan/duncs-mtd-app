@@ -12,6 +12,8 @@ import { BusinessSourcesStore } from '../../business-sources';
 import { ObligationRow, ObligationsStore } from '../../obligations';
 import { QuarterlyService } from '../service/quarterly.service';
 import {
+  ForeignPropertyExpenses,
+  ForeignPropertyIncome,
   QuarterlyDraft,
   QuarterlyState,
   SelfEmploymentDisallowableExpenses,
@@ -20,6 +22,8 @@ import {
   UkPropertyExpenses,
   UkPropertyIncome,
   draftKey,
+  emptyForeignPropExpenses,
+  emptyForeignPropIncome,
   emptyPropExpenses,
   emptyPropIncome,
   emptySEDisallowable,
@@ -185,6 +189,30 @@ export const QuarterlyStore = signalStore(
         },
 
         /**
+         * Patches income fields for a foreign property draft.
+         * @param key - Draft key from {@link draftKey}.
+         * @param patch - Partial foreign property income fields to apply.
+         */
+        patchForeignPropIncome(key: string, patch: Partial<ForeignPropertyIncome>): void {
+          applyToDraft(key, draft => ({
+            foreignPropIncome: { ...draft.foreignPropIncome, ...patch },
+            status: draft.status === 'submitted' ? draft.status : 'draft',
+          }));
+        },
+
+        /**
+         * Patches expense fields for a foreign property draft.
+         * @param key - Draft key from {@link draftKey}.
+         * @param patch - Partial foreign property expense fields to apply.
+         */
+        patchForeignPropExpenses(key: string, patch: Partial<ForeignPropertyExpenses>): void {
+          applyToDraft(key, draft => ({
+            foreignPropExpenses: { ...draft.foreignPropExpenses, ...patch },
+            status: draft.status === 'submitted' ? draft.status : 'draft',
+          }));
+        },
+
+        /**
          * Sets the confirmation checkbox state for a draft.
          * @param key - Draft key from {@link draftKey}.
          * @param confirmed - Whether the user has confirmed the figures.
@@ -224,6 +252,12 @@ export const QuarterlyStore = signalStore(
                 draft.periodStartDate, draft.periodEndDate, token,
                 draft.seIncome, draft.seExpenses, draft.seDisallowableExpenses,
               );
+            } else if (draft.businessType === 'foreign-property') {
+              submissionId = await service.submitForeignProperty(
+                nino, draft.businessId, draft.taxYear,
+                draft.periodStartDate, draft.periodEndDate, token,
+                draft.foreignPropIncome, draft.foreignPropExpenses,
+              );
             } else {
               submissionId = await service.submitUkProperty(
                 nino, draft.businessId, draft.taxYear,
@@ -262,61 +296,107 @@ export const QuarterlyStore = signalStore(
 
         /**
          * Loads synthetic test drafts for UI development without authentication.
-         * Creates one self-employment draft and one UK property draft with
-         * realistic figures so the full UI can be exercised in browser mode.
+         * Creates one self-employment, one UK property, and one foreign property
+         * draft with realistic figures so the full UI can be exercised in browser mode.
          */
         seedTestDrafts(): void {
-          const seKey = draftKey('test-biz-se', '2024-04-06');
-          const propKey = draftKey('test-biz-prop', '2024-04-06');
-          const seDraft: QuarterlyDraft = {
-            businessId: 'test-biz-se',
-            businessName: 'Test Shop (seed)',
+          // ── Q1: Apr 6 – Jul 5 2024 ──────────────────────────────────────
+          const seQ1Key   = draftKey('test-biz-se',   '2024-04-06');
+          const propQ1Key = draftKey('test-biz-prop', '2024-04-06');
+          const fpQ1Key   = draftKey('test-biz-fp',   '2024-04-06');
+
+          const seQ1Draft: QuarterlyDraft = {
+            businessId: 'test-biz-se', businessName: 'Test Shop',
             businessType: 'self-employment',
-            periodStartDate: '2024-04-06',
-            periodEndDate: '2024-07-05',
-            dueDate: '2024-08-07',
-            taxYear: '2024-25',
+            periodStartDate: '2024-04-06', periodEndDate: '2024-07-05',
+            dueDate: '2024-08-07', taxYear: '2024-25',
             seIncome: { turnover: 18450, other: null },
-            seExpenses: {
-              ...emptySEExpenses(),
-              costOfGoods: 3200,
-              wagesAndStaffCosts: 1500,
-              carVanTravelExpenses: 530.50,
-            },
+            seExpenses: { ...emptySEExpenses(), costOfGoods: 3200, wagesAndStaffCosts: 1500, carVanTravelExpenses: 530.50 },
             seDisallowableExpenses: emptySEDisallowable(),
-            propIncome: emptyPropIncome(),
-            propExpenses: emptyPropExpenses(),
-            confirmed: false,
-            lastSaved: null,
-            submissionId: null,
-            status: 'draft',
-            error: null,
+            propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+            foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
+            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
           };
-          const propDraft: QuarterlyDraft = {
-            businessId: 'test-biz-prop',
-            businessName: 'Rental Property (seed)',
+
+          const propQ1Draft: QuarterlyDraft = {
+            businessId: 'test-biz-prop', businessName: 'UK Rental Property',
             businessType: 'uk-property',
-            periodStartDate: '2024-04-06',
-            periodEndDate: '2024-07-05',
-            dueDate: '2024-08-07',
-            taxYear: '2024-25',
-            seIncome: emptySEIncome(),
-            seExpenses: emptySEExpenses(),
-            seDisallowableExpenses: emptySEDisallowable(),
+            periodStartDate: '2024-04-06', periodEndDate: '2024-07-05',
+            dueDate: '2024-08-07', taxYear: '2024-25',
+            seIncome: emptySEIncome(), seExpenses: emptySEExpenses(), seDisallowableExpenses: emptySEDisallowable(),
             propIncome: { rentAmount: 4800, rentTaxDeducted: null, premiumsOfLeaseGrant: null, reversePremiums: null, otherIncome: null },
-            propExpenses: {
-              ...emptyPropExpenses(),
-              premisesRunningCosts: 350,
-              repairsAndMaintenance: 120,
-            },
-            confirmed: false,
-            lastSaved: null,
-            submissionId: null,
-            status: 'draft',
-            error: null,
+            propExpenses: { ...emptyPropExpenses(), premisesRunningCosts: 350, repairsAndMaintenance: 120 },
+            foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
+            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
           };
+
+          const fpQ1Draft: QuarterlyDraft = {
+            businessId: 'test-biz-fp', businessName: 'French Apartment',
+            businessType: 'foreign-property',
+            periodStartDate: '2024-04-06', periodEndDate: '2024-07-05',
+            dueDate: '2024-08-07', taxYear: '2024-25',
+            seIncome: emptySEIncome(), seExpenses: emptySEExpenses(), seDisallowableExpenses: emptySEDisallowable(),
+            propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+            foreignPropIncome: {
+              countryCode: 'FRA', rentIncome: 3200, foreignTaxCreditRelief: false,
+              premiumsOfLeaseGrant: null, otherPropertyIncome: null,
+              foreignTaxPaidOrDeducted: 240, specialWithholdingTaxOrUkTaxPaid: null,
+            },
+            foreignPropExpenses: { ...emptyForeignPropExpenses(), premisesRunningCosts: 280, repairsAndMaintenance: 95 },
+            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
+          };
+
+          // ── Q2: Jul 6 – Oct 5 2024 ──────────────────────────────────────
+          const seQ2Key   = draftKey('test-biz-se',   '2024-07-06');
+          const propQ2Key = draftKey('test-biz-prop', '2024-07-06');
+          const fpQ2Key   = draftKey('test-biz-fp',   '2024-07-06');
+
+          const seQ2Draft: QuarterlyDraft = {
+            businessId: 'test-biz-se', businessName: 'Test Shop',
+            businessType: 'self-employment',
+            periodStartDate: '2024-07-06', periodEndDate: '2024-10-05',
+            dueDate: '2024-11-07', taxYear: '2024-25',
+            seIncome: { turnover: 21300, other: null },
+            seExpenses: { ...emptySEExpenses(), costOfGoods: 4100, wagesAndStaffCosts: 1500, adminCosts: 310 },
+            seDisallowableExpenses: emptySEDisallowable(),
+            propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+            foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
+            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
+          };
+
+          const propQ2Draft: QuarterlyDraft = {
+            businessId: 'test-biz-prop', businessName: 'UK Rental Property',
+            businessType: 'uk-property',
+            periodStartDate: '2024-07-06', periodEndDate: '2024-10-05',
+            dueDate: '2024-11-07', taxYear: '2024-25',
+            seIncome: emptySEIncome(), seExpenses: emptySEExpenses(), seDisallowableExpenses: emptySEDisallowable(),
+            propIncome: { rentAmount: 4800, rentTaxDeducted: null, premiumsOfLeaseGrant: null, reversePremiums: null, otherIncome: null },
+            propExpenses: { ...emptyPropExpenses(), premisesRunningCosts: 350, repairsAndMaintenance: 85 },
+            foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
+            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
+          };
+
+          const fpQ2Draft: QuarterlyDraft = {
+            businessId: 'test-biz-fp', businessName: 'French Apartment',
+            businessType: 'foreign-property',
+            periodStartDate: '2024-07-06', periodEndDate: '2024-10-05',
+            dueDate: '2024-11-07', taxYear: '2024-25',
+            seIncome: emptySEIncome(), seExpenses: emptySEExpenses(), seDisallowableExpenses: emptySEDisallowable(),
+            propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+            foreignPropIncome: {
+              countryCode: 'FRA', rentIncome: 3200, foreignTaxCreditRelief: false,
+              premiumsOfLeaseGrant: null, otherPropertyIncome: null,
+              foreignTaxPaidOrDeducted: 195, specialWithholdingTaxOrUkTaxPaid: null,
+            },
+            foreignPropExpenses: { ...emptyForeignPropExpenses(), premisesRunningCosts: 280, repairsAndMaintenance: 110 },
+            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
+          };
+
           patchState(store, {
-            drafts: { [seKey]: seDraft, [propKey]: propDraft },
+            drafts: {
+              [seQ1Key]: seQ1Draft, [propQ1Key]: propQ1Draft, [fpQ1Key]: fpQ1Draft,
+              [seQ2Key]: seQ2Draft, [propQ2Key]: propQ2Draft, [fpQ2Key]: fpQ2Draft,
+            },
             error: null,
           });
         },
@@ -333,9 +413,15 @@ export const QuarterlyStore = signalStore(
  * @param row - The open obligation row.
  */
 function buildEmptyDraft(biz: BusinessSourceItem, row: ObligationRow): QuarterlyDraft {
-  const businessType = biz.typeOfBusiness === 'self-employment' ? 'self-employment' : 'uk-property';
+  const t = biz.typeOfBusiness;
+  const businessType: 'self-employment' | 'uk-property' | 'foreign-property' =
+    t === 'self-employment' ? 'self-employment'
+    : t === 'foreign-property' ? 'foreign-property'
+    : 'uk-property';
   const businessName = biz.tradingName
-    ?? (businessType === 'self-employment' ? 'Self Employment' : 'UK Property');
+    ?? (businessType === 'self-employment' ? 'Self Employment'
+       : businessType === 'foreign-property' ? 'Foreign Property'
+       : 'UK Property');
   return {
     businessId: biz.businessId,
     businessName,
@@ -349,6 +435,8 @@ function buildEmptyDraft(biz: BusinessSourceItem, row: ObligationRow): Quarterly
     seDisallowableExpenses: emptySEDisallowable(),
     propIncome: emptyPropIncome(),
     propExpenses: emptyPropExpenses(),
+    foreignPropIncome: emptyForeignPropIncome(),
+    foreignPropExpenses: emptyForeignPropExpenses(),
     confirmed: false,
     lastSaved: null,
     submissionId: null,

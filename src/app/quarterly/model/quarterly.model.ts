@@ -1,7 +1,8 @@
 /**
  * @fileoverview Domain models for the Quarterly Update feature.
- * Covers Self Employment (Self Employment Business API v3) and
- * UK Property (Property Business API v4) income sources.
+ * Covers Self Employment (Self Employment Business API v3),
+ * UK Property (Property Business API v4), and
+ * Foreign Property (Property Business API v6) income sources.
  */
 
 /** Allowable expense fields for a self-employment periodic summary (SE Business API v3). */
@@ -120,6 +121,44 @@ export interface UkPropertyExpenses {
   consolidatedExpenses: number | null;
 }
 
+/** Income fields for a foreign property periodic summary (Property Business API v6). */
+export interface ForeignPropertyIncome {
+  /** ISO 3166-1 alpha-3 country code of the property (e.g. `'FRA'`). */
+  countryCode: string;
+  /** Total rental income received from the foreign property. */
+  rentIncome: number | null;
+  /** Whether the taxpayer is claiming Foreign Tax Credit Relief on this income. */
+  foreignTaxCreditRelief: boolean;
+  /** Premiums received for granting a lease. */
+  premiumsOfLeaseGrant: number | null;
+  /** Other property income not listed above. */
+  otherPropertyIncome: number | null;
+  /** Foreign tax paid or deducted at source on this income. */
+  foreignTaxPaidOrDeducted: number | null;
+  /** Special withholding tax or UK tax paid on this income. */
+  specialWithholdingTaxOrUkTaxPaid: number | null;
+}
+
+/** Expense fields for a foreign property periodic summary (Property Business API v6). */
+export interface ForeignPropertyExpenses {
+  /** Premises running costs. */
+  premisesRunningCosts: number | null;
+  /** Repairs and maintenance of the property. */
+  repairsAndMaintenance: number | null;
+  /** Mortgage interest and other financial costs. */
+  financialCosts: number | null;
+  /** Professional fees (letting agents, solicitors, accountants). */
+  professionalFees: number | null;
+  /** Cost of services provided with the property. */
+  costOfServices: number | null;
+  /** Travel costs related to the property. */
+  travelCosts: number | null;
+  /** Any other allowable property expenses. */
+  other: number | null;
+  /** Optional: use instead of individual fields when expense detail is not required. */
+  consolidatedExpenses: number | null;
+}
+
 /** Lifecycle status of a quarterly draft. */
 export type DraftStatus = 'draft' | 'submitting' | 'submitted' | 'error';
 
@@ -131,8 +170,8 @@ export interface QuarterlyDraft {
   businessId: string;
   /** Display name derived from the income source (trading name or type label). */
   businessName: string;
-  /** Whether this source is self-employment or UK property. */
-  businessType: 'self-employment' | 'uk-property';
+  /** Whether this source is self-employment, UK property, or foreign property. */
+  businessType: 'self-employment' | 'uk-property' | 'foreign-property';
   /** ISO start date of the reporting period (e.g. `'2024-04-06'`). */
   periodStartDate: string;
   /** ISO end date of the reporting period. */
@@ -153,6 +192,11 @@ export interface QuarterlyDraft {
   propIncome: UkPropertyIncome;
   /** Expenses (used when `businessType` is `'uk-property'`). */
   propExpenses: UkPropertyExpenses;
+
+  /** Income figures (used when `businessType` is `'foreign-property'`). */
+  foreignPropIncome: ForeignPropertyIncome;
+  /** Expenses (used when `businessType` is `'foreign-property'`). */
+  foreignPropExpenses: ForeignPropertyExpenses;
 
   /** Whether the user has confirmed the figures are accurate. */
   confirmed: boolean;
@@ -296,5 +340,50 @@ export function totalPropExpenses(expenses: UkPropertyExpenses): number {
     expenses.premisesRunningCosts, expenses.repairsAndMaintenance, expenses.financialCosts,
     expenses.professionalFees, expenses.costOfServices, expenses.travelCosts,
     expenses.residentialFinancialCost, expenses.broughtFwdResidentialFinancialCost, expenses.other,
+  ].reduce<number>((sum, v) => sum + (v ?? 0), 0);
+}
+
+/** Returns a blank {@link ForeignPropertyIncome} object with all numeric fields `null`. */
+export function emptyForeignPropIncome(): ForeignPropertyIncome {
+  return {
+    countryCode: '',
+    rentIncome: null,
+    foreignTaxCreditRelief: false,
+    premiumsOfLeaseGrant: null,
+    otherPropertyIncome: null,
+    foreignTaxPaidOrDeducted: null,
+    specialWithholdingTaxOrUkTaxPaid: null,
+  };
+}
+
+/** Returns a blank {@link ForeignPropertyExpenses} object with all fields `null`. */
+export function emptyForeignPropExpenses(): ForeignPropertyExpenses {
+  return {
+    premisesRunningCosts: null, repairsAndMaintenance: null, financialCosts: null,
+    professionalFees: null, costOfServices: null, travelCosts: null,
+    other: null, consolidatedExpenses: null,
+  };
+}
+
+/**
+ * Sums the positive income fields for a foreign property source.
+ * Excludes tax deductions (`foreignTaxPaidOrDeducted`, `specialWithholdingTaxOrUkTaxPaid`).
+ * @param income - The foreign property income fields.
+ */
+export function totalForeignPropIncome(income: ForeignPropertyIncome): number {
+  return [income.rentIncome, income.premiumsOfLeaseGrant, income.otherPropertyIncome]
+    .reduce<number>((sum, v) => sum + (v ?? 0), 0);
+}
+
+/**
+ * Sums all expense fields for a foreign property source.
+ * Uses `consolidatedExpenses` if set; otherwise sums the individual fields.
+ * @param expenses - The foreign property expense fields.
+ */
+export function totalForeignPropExpenses(expenses: ForeignPropertyExpenses): number {
+  if (expenses.consolidatedExpenses !== null) return expenses.consolidatedExpenses;
+  return [
+    expenses.premisesRunningCosts, expenses.repairsAndMaintenance, expenses.financialCosts,
+    expenses.professionalFees, expenses.costOfServices, expenses.travelCosts, expenses.other,
   ].reduce<number>((sum, v) => sum + (v ?? 0), 0);
 }

@@ -208,6 +208,65 @@
           </div>
         </div>
       }
+
+      <!-- Foreign Property expenses -->
+      @if (draft.businessType === 'foreign-property') {
+        <p class="modal-hint">
+          Enter each expense category for the period.
+          Or use <strong>Consolidated expenses</strong> for a single total.
+        </p>
+
+        <div class="expense-grid">
+          <div class="expense-row expense-row--header" aria-hidden="true">
+            <span>Category</span>
+            <span>Amount (£)</span>
+          </div>
+
+          @for (row of foreignPropExpenseRows; track row.field) {
+            <div class="expense-row">
+              <label
+                class="expense-label"
+                [for]="'fp-exp-' + row.field + '-' + draftKey(draft)"
+              >
+                {{ row.label }}
+              </label>
+              <input
+                class="expense-input"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                [id]="'fp-exp-' + row.field + '-' + draftKey(draft)"
+                [value]="draft.foreignPropExpenses[row.field] ?? ''"
+                (input)="onForeignPropExpenseInput(draftKey(draft), row.field, $event)"
+              />
+            </div>
+          }
+
+          <div class="expense-divider">
+            <span>Or use a consolidated total</span>
+          </div>
+
+          <div class="expense-row">
+            <label
+              class="expense-label"
+              [for]="'fp-consolidated-' + draftKey(draft)"
+            >
+              Consolidated expenses
+            </label>
+            <input
+              class="expense-input"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              [id]="'fp-consolidated-' + draftKey(draft)"
+              [value]="draft.foreignPropExpenses.consolidatedExpenses ?? ''"
+              (input)="onForeignPropExpenseInput(draftKey(draft), 'consolidatedExpenses', $event)"
+            />
+          </div>
+        </div>
+      }
     </div>
 
     <!-- Footer -->
