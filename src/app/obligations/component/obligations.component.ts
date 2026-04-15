@@ -33,4 +33,23 @@ export class ObligationsComponent implements OnInit {
   protected daysUntilDue(dueDate: string): number {
     return Math.ceil((new Date(dueDate).getTime() - Date.now()) / 86_400_000);
   }
+
+  /**
+   * Returns a human-readable label for an income source type.
+   * @param typeOfBusiness - The raw `typeOfBusiness` string from the obligations API.
+   */
+  protected sourceLabel(typeOfBusiness: string): string {
+    switch (typeOfBusiness) {
+      case 'self-employment': return 'Self Employment';
+      case 'uk-property': return 'UK Property';
+      case 'foreign-property': return 'Foreign Property';
+      case 'ITSA': return 'Annual Return';
+      default: return typeOfBusiness;
+    }
+  }
+
+  /** Loads synthetic test obligations for UI development without authentication. */
+  protected onLoadTestData(): void {
+    this.store.seedTestObligations();
+  }
 }

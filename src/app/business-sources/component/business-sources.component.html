@@ -10,9 +10,14 @@
   } @else if (store.hasError()) {
     <p class="status status--error" role="alert">{{ store.error() }}</p>
   } @else if (store.businesses() === null) {
-    <p class="status status--empty">Sign in and set your NINO on the Auth tab to load business sources.</p>
-  } @else if (store.isEmpty()) {
     <div class="empty-state">
+      <p class="status status--empty">Sign in and set your NINO on the Auth tab to load business sources.</p>
+      <button class="btn btn--outline seed-btn" type="button" (click)="onLoadTestData()">
+        Load test data
+      </button>
+    </div>
+  } @else if (store.isEmpty()) {
+    <div class="empty-state empty-state--card">
       <p>No business income sources found for this NINO.</p>
       <p class="hint">
         Business sources must be registered through

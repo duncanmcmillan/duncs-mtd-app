@@ -23,4 +23,9 @@ export class BusinessSourcesComponent implements OnInit {
   ngOnInit(): void {
     void this.store.loadBusinessSources();
   }
+
+  /** Loads synthetic business sources for UI development without authentication. */
+  protected onLoadTestData(): void {
+    this.store.seedTestSources();
+  }
 }

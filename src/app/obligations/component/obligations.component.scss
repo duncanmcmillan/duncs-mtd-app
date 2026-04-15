@@ -32,6 +32,76 @@
   &--error { color: var(--color-error); }
 }
 
+/* ── Empty state ─────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &--outline {
+    background: transparent;
+    color: var(--neutral-500);
+    border: 1px solid var(--neutral-300);
+
+    &:hover {
+      border-color: var(--neutral-400);
+      color: var(--neutral-600);
+    }
+  }
+}
+
+.seed-btn {
+  opacity: 0.7;
+}
+
+/* ── Source badges ──────────────────────────── */
+
+.cell-source {
+  white-space: nowrap;
+}
+
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  &--self-employment {
+    background: #e0f2fe;
+    color: #075985;
+  }
+
+  &--uk-property {
+    background: #ede9fe;
+    color: #5b21b6;
+  }
+
+  &--foreign-property {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  &--ITSA {
+    background: var(--neutral-100);
+    color: var(--neutral-600);
+  }
+}
+
 /* ── Table ──────────────────────────────────── */
 
 .obligations-table {

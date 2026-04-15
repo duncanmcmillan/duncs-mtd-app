@@ -5,7 +5,7 @@ import { computed, inject } from '@angular/core';
 import { signalStore, withState, withComputed, withMethods, patchState } from '@ngrx/signals';
 import { BusinessSourcesService } from '../service/business-sources.service';
 import { BusinessSourcesState } from '../model/business-sources.model';
-import { AppStore, extractErrorMessage } from '../../core';
+import { AppStore, BusinessSourceItem, extractErrorMessage } from '../../core';
 
 const initialState: BusinessSourcesState = {
   isLoading: false,
@@ -43,6 +43,19 @@ export const BusinessSourcesStore = signalStore(
           isLoading: false,
         });
       }
+    },
+
+    /**
+     * Loads synthetic business sources covering all three income source types,
+     * for UI development without authentication.
+     */
+    seedTestSources(): void {
+      const businesses: BusinessSourceItem[] = [
+        { businessId: 'test-biz-se', typeOfBusiness: 'self-employment', tradingName: 'Acme Consulting' },
+        { businessId: 'test-biz-prop', typeOfBusiness: 'uk-property' },
+        { businessId: 'test-biz-fp', typeOfBusiness: 'foreign-property' },
+      ];
+      patchState(store, { businesses, error: null });
     },
   }))
 );

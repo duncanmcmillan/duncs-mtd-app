@@ -63,7 +63,7 @@ Feature tabs that display **multiple items** (e.g. one per period, obligation, o
   - `submitting` → `#f59e0b` (amber)
 - Active tab: white background + subtle drop shadow; no override of status border colour.
 - Use `linkedSignal` in the component to auto-select the first item; `selectTab(key)` allows user override.
-- Only the selected item's content is rendered via `@if (selectedDraft(); as draft)`.
+- Only the selected item's content is rendered via `@if (selectedItem(); as item)`.
 - Reference implementation: `src/app/quarterly/component/quarterly.component`.
 
 ## Test data / seed pattern

@@ -16,14 +16,20 @@
     <table class="obligations-table" aria-label="HMRC reporting obligations">
       <thead>
         <tr>
+          <th scope="col">Source</th>
           <th scope="col">Period</th>
           <th scope="col">Due date</th>
           <th scope="col">Status</th>
         </tr>
       </thead>
       <tbody>
-        @for (row of store.obligationRows(); track row.periodStartDate + (row.businessId ?? '')) {
+        @for (row of store.obligationRows(); track row.periodStartDate + (row.businessId ?? '') + row.typeOfBusiness) {
           <tr>
+            <td class="cell-source">
+              <span class="source-badge source-badge--{{ row.typeOfBusiness }}">
+                {{ sourceLabel(row.typeOfBusiness) }}
+              </span>
+            </td>
             <td class="cell-period">
               {{ row.periodStartDate | date:'d MMM yyyy' }}&nbsp;–&nbsp;{{ row.periodEndDate | date:'d MMM yyyy' }}
             </td>
@@ -58,6 +64,11 @@
   }
 
   @if (!store.isLoading() && !store.hasError() && !store.rawResponse()) {
-    <p class="status">Not authenticated — sign in to load obligations.</p>
+    <div class="empty-state">
+      <p class="status">Not authenticated — sign in to load obligations.</p>
+      <button class="btn btn--outline seed-btn" type="button" (click)="onLoadTestData()">
+        Load test data
+      </button>
+    </div>
   }
 </div>
