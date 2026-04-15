@@ -1,9 +1,67 @@
 <div class="quarterly-view">
 
-  <!-- Page header -->
+  <!-- Page header — title left, period + source navs right -->
   <header class="view-header">
-    <span class="view-label">MTD ITSA · Quarterly updates</span>
-    <h1 class="view-title">Quarterly Update</h1>
+    <div class="view-header-left">
+      <span class="view-label">MTD ITSA · Quarterly updates</span>
+      <h1 class="view-title">Quarterly Update</h1>
+    </div>
+
+    <div class="view-header-right">
+      <!-- Level 1: Period selector -->
+      @if (periodList().length > 0) {
+        <nav class="period-nav" role="tablist" aria-label="Quarterly periods">
+          @for (period of periodList(); track period.startDate) {
+            <button
+              class="period-nav-btn"
+              [class.period-nav-btn--active]="selectedPeriod() === period.startDate"
+              role="tab"
+              type="button"
+              [attr.aria-selected]="selectedPeriod() === period.startDate"
+              (click)="selectPeriod(period.startDate)"
+            >
+              {{ period.startDate | date:'MMM' }}–{{ period.endDate | date:'MMM yyyy' }}
+            </button>
+          }
+        </nav>
+      }
+
+      <!-- Level 2: Income-source tabs for selected period -->
+      @if (periodDrafts().length > 0) {
+        <nav class="source-tabs" role="tablist" aria-label="Income sources">
+          @for (draft of periodDrafts(); track keyFor(draft)) {
+            <button
+              class="source-tab"
+              [class.source-tab--active]="selectedKey() === keyFor(draft)"
+              [class.source-tab--submitted]="draft.status === 'submitted'"
+              [class.source-tab--error]="draft.status === 'error'"
+              [class.source-tab--submitting]="draft.status === 'submitting'"
+              role="tab"
+              type="button"
+              [attr.aria-selected]="selectedKey() === keyFor(draft)"
+              [attr.aria-controls]="'panel-' + keyFor(draft)"
+              (click)="selectTab(keyFor(draft))"
+            >
+              <span class="source-tab-type">
+                @if (draft.businessType === 'self-employment') { Self Employment }
+                @else if (draft.businessType === 'foreign-property') { Foreign Property }
+                @else { UK Property }
+              </span>
+              <span class="source-tab-name">{{ draft.businessName }}</span>
+              <span class="tab-status-row">
+                <span class="tab-status-dot" aria-hidden="true"></span>
+                <span class="tab-status-label">
+                  @if (draft.status === 'submitted') { Submitted }
+                  @else if (draft.status === 'submitting') { Submitting… }
+                  @else if (draft.status === 'error') { Error }
+                  @else { In Draft }
+                </span>
+              </span>
+            </button>
+          }
+        </nav>
+      }
+    </div>
   </header>
 
   <!-- Global loading state -->
@@ -24,60 +82,6 @@
         Load test data
       </button>
     </div>
-  }
-
-  <!-- ── Level 1: Period selector ─────────────────────────────────────────── -->
-  @if (periodList().length > 0) {
-    <nav class="period-nav" role="tablist" aria-label="Quarterly periods">
-      @for (period of periodList(); track period.startDate) {
-        <button
-          class="period-nav-btn"
-          [class.period-nav-btn--active]="selectedPeriod() === period.startDate"
-          role="tab"
-          type="button"
-          [attr.aria-selected]="selectedPeriod() === period.startDate"
-          (click)="selectPeriod(period.startDate)"
-        >
-          {{ period.startDate | date:'MMM' }}–{{ period.endDate | date:'MMM yyyy' }}
-        </button>
-      }
-    </nav>
-  }
-
-  <!-- ── Level 2: Income-source tabs for selected period ───────────────────── -->
-  @if (periodDrafts().length > 0) {
-    <nav class="source-tabs" role="tablist" aria-label="Income sources">
-      @for (draft of periodDrafts(); track keyFor(draft)) {
-        <button
-          class="source-tab"
-          [class.source-tab--active]="selectedKey() === keyFor(draft)"
-          [class.source-tab--submitted]="draft.status === 'submitted'"
-          [class.source-tab--error]="draft.status === 'error'"
-          [class.source-tab--submitting]="draft.status === 'submitting'"
-          role="tab"
-          type="button"
-          [attr.aria-selected]="selectedKey() === keyFor(draft)"
-          [attr.aria-controls]="'panel-' + keyFor(draft)"
-          (click)="selectTab(keyFor(draft))"
-        >
-          <span class="source-tab-type">
-            @if (draft.businessType === 'self-employment') { Self Employment }
-            @else if (draft.businessType === 'foreign-property') { Foreign Property }
-            @else { UK Property }
-          </span>
-          <span class="source-tab-name">{{ draft.businessName }}</span>
-          <span class="tab-status-row">
-            <span class="tab-status-dot" aria-hidden="true"></span>
-            <span class="tab-status-label">
-              @if (draft.status === 'submitted') { Submitted }
-              @else if (draft.status === 'submitting') { Submitting… }
-              @else if (draft.status === 'error') { Error }
-              @else { In Draft }
-            </span>
-          </span>
-        </button>
-      }
-    </nav>
   }
 
   <!-- ── Active period panel ────────────────────────────────────────────────── -->
