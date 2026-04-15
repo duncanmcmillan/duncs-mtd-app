@@ -49,16 +49,51 @@
   opacity: 0.7;
 }
 
-/* ── Period sub-tabs ───────────────────────────────────────────────────────── */
+/* ── Period selector (level 1) ─────────────────────────────────────────────── */
 
-.period-tabs {
+.period-nav {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.period-nav-btn {
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: var(--font-body);
+  color: var(--neutral-500);
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+
+  &:hover:not(.period-nav-btn--active) {
+    color: var(--neutral-700);
+    background: var(--neutral-50);
+  }
+
+  &--active {
+    color: var(--neutral-800);
+    font-weight: 500;
+    border-bottom-color: var(--orange-500);
+  }
+}
+
+/* ── Income-source tabs (level 2) ──────────────────────────────────────────── */
+
+.source-tabs {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
 
-.period-tab {
+.source-tab {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -73,7 +108,7 @@
   min-width: 150px;
   transition: background 0.15s, box-shadow 0.15s;
 
-  &:hover:not(.period-tab--active) {
+  &:hover:not(.source-tab--active) {
     background: var(--neutral-100);
   }
 
@@ -101,16 +136,18 @@
   }
 }
 
-.tab-period {
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--neutral-700);
+.source-tab-type {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--neutral-500);
 }
 
-.tab-business {
-  font-size: 11px;
-  font-weight: 300;
-  color: var(--neutral-400);
+.source-tab-name {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--neutral-700);
 }
 
 .tab-status-row {

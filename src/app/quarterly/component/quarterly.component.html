@@ -26,26 +26,46 @@
     </div>
   }
 
-  <!-- ── Period sub-tab bar ─────────────────────────────────────────────────── -->
-  @if (store.draftList().length > 0) {
-    <nav class="period-tabs" role="tablist" aria-label="Quarterly periods">
-      @for (draft of store.draftList(); track keyFor(draft)) {
+  <!-- ── Level 1: Period selector ─────────────────────────────────────────── -->
+  @if (periodList().length > 0) {
+    <nav class="period-nav" role="tablist" aria-label="Quarterly periods">
+      @for (period of periodList(); track period.startDate) {
         <button
-          class="period-tab"
-          [class.period-tab--active]="selectedKey() === keyFor(draft)"
-          [class.period-tab--submitted]="draft.status === 'submitted'"
-          [class.period-tab--error]="draft.status === 'error'"
-          [class.period-tab--submitting]="draft.status === 'submitting'"
+          class="period-nav-btn"
+          [class.period-nav-btn--active]="selectedPeriod() === period.startDate"
+          role="tab"
+          type="button"
+          [attr.aria-selected]="selectedPeriod() === period.startDate"
+          (click)="selectPeriod(period.startDate)"
+        >
+          {{ period.startDate | date:'MMM' }}–{{ period.endDate | date:'MMM yyyy' }}
+        </button>
+      }
+    </nav>
+  }
+
+  <!-- ── Level 2: Income-source tabs for selected period ───────────────────── -->
+  @if (periodDrafts().length > 0) {
+    <nav class="source-tabs" role="tablist" aria-label="Income sources">
+      @for (draft of periodDrafts(); track keyFor(draft)) {
+        <button
+          class="source-tab"
+          [class.source-tab--active]="selectedKey() === keyFor(draft)"
+          [class.source-tab--submitted]="draft.status === 'submitted'"
+          [class.source-tab--error]="draft.status === 'error'"
+          [class.source-tab--submitting]="draft.status === 'submitting'"
           role="tab"
           type="button"
           [attr.aria-selected]="selectedKey() === keyFor(draft)"
           [attr.aria-controls]="'panel-' + keyFor(draft)"
           (click)="selectTab(keyFor(draft))"
         >
-          <span class="tab-period">
-            {{ draft.periodStartDate | date:'MMM' }}–{{ draft.periodEndDate | date:'MMM yyyy' }}
+          <span class="source-tab-type">
+            @if (draft.businessType === 'self-employment') { Self Employment }
+            @else if (draft.businessType === 'foreign-property') { Foreign Property }
+            @else { UK Property }
           </span>
-          <span class="tab-business">{{ draft.businessName }}</span>
+          <span class="source-tab-name">{{ draft.businessName }}</span>
           <span class="tab-status-row">
             <span class="tab-status-dot" aria-hidden="true"></span>
             <span class="tab-status-label">

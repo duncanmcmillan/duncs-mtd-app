@@ -21,6 +21,16 @@ import {
   totalSEIncome,
 } from '../model/quarterly.model';
 
+/** A unique reporting period derived from the draft list. */
+interface PeriodEntry {
+  /** ISO period start date. */
+  startDate: string;
+  /** ISO period end date. */
+  endDate: string;
+  /** ISO due date for submissions in this period. */
+  dueDate: string;
+}
+
 /**
  * Main view for the Quarterly Update tab.
  * Initialises drafts from open obligations on mount and renders a workflow
@@ -37,13 +47,42 @@ export class QuarterlyComponent implements OnInit {
   /** @internal */
   protected readonly store = inject(QuarterlyStore);
 
+  /** Unique reporting periods derived from the draft list, sorted ascending. */
+  protected readonly periodList = computed((): PeriodEntry[] => {
+    const seen = new Set<string>();
+    const periods: PeriodEntry[] = [];
+    for (const draft of this.store.draftList()) {
+      if (!seen.has(draft.periodStartDate)) {
+        seen.add(draft.periodStartDate);
+        periods.push({ startDate: draft.periodStartDate, endDate: draft.periodEndDate, dueDate: draft.dueDate });
+      }
+    }
+    return periods;
+  });
+
   /**
-   * Tracks which period tab is selected; automatically selects the first draft
-   * whenever the draft list changes (e.g. after init or seedTestDrafts).
+   * The currently selected period start date; auto-selects the first period
+   * whenever the period list changes (e.g. after init or seedTestDrafts).
    */
-  protected readonly selectedKey = linkedSignal(() => {
-    const list = this.store.draftList();
-    return list.length > 0 ? draftKey(list[0].businessId, list[0].periodStartDate) : null;
+  protected readonly selectedPeriod = linkedSignal<string | null>(() => {
+    const list = this.periodList();
+    return list.length > 0 ? list[0].startDate : null;
+  });
+
+  /** All drafts for the currently selected period, in draftList order. */
+  protected readonly periodDrafts = computed((): QuarterlyDraft[] => {
+    const period = this.selectedPeriod();
+    if (!period) return [];
+    return this.store.draftList().filter(d => d.periodStartDate === period);
+  });
+
+  /**
+   * The currently selected income-source key within the active period;
+   * auto-resets to the first source whenever the active period changes.
+   */
+  protected readonly selectedKey = linkedSignal<string | null>(() => {
+    const drafts = this.periodDrafts();
+    return drafts.length > 0 ? draftKey(drafts[0].businessId, drafts[0].periodStartDate) : null;
   });
 
   /** The currently selected draft, or `null` when no drafts are loaded. */
@@ -60,7 +99,15 @@ export class QuarterlyComponent implements OnInit {
   // ─── Tab navigation ────────────────────────────────────────────────────────
 
   /**
-   * Selects the given period tab.
+   * Selects the given period (top-level nav).
+   * @param startDate - ISO period start date.
+   */
+  protected selectPeriod(startDate: string): void {
+    this.selectedPeriod.set(startDate);
+  }
+
+  /**
+   * Selects the given income-source tab within the active period.
    * @param key - Draft key from {@link draftKey}.
    */
   protected selectTab(key: string): void {

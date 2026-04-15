@@ -300,12 +300,13 @@ export const QuarterlyStore = signalStore(
          * draft with realistic figures so the full UI can be exercised in browser mode.
          */
         seedTestDrafts(): void {
-          const seKey = draftKey('test-biz-se', '2024-04-06');
-          const propKey = draftKey('test-biz-prop', '2024-04-06');
-          const fpKey = draftKey('test-biz-fp', '2024-04-06');
+          // ── Q1: Apr 6 – Jul 5 2024 ──────────────────────────────────────
+          const seQ1Key   = draftKey('test-biz-se',   '2024-04-06');
+          const propQ1Key = draftKey('test-biz-prop', '2024-04-06');
+          const fpQ1Key   = draftKey('test-biz-fp',   '2024-04-06');
 
-          const seDraft: QuarterlyDraft = {
-            businessId: 'test-biz-se', businessName: 'Test Shop (seed)',
+          const seQ1Draft: QuarterlyDraft = {
+            businessId: 'test-biz-se', businessName: 'Test Shop',
             businessType: 'self-employment',
             periodStartDate: '2024-04-06', periodEndDate: '2024-07-05',
             dueDate: '2024-08-07', taxYear: '2024-25',
@@ -317,8 +318,8 @@ export const QuarterlyStore = signalStore(
             confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
           };
 
-          const propDraft: QuarterlyDraft = {
-            businessId: 'test-biz-prop', businessName: 'UK Rental Property (seed)',
+          const propQ1Draft: QuarterlyDraft = {
+            businessId: 'test-biz-prop', businessName: 'UK Rental Property',
             businessType: 'uk-property',
             periodStartDate: '2024-04-06', periodEndDate: '2024-07-05',
             dueDate: '2024-08-07', taxYear: '2024-25',
@@ -329,8 +330,8 @@ export const QuarterlyStore = signalStore(
             confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
           };
 
-          const fpDraft: QuarterlyDraft = {
-            businessId: 'test-biz-fp', businessName: 'French Apartment (seed)',
+          const fpQ1Draft: QuarterlyDraft = {
+            businessId: 'test-biz-fp', businessName: 'French Apartment',
             businessType: 'foreign-property',
             periodStartDate: '2024-04-06', periodEndDate: '2024-07-05',
             dueDate: '2024-08-07', taxYear: '2024-25',
@@ -345,8 +346,57 @@ export const QuarterlyStore = signalStore(
             confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
           };
 
+          // ── Q2: Jul 6 – Oct 5 2024 ──────────────────────────────────────
+          const seQ2Key   = draftKey('test-biz-se',   '2024-07-06');
+          const propQ2Key = draftKey('test-biz-prop', '2024-07-06');
+          const fpQ2Key   = draftKey('test-biz-fp',   '2024-07-06');
+
+          const seQ2Draft: QuarterlyDraft = {
+            businessId: 'test-biz-se', businessName: 'Test Shop',
+            businessType: 'self-employment',
+            periodStartDate: '2024-07-06', periodEndDate: '2024-10-05',
+            dueDate: '2024-11-07', taxYear: '2024-25',
+            seIncome: { turnover: 21300, other: null },
+            seExpenses: { ...emptySEExpenses(), costOfGoods: 4100, wagesAndStaffCosts: 1500, adminCosts: 310 },
+            seDisallowableExpenses: emptySEDisallowable(),
+            propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+            foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
+            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
+          };
+
+          const propQ2Draft: QuarterlyDraft = {
+            businessId: 'test-biz-prop', businessName: 'UK Rental Property',
+            businessType: 'uk-property',
+            periodStartDate: '2024-07-06', periodEndDate: '2024-10-05',
+            dueDate: '2024-11-07', taxYear: '2024-25',
+            seIncome: emptySEIncome(), seExpenses: emptySEExpenses(), seDisallowableExpenses: emptySEDisallowable(),
+            propIncome: { rentAmount: 4800, rentTaxDeducted: null, premiumsOfLeaseGrant: null, reversePremiums: null, otherIncome: null },
+            propExpenses: { ...emptyPropExpenses(), premisesRunningCosts: 350, repairsAndMaintenance: 85 },
+            foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
+            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
+          };
+
+          const fpQ2Draft: QuarterlyDraft = {
+            businessId: 'test-biz-fp', businessName: 'French Apartment',
+            businessType: 'foreign-property',
+            periodStartDate: '2024-07-06', periodEndDate: '2024-10-05',
+            dueDate: '2024-11-07', taxYear: '2024-25',
+            seIncome: emptySEIncome(), seExpenses: emptySEExpenses(), seDisallowableExpenses: emptySEDisallowable(),
+            propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+            foreignPropIncome: {
+              countryCode: 'FRA', rentIncome: 3200, foreignTaxCreditRelief: false,
+              premiumsOfLeaseGrant: null, otherPropertyIncome: null,
+              foreignTaxPaidOrDeducted: 195, specialWithholdingTaxOrUkTaxPaid: null,
+            },
+            foreignPropExpenses: { ...emptyForeignPropExpenses(), premisesRunningCosts: 280, repairsAndMaintenance: 110 },
+            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
+          };
+
           patchState(store, {
-            drafts: { [seKey]: seDraft, [propKey]: propDraft, [fpKey]: fpDraft },
+            drafts: {
+              [seQ1Key]: seQ1Draft, [propQ1Key]: propQ1Draft, [fpQ1Key]: fpQ1Draft,
+              [seQ2Key]: seQ2Draft, [propQ2Key]: propQ2Draft, [fpQ2Key]: fpQ2Draft,
+            },
             error: null,
           });
         },
