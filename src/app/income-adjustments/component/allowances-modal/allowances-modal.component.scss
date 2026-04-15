@@ -87,7 +87,7 @@
 .expense-row {
   display: grid;
   grid-template-columns: 1fr 160px;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   padding: 6px 0;
 
@@ -106,6 +106,14 @@
   font-size: 13px;
   font-weight: 300;
   color: var(--neutral-600);
+}
+
+.field-note {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--neutral-400);
+  margin: 2px 0 0;
+  line-height: 1.4;
 }
 
 .expense-input {

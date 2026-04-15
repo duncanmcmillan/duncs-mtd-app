@@ -38,9 +38,14 @@
 
         @for (row of rows; track row.field) {
           <div class="expense-row">
-            <label class="expense-label" [for]="'allow-' + row.field">
-              {{ row.label }}
-            </label>
+            <div>
+              <label class="expense-label" [for]="'allow-' + row.field">
+                {{ row.label }}
+              </label>
+              @if (row.note) {
+                <p class="field-note">{{ row.note }}</p>
+              }
+            </div>
             <input
               class="expense-input"
               type="number"

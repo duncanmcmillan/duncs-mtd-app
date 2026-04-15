@@ -1,6 +1,7 @@
 /**
  * @fileoverview Domain model for the Income & Adjustments feature.
  * Covers three HMRC MTD annual submission types: Allowances, Adjustments, and Dividends.
+ * Field names match the HMRC API payload properties exactly.
  */
 
 /** The three top-level sections within the Income & Adjustments tab. */
@@ -8,8 +9,9 @@ export type IncomeAdjustmentsSection = 'allowances' | 'adjustments' | 'dividends
 
 /**
  * Allowance declarations for a single income source in a given tax year.
- * Submitted via the Self Employment Annual Submission (SE) or
- * Property Annual Submission (UK/Foreign Property) APIs.
+ * SE fields: Self Employment Business Annual Submission API (v3+).
+ * Property fields: Property Business Annual Submission API (v4+).
+ * Fields not applicable to a source type should be left `undefined`.
  */
 export interface AllowanceEntry {
   /** HMRC business identifier. */
@@ -18,21 +20,48 @@ export interface AllowanceEntry {
   typeOfBusiness: 'self-employment' | 'uk-property' | 'foreign-property';
   /** Tax year string, e.g. `'2024-25'`. */
   taxYear: string;
-  /** Annual Investment Allowance (£). */
+
+  // ── Common ───────────────────────────────────────────────────────────────
+  /** Annual Investment Allowance on equipment purchases (excluding cars). */
   annualInvestmentAllowance?: number;
-  /** Capital Allowance — Main Pool (£). Self-employment only. */
-  capitalAllowanceMainPool?: number;
-  /** Trading Income Allowance (£). Self-employment only. */
-  tradingIncomeAllowance?: number;
-  /** Property Income Allowance (£). Property only. */
-  propertyIncomeAllowance?: number;
-  /** Other Capital Allowance (£). Property only. */
+  /** Zero emissions car allowance. SE, UK Property, Foreign Property. */
+  zeroEmissionsCarAllowance?: number;
+  /** Other capital allowances not captured by more specific fields. Property only. */
   otherCapitalAllowance?: number;
+  /** Tax exemption for property or land income (capped at £1,000). Property only. */
+  propertyIncomeAllowance?: number;
+  /** Business Premises Renovation Allowance for unused business premises. SE & UK Property. */
+  businessPremisesRenovationAllowance?: number;
+  /** Cost of replacing domestic items (formerly Wear and Tear). UK & Foreign Non-FHL Property. */
+  costOfReplacingDomesticItems?: number;
+  /** Expenditure on electric vehicle charge-point equipment. UK Property. */
+  electricChargePointAllowance?: number;
+  /** Zero emissions goods vehicle allowance. UK Non-FHL & Foreign Non-FHL Property. */
+  zeroEmissionsGoodsVehicleAllowance?: number;
+
+  // ── Self-employment only ─────────────────────────────────────────────────
+  /** Capital allowances on equipment including lower-CO2 cars (main pool). SE only. */
+  capitalAllowanceMainPool?: number;
+  /** Capital allowances at special rate (higher-CO2 / integral building features). SE only. */
+  capitalAllowanceSpecialRatePool?: number;
+  /** Capital allowances for single-asset pools. SE only. */
+  capitalAllowanceSingleAssetPool?: number;
+  /** Other enhanced capital allowances. SE only. */
+  enhancedCapitalAllowance?: number;
+  /** Allowances on sale or cessation of business use (write-off). SE only. */
+  allowanceOnSales?: number;
+  /**
+   * Trading Income Allowance (mutually exclusive with all other allowances).
+   * SE only.
+   */
+  tradingIncomeAllowance?: number;
 }
 
 /**
- * Adjustment declarations for a single income source in a given tax year.
- * Submitted via the Business Source Adjustable Summary (BSAS) API.
+ * Annual adjustment declarations for a single income source in a given tax year.
+ * SE fields: Self Employment Business Annual Submission API `adjustments` object.
+ * Property fields: Property Business Annual Submission API `adjustments` object.
+ * The `calculationId` is used separately for triggering BSAS via the BSAS API.
  */
 export interface AdjustmentEntry {
   /** HMRC business identifier. */
@@ -41,18 +70,51 @@ export interface AdjustmentEntry {
   typeOfBusiness: 'self-employment' | 'uk-property' | 'foreign-property';
   /** Tax year string, e.g. `'2024-25'`. */
   taxYear: string;
-  /** Calculation ID required to trigger and submit the BSAS. */
+  /** Calculation ID used to trigger and submit the BSAS (required for BSAS API calls). */
   calculationId?: string;
-  /** Included non-taxable profits (£). Self-employment only. */
+
+  // ── Self-employment adjustments ─────────────────────────────────────────
+  /** Income included in business figures that is not taxable as business profit. SE only. */
   includedNonTaxableProfits?: number;
-  /** Basis adjustment (£). Self-employment only. */
+  /** Modification for differences between basis period and accounting period (can be negative). SE only. */
   basisAdjustment?: number;
-  /** Overlap relief used (£). Self-employment only. */
+  /** Overlap relief used this year. SE only. */
   overlapReliefUsed?: number;
-  /** Private use adjustment (£). Property only. */
+  /** Adjustment for change of accounting practice. SE only. */
+  accountingAdjustment?: number;
+  /** Averaging adjustment (farmers, market gardeners, literary/artistic creators only). SE only. */
+  averagingAdjustment?: number;
+  /** Other business income not included elsewhere. SE only. */
+  outstandingBusinessIncome?: number;
+  /** Gain on disposal of asset where Business Premises Renovation Allowance applies. SE only. */
+  balancingChargeBpra?: number;
+  /** Balancing charge on sale or cessation of business use (non-BPRA). SE only. */
+  balancingChargeOther?: number;
+  /** Normal sale price of goods or stock taken out of the business for personal use. SE only. */
+  goodsAndServicesOwnUse?: number;
+  /** Transition profit arising in the current tax year (basis period reform). SE only. */
+  transitionProfitAmount?: number;
+  /** Additional elected transition profit brought forward. SE only. */
+  transitionProfitAccelerationAmount?: number;
+
+  // ── Property adjustments (numeric) ──────────────────────────────────────
+  /** Adjustments that are not solely for the property business. Property only. */
   privateUseAdjustment?: number;
-  /** Balancing charge (£). Property only. */
+  /** Recovery charge when a capital-allowance asset is sold or leaves use. Property only. */
   balancingCharge?: number;
+  /** Income from sale of BPRA-renovated premises within 7 years. Property only. */
+  businessPremisesRenovationAllowanceBalancingCharges?: number;
+
+  // ── Property adjustment flags (boolean) ─────────────────────────────────
+  /** Non-resident landlord status. Property only. */
+  nonResidentLandlord?: boolean;
+  /**
+   * Property didn't qualify for FHL this year but qualified last year
+   * (period-of-grace election). FHL property only.
+   */
+  periodOfGraceAdjustment?: boolean;
+  /** Rent A Room income is jointly let with another person. Property only. */
+  rentARoomJointlyLet?: boolean;
 }
 
 /** A single foreign dividend item within a {@link DividendEntry}. */

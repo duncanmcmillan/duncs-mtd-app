@@ -123,6 +123,59 @@
   color: var(--neutral-600);
 }
 
+.field-note {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--neutral-400);
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+/* ── Elections & Status Flags (boolean checkboxes) ──────────────────── */
+
+.flag-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.flag-section-title {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--neutral-400);
+  margin: 0 0 8px;
+}
+
+.flag-row {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--neutral-100);
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.flag-check {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--orange-500);
+}
+
+.flag-label {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--neutral-600);
+}
+
 .expense-input {
   width: 100%;
   padding: 6px 10px;

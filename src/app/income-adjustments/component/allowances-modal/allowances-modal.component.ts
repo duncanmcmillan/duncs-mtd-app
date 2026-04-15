@@ -1,6 +1,6 @@
 /**
  * @fileoverview Modal component for editing annual allowances per income source.
- * Renders fields appropriate to the active source type (SE vs property).
+ * Renders fields appropriate to the active source type (SE, UK Property, Foreign Property).
  */
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { IncomeAdjustmentsStore } from '../../store/income-adjustments.store';
@@ -12,18 +12,52 @@ interface AllowanceRow {
   field: keyof AllowanceEntry;
   /** Human-readable label. */
   label: string;
+  /** Optional note shown below the label (e.g. mutual-exclusivity warning). */
+  note?: string;
 }
 
 const SE_ALLOWANCE_ROWS: AllowanceRow[] = [
   { field: 'annualInvestmentAllowance', label: 'Annual Investment Allowance' },
   { field: 'capitalAllowanceMainPool', label: 'Capital Allowance — Main Pool' },
-  { field: 'tradingIncomeAllowance', label: 'Trading Income Allowance' },
+  { field: 'capitalAllowanceSpecialRatePool', label: 'Capital Allowance — Special Rate Pool' },
+  { field: 'capitalAllowanceSingleAssetPool', label: 'Capital Allowance — Single Asset Pool' },
+  { field: 'enhancedCapitalAllowance', label: 'Enhanced Capital Allowance' },
+  { field: 'allowanceOnSales', label: 'Allowance on Sales' },
+  { field: 'zeroEmissionsCarAllowance', label: 'Zero Emissions Car Allowance' },
+  { field: 'businessPremisesRenovationAllowance', label: 'Business Premises Renovation Allowance' },
+  {
+    field: 'tradingIncomeAllowance',
+    label: 'Trading Income Allowance',
+    note: 'Mutually exclusive with all other allowances above',
+  },
 ];
 
-const PROP_ALLOWANCE_ROWS: AllowanceRow[] = [
+const UK_PROP_ALLOWANCE_ROWS: AllowanceRow[] = [
   { field: 'annualInvestmentAllowance', label: 'Annual Investment Allowance' },
-  { field: 'propertyIncomeAllowance', label: 'Property Income Allowance' },
+  { field: 'electricChargePointAllowance', label: 'Electric Charge Point Allowance' },
+  { field: 'zeroEmissionsGoodsVehicleAllowance', label: 'Zero Emissions Goods Vehicle Allowance' },
+  { field: 'zeroEmissionsCarAllowance', label: 'Zero Emissions Car Allowance' },
+  { field: 'businessPremisesRenovationAllowance', label: 'Business Premises Renovation Allowance' },
   { field: 'otherCapitalAllowance', label: 'Other Capital Allowance' },
+  { field: 'costOfReplacingDomesticItems', label: 'Cost of Replacing Domestic Items' },
+  {
+    field: 'propertyIncomeAllowance',
+    label: 'Property Income Allowance',
+    note: 'Mutually exclusive with most deductible expenses (capped at £1,000)',
+  },
+];
+
+const FP_ALLOWANCE_ROWS: AllowanceRow[] = [
+  { field: 'annualInvestmentAllowance', label: 'Annual Investment Allowance' },
+  { field: 'zeroEmissionsGoodsVehicleAllowance', label: 'Zero Emissions Goods Vehicle Allowance' },
+  { field: 'zeroEmissionsCarAllowance', label: 'Zero Emissions Car Allowance' },
+  { field: 'otherCapitalAllowance', label: 'Other Capital Allowance' },
+  { field: 'costOfReplacingDomesticItems', label: 'Cost of Replacing Domestic Items' },
+  {
+    field: 'propertyIncomeAllowance',
+    label: 'Property Income Allowance',
+    note: 'Mutually exclusive with most deductible expenses (capped at £1,000)',
+  },
 ];
 
 /**
@@ -44,7 +78,12 @@ export class AllowancesModalComponent {
   protected get rows(): AllowanceRow[] {
     const entry = this.store.activeAllowancesEntry();
     if (!entry) return [];
-    return entry.typeOfBusiness === 'self-employment' ? SE_ALLOWANCE_ROWS : PROP_ALLOWANCE_ROWS;
+    switch (entry.typeOfBusiness) {
+      case 'self-employment': return SE_ALLOWANCE_ROWS;
+      case 'uk-property': return UK_PROP_ALLOWANCE_ROWS;
+      case 'foreign-property': return FP_ALLOWANCE_ROWS;
+      default: return [];
+    }
   }
 
   /** Human-readable title for the active source. */
