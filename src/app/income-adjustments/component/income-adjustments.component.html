@@ -1,0 +1,234 @@
+<div class="ia-view">
+
+  <!-- Page header — title left, section + source navs right -->
+  <header class="view-header">
+    <div class="view-header-left">
+      <span class="view-label">MTD ITSA · Annual submissions</span>
+      <h1 class="view-title">Income &amp; Adjustments</h1>
+    </div>
+
+    <div class="view-header-right">
+      <!-- Level 1: Section selector -->
+      @if (hasData()) {
+        <nav class="section-nav" role="tablist" aria-label="Sections">
+          @for (section of sectionList; track section) {
+            <button
+              class="section-nav-btn"
+              [class.section-nav-btn--active]="selectedSection() === section"
+              role="tab"
+              type="button"
+              [attr.aria-selected]="selectedSection() === section"
+              [attr.aria-controls]="'panel-ia-' + section"
+              (click)="selectSection(section)"
+            >{{ sectionLabel(section) }}</button>
+          }
+        </nav>
+      }
+
+      <!-- Level 2: Income source tabs (hidden for Dividends) -->
+      @if (sourceList().length > 0) {
+        <nav class="source-tabs" role="tablist" aria-label="Income sources">
+          @for (type of sourceList(); track type) {
+            <button
+              class="source-tab"
+              [class.source-tab--active]="selectedSource() === type"
+              role="tab"
+              type="button"
+              [attr.aria-selected]="selectedSource() === type"
+              [attr.aria-controls]="'panel-ia-src-' + type"
+              (click)="selectSource(type)"
+            >
+              <span class="source-tab-label">{{ sourceLabel(type) }}</span>
+            </button>
+          }
+        </nav>
+      }
+    </div>
+  </header>
+
+  @if (store.isLoading()) {
+    <p class="status" aria-live="polite" aria-busy="true">Loading…</p>
+  }
+
+  @if (store.hasError()) {
+    <p class="status status--error" role="alert">{{ store.error() }}</p>
+  }
+
+  <!-- ── Allowances panel ──────────────────────────────────────────────── -->
+  @if (hasData() && selectedSection() === 'allowances') {
+    <section
+      class="ia-panel"
+      role="tabpanel"
+      [id]="'panel-ia-allowances'"
+      aria-label="Allowances"
+    >
+      @if (selectedAllowances(); as entry) {
+        <table class="fields-table">
+          <caption class="sr-only">Allowances for {{ sourceLabel(entry.typeOfBusiness) }}, {{ entry.taxYear }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Allowance</th>
+              <th scope="col" class="col-amount">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (entry.annualInvestmentAllowance != null) {
+              <tr>
+                <td>Annual Investment Allowance</td>
+                <td class="cell-amount">{{ entry.annualInvestmentAllowance | currency:'GBP':'symbol':'1.2-2' }}</td>
+              </tr>
+            }
+            @if (entry.capitalAllowanceMainPool != null) {
+              <tr>
+                <td>Capital Allowance — Main Pool</td>
+                <td class="cell-amount">{{ entry.capitalAllowanceMainPool | currency:'GBP':'symbol':'1.2-2' }}</td>
+              </tr>
+            }
+            @if (entry.tradingIncomeAllowance != null) {
+              <tr>
+                <td>Trading Income Allowance</td>
+                <td class="cell-amount">{{ entry.tradingIncomeAllowance | currency:'GBP':'symbol':'1.2-2' }}</td>
+              </tr>
+            }
+            @if (entry.propertyIncomeAllowance != null) {
+              <tr>
+                <td>Property Income Allowance</td>
+                <td class="cell-amount">{{ entry.propertyIncomeAllowance | currency:'GBP':'symbol':'1.2-2' }}</td>
+              </tr>
+            }
+            @if (entry.otherCapitalAllowance != null) {
+              <tr>
+                <td>Other Capital Allowance</td>
+                <td class="cell-amount">{{ entry.otherCapitalAllowance | currency:'GBP':'symbol':'1.2-2' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="status">No allowances recorded for this source.</p>
+      }
+    </section>
+  }
+
+  <!-- ── Adjustments panel ─────────────────────────────────────────────── -->
+  @if (hasData() && selectedSection() === 'adjustments') {
+    <section
+      class="ia-panel"
+      role="tabpanel"
+      [id]="'panel-ia-adjustments'"
+      aria-label="Adjustments"
+    >
+      @if (selectedAdjustments(); as entry) {
+        @if (entry.calculationId) {
+          <p class="calc-id">Calc ID: <code>{{ entry.calculationId }}</code></p>
+        }
+        <table class="fields-table">
+          <caption class="sr-only">Adjustments for {{ sourceLabel(entry.typeOfBusiness) }}, {{ entry.taxYear }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Adjustment</th>
+              <th scope="col" class="col-amount">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (entry.includedNonTaxableProfits != null) {
+              <tr>
+                <td>Included Non-Taxable Profits</td>
+                <td class="cell-amount">{{ entry.includedNonTaxableProfits | currency:'GBP':'symbol':'1.2-2' }}</td>
+              </tr>
+            }
+            @if (entry.basisAdjustment != null) {
+              <tr>
+                <td>Basis Adjustment</td>
+                <td class="cell-amount">{{ entry.basisAdjustment | currency:'GBP':'symbol':'1.2-2' }}</td>
+              </tr>
+            }
+            @if (entry.overlapReliefUsed != null) {
+              <tr>
+                <td>Overlap Relief Used</td>
+                <td class="cell-amount">{{ entry.overlapReliefUsed | currency:'GBP':'symbol':'1.2-2' }}</td>
+              </tr>
+            }
+            @if (entry.privateUseAdjustment != null) {
+              <tr>
+                <td>Private Use Adjustment</td>
+                <td class="cell-amount">{{ entry.privateUseAdjustment | currency:'GBP':'symbol':'1.2-2' }}</td>
+              </tr>
+            }
+            @if (entry.balancingCharge != null) {
+              <tr>
+                <td>Balancing Charge</td>
+                <td class="cell-amount">{{ entry.balancingCharge | currency:'GBP':'symbol':'1.2-2' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="status">No adjustments recorded for this source.</p>
+      }
+    </section>
+  }
+
+  <!-- ── Dividends panel ───────────────────────────────────────────────── -->
+  @if (hasData() && selectedSection() === 'dividends') {
+    <section
+      class="ia-panel"
+      role="tabpanel"
+      [id]="'panel-ia-dividends'"
+      aria-label="Dividends"
+    >
+      @if (store.dividends(); as entry) {
+        <table class="fields-table">
+          <caption class="sr-only">Dividend income, {{ entry.taxYear }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Type</th>
+              <th scope="col" class="col-amount">Amount</th>
+              <th scope="col" class="col-amount">Tax taken off</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (entry.ukDividends != null) {
+              <tr>
+                <td>UK Dividends</td>
+                <td class="cell-amount">{{ entry.ukDividends | currency:'GBP':'symbol':'1.2-2' }}</td>
+                <td class="cell-amount">—</td>
+              </tr>
+            }
+            @if (entry.otherUkDividends != null) {
+              <tr>
+                <td>Other UK Dividends</td>
+                <td class="cell-amount">{{ entry.otherUkDividends | currency:'GBP':'symbol':'1.2-2' }}</td>
+                <td class="cell-amount">—</td>
+              </tr>
+            }
+            @for (fd of entry.foreignDividends ?? []; track fd.countryCode) {
+              <tr>
+                <td>Foreign Dividend ({{ fd.countryCode }})</td>
+                <td class="cell-amount">{{ fd.amount | currency:'GBP':'symbol':'1.2-2' }}</td>
+                <td class="cell-amount">
+                  @if (fd.taxTakenOff != null) {
+                    {{ fd.taxTakenOff | currency:'GBP':'symbol':'1.2-2' }}
+                  } @else { — }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="status">No dividend income recorded.</p>
+      }
+    </section>
+  }
+
+  <!-- Empty state — shown before any data is loaded -->
+  @if (!store.isLoading() && !store.hasError() && !hasData()) {
+    <div class="empty-state">
+      <p class="status">Not authenticated — sign in to load data.</p>
+      <button class="btn btn--outline seed-btn" type="button" (click)="onLoadTestData()">
+        Load test data
+      </button>
+    </div>
+  }
+
+</div>
