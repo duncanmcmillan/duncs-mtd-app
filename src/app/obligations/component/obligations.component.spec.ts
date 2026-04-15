@@ -28,7 +28,7 @@ describe('ObligationsComponent', () => {
   });
 
   it('shows the unauthenticated message when not signed in', () => {
-    const el: HTMLElement | null = fixture.nativeElement.querySelector('.empty');
+    const el: HTMLElement | null = fixture.nativeElement.querySelector('.empty-state');
     expect(el).toBeTruthy();
     expect(el!.textContent).toContain('Not authenticated');
   });

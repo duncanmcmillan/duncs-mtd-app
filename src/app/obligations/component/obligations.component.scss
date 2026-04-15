@@ -1,9 +1,23 @@
-.obligations-view {
-  max-width: 760px;
-}
+/* ── Page header ────────────────────────────────────────────────────── */
 
 .view-header {
-  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.view-header-left {
+  flex-shrink: 0;
+}
+
+.view-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
 
 .view-label {
@@ -24,6 +38,8 @@
   letter-spacing: -0.02em;
 }
 
+/* ── Status messages ────────────────────────────────────────────────── */
+
 .status {
   font-size: 13px;
   font-weight: 300;
@@ -32,7 +48,155 @@
   &--error { color: var(--color-error); }
 }
 
-/* ── Table ──────────────────────────────────── */
+/* ── Empty state ────────────────────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &--outline {
+    background: transparent;
+    color: var(--neutral-500);
+    border: 1px solid var(--neutral-300);
+
+    &:hover {
+      border-color: var(--neutral-400);
+      color: var(--neutral-600);
+    }
+  }
+}
+
+.seed-btn {
+  opacity: 0.7;
+}
+
+/* ── Tax year selector (level 1) ────────────────────────────────────── */
+
+.period-nav {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.period-nav-btn {
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: var(--font-body);
+  color: var(--neutral-500);
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+
+  &:hover:not(.period-nav-btn--active) {
+    color: var(--neutral-700);
+    background: var(--neutral-50);
+  }
+
+  &--active {
+    color: var(--neutral-800);
+    font-weight: 500;
+    border-bottom-color: var(--orange-500);
+  }
+}
+
+/* ── Income source tabs (level 2) ───────────────────────────────────── */
+
+.source-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.source-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px 10px 12px;
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-left: 4px solid var(--neutral-300);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  min-width: 110px;
+  transition: background 0.15s, box-shadow 0.15s;
+
+  &:hover:not(.source-tab--active) {
+    background: var(--neutral-100);
+  }
+
+  &--active {
+    background: var(--neutral-0);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  &--fulfilled {
+    border-left-color: #15803d;
+    .tab-status-dot { background: #15803d; }
+    .tab-status-label { color: #15803d; }
+  }
+
+  &--open {
+    border-left-color: #f59e0b;
+    .tab-status-dot { background: #f59e0b; }
+    .tab-status-label { color: #b45309; }
+  }
+
+  &--overdue {
+    border-left-color: var(--color-error);
+    .tab-status-dot { background: var(--color-error); }
+    .tab-status-label { color: var(--color-error); }
+  }
+}
+
+.source-tab-type {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--neutral-500);
+}
+
+.tab-status-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.tab-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--neutral-300);
+  flex-shrink: 0;
+}
+
+.tab-status-label {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--neutral-400);
+}
+
+/* ── Obligations table ──────────────────────────────────────────────── */
 
 .obligations-table {
   width: 100%;
@@ -81,7 +245,7 @@
   white-space: nowrap;
 }
 
-/* ── Status badges ──────────────────────────── */
+/* ── Status badges ──────────────────────────────────────────────────── */
 
 .badge {
   display: inline-flex;
