@@ -11,6 +11,8 @@ import {
   emptySEDisallowable,
   emptyPropIncome,
   emptyPropExpenses,
+  emptyForeignPropIncome,
+  emptyForeignPropExpenses,
 } from '../model/quarterly.model';
 
 // Polyfill localStorage for jsdom (not available in all Angular test environments).
@@ -70,6 +72,24 @@ describe('QuarterlyService', () => {
     });
   });
 
+  describe('submitForeignProperty()', () => {
+    it('POSTs to the Foreign Property Business API with the correct path', async () => {
+      const promise = service.submitForeignProperty(
+        'AB123456C', 'fp1', '2024-25',
+        '2024-04-06', '2024-07-05', 'test-token',
+        emptyForeignPropIncome(), emptyForeignPropExpenses(),
+      );
+      await Promise.resolve();
+      const req = httpController.expectOne(
+        r => r.url.includes('/individuals/business/property/foreign/AB123456C/2024-25/fp1/period'),
+      );
+      expect(req.request.method).toBe('POST');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer test-token');
+      req.flush({ submissionId: 'fp-sub-789' });
+      await expect(promise).resolves.toBe('fp-sub-789');
+    });
+  });
+
   describe('submitUkProperty()', () => {
     it('POSTs to the Property Business API with the correct path', async () => {
       const promise = service.submitUkProperty(
@@ -97,6 +117,7 @@ describe('QuarterlyService', () => {
         seIncome: emptySEIncome(), seExpenses: emptySEExpenses(),
         seDisallowableExpenses: emptySEDisallowable(),
         propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+        foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
         confirmed: false, lastSaved: null, submissionId: null,
         status: 'draft', error: null,
       };

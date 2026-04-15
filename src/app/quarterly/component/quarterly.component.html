@@ -75,6 +75,7 @@
         <div class="card-header-left">
           <span class="business-type-badge business-type-badge--{{ draft.businessType }}">
             @if (draft.businessType === 'self-employment') { Self Employment }
+            @else if (draft.businessType === 'foreign-property') { Foreign Property }
             @else { UK Property }
           </span>
           <h2 class="card-title">
@@ -192,6 +193,76 @@
                   [value]="draft.propIncome.otherIncome ?? ''"
                   [attr.aria-label]="'Other property income for ' + draft.businessName"
                   (input)="onPropIncomeInput(keyFor(draft), 'otherIncome', $event)"
+                />
+              </div>
+            }
+
+            @if (draft.businessType === 'foreign-property') {
+              <div class="figure-row figure-row--country">
+                <label class="figure-label" [for]="'fp-country-' + keyFor(draft)">
+                  Country code
+                </label>
+                <input
+                  class="figure-input figure-input--country"
+                  type="text"
+                  maxlength="3"
+                  placeholder="e.g. FRA"
+                  [id]="'fp-country-' + keyFor(draft)"
+                  [value]="draft.foreignPropIncome.countryCode"
+                  [attr.aria-label]="'ISO country code for ' + draft.businessName"
+                  (input)="onForeignPropCountryCodeInput(keyFor(draft), $event)"
+                />
+              </div>
+              <div class="figure-row">
+                <label class="figure-label confirm-label--inline" [for]="'fp-ftcr-' + keyFor(draft)">
+                  Foreign Tax Credit Relief
+                </label>
+                <input
+                  type="checkbox"
+                  class="confirm-checkbox"
+                  [id]="'fp-ftcr-' + keyFor(draft)"
+                  [checked]="draft.foreignPropIncome.foreignTaxCreditRelief"
+                  [attr.aria-label]="'Claim Foreign Tax Credit Relief for ' + draft.businessName"
+                  (change)="onForeignTaxCreditReliefChange(keyFor(draft), $event)"
+                />
+              </div>
+              <div class="figure-row">
+                <label class="figure-label" [for]="'fp-rent-' + keyFor(draft)">
+                  Rent income
+                </label>
+                <input
+                  class="figure-input"
+                  type="number" min="0" step="0.01" placeholder="0.00"
+                  [id]="'fp-rent-' + keyFor(draft)"
+                  [value]="draft.foreignPropIncome.rentIncome ?? ''"
+                  [attr.aria-label]="'Rent income for ' + draft.businessName"
+                  (input)="onForeignPropIncomeInput(keyFor(draft), 'rentIncome', $event)"
+                />
+              </div>
+              <div class="figure-row">
+                <label class="figure-label" [for]="'fp-other-' + keyFor(draft)">
+                  Other income
+                </label>
+                <input
+                  class="figure-input"
+                  type="number" min="0" step="0.01" placeholder="0.00"
+                  [id]="'fp-other-' + keyFor(draft)"
+                  [value]="draft.foreignPropIncome.otherPropertyIncome ?? ''"
+                  [attr.aria-label]="'Other income for ' + draft.businessName"
+                  (input)="onForeignPropIncomeInput(keyFor(draft), 'otherPropertyIncome', $event)"
+                />
+              </div>
+              <div class="figure-row">
+                <label class="figure-label" [for]="'fp-tax-' + keyFor(draft)">
+                  Foreign tax paid
+                </label>
+                <input
+                  class="figure-input"
+                  type="number" min="0" step="0.01" placeholder="0.00"
+                  [id]="'fp-tax-' + keyFor(draft)"
+                  [value]="draft.foreignPropIncome.foreignTaxPaidOrDeducted ?? ''"
+                  [attr.aria-label]="'Foreign tax paid for ' + draft.businessName"
+                  (input)="onForeignPropIncomeInput(keyFor(draft), 'foreignTaxPaidOrDeducted', $event)"
                 />
               </div>
             }

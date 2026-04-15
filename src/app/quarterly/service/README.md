@@ -129,7 +129,63 @@ interface SelfEmploymentSubmitResponse {
 ### Response
 
 ```typescript
-interface UkPropertySubmitResponse {
+interface PropertySubmitResponse {
+  submissionId: string;
+}
+```
+
+---
+
+---
+
+## Endpoint 3 — Foreign Property Periodic Summary (Create)
+
+| Field        | Value |
+|--------------|-------|
+| Method       | `POST` |
+| Sandbox URL  | `https://test-api.service.hmrc.gov.uk/individuals/business/property/foreign/{nino}/{taxYear}/{businessId}/period` |
+| Live URL     | `https://api.service.hmrc.gov.uk/individuals/business/property/foreign/{nino}/{taxYear}/{businessId}/period` |
+| API Version  | `6.0` |
+
+### Request
+
+**Path parameters:**
+
+| Parameter    | Type   | Source |
+|--------------|--------|--------|
+| `nino`       | string | `AppStore.nino()` |
+| `taxYear`    | string | Derived from obligation period start date via `taxYearFromPeriodStart()` |
+| `businessId` | string | `ObligationRow.businessId` / `BusinessSourceItem.businessId` |
+
+**Request body:**
+
+```json
+{
+  "fromDate": "2024-04-06",
+  "toDate": "2024-07-05",
+  "foreignProperty": [
+    {
+      "countryCode": "FRA",
+      "income": {
+        "foreignTaxCreditRelief": false,
+        "rentIncome": { "rentAmount": 3200.00 },
+        "foreignTaxPaidOrDeducted": 240.00
+      },
+      "expenses": {
+        "premisesRunningCosts": 280.00,
+        "repairsAndMaintenance": 95.00
+      }
+    }
+  ]
+}
+```
+
+> Income is wrapped in a per-country array. `rentIncome` is nested as `{ rentAmount }`. `foreignTaxCreditRelief` is always included (boolean). All other `null` fields are omitted. Use `consolidatedExpenses` OR individual expense fields — not both.
+
+### Response
+
+```typescript
+interface PropertySubmitResponse {
   submissionId: string;
 }
 ```

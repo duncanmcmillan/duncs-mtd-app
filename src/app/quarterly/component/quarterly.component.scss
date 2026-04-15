@@ -185,6 +185,11 @@
     background: #dbeafe;
     color: #1d4ed8;
   }
+
+  &--foreign-property {
+    background: #d1fae5;
+    color: #065f46;
+  }
 }
 
 .card-title {
@@ -356,6 +361,15 @@
   &--expenses-summary {
     padding: 6px 0;
   }
+
+  &--country {
+    .figure-input--country {
+      width: 80px;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+  }
 }
 
 .figure-label {
@@ -441,6 +455,13 @@
   flex-shrink: 0;
   accent-color: var(--orange-500);
   cursor: pointer;
+}
+
+.confirm-label--inline {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--neutral-500);
+  flex: 1;
 }
 
 .last-saved {
