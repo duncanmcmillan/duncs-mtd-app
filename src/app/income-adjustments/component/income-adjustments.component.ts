@@ -7,6 +7,9 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, linkedSig
 import { CurrencyPipe } from '@angular/common';
 import { IncomeAdjustmentsStore } from '../store/income-adjustments.store';
 import { IncomeAdjustmentsSection, AllowanceEntry, AdjustmentEntry } from '../model/income-adjustments.model';
+import { AllowancesModalComponent } from './allowances-modal/allowances-modal.component';
+import { AdjustmentsModalComponent } from './adjustments-modal/adjustments-modal.component';
+import { DividendsModalComponent } from './dividends-modal/dividends-modal.component';
 
 /**
  * Displays HMRC annual allowances, BSAS adjustments, and dividend income using
@@ -15,7 +18,7 @@ import { IncomeAdjustmentsSection, AllowanceEntry, AdjustmentEntry } from '../mo
  */
 @Component({
   selector: 'app-income-adjustments',
-  imports: [CurrencyPipe],
+  imports: [CurrencyPipe, AllowancesModalComponent, AdjustmentsModalComponent, DividendsModalComponent],
   templateUrl: './income-adjustments.component.html',
   styleUrl: './income-adjustments.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,7 +38,7 @@ export class IncomeAdjustmentsComponent implements OnInit {
 
   /**
    * Income source types available for the selected section.
-   * Empty for the Dividends section (no per-source navigation needed).
+   * Empty for the Dividends section.
    */
   protected readonly sourceList = computed((): string[] => {
     if (this.selectedSection() === 'dividends') return [];
@@ -93,6 +96,29 @@ export class IncomeAdjustmentsComponent implements OnInit {
    */
   protected selectSource(type: string): void {
     this.selectedSource.set(type);
+  }
+
+  // ── Modal handlers ───────────────────────────────────────────────────────────
+
+  /**
+   * Opens the allowances edit modal for the currently selected source.
+   */
+  protected openAllowancesModal(): void {
+    const src = this.selectedSource();
+    if (src) this.store.openAllowancesModal(src);
+  }
+
+  /**
+   * Opens the adjustments edit modal for the currently selected source.
+   */
+  protected openAdjustmentsModal(): void {
+    const src = this.selectedSource();
+    if (src) this.store.openAdjustmentsModal(src);
+  }
+
+  /** Opens the dividends edit modal. */
+  protected openDividendsModal(): void {
+    this.store.openDividendsModal();
   }
 
   // ── Template helpers ─────────────────────────────────────────────────────────

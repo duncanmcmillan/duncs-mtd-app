@@ -92,4 +92,10 @@ export interface IncomeAdjustmentsState {
   adjustments: AdjustmentEntry[] | null;
   /** Dividend declarations, or `null` before any data is loaded. */
   dividends: DividendEntry | null;
+  /** `typeOfBusiness` of the allowances entry currently open in the edit modal, or `null`. */
+  activeAllowancesSource: string | null;
+  /** `typeOfBusiness` of the adjustments entry currently open in the edit modal, or `null`. */
+  activeAdjustmentsSource: string | null;
+  /** `true` when the dividends edit modal is open. */
+  dividendsModalOpen: boolean;
 }

@@ -1,0 +1,127 @@
+@if (store.dividends(); as entry) {
+  <!-- Backdrop -->
+  <div class="modal-backdrop" (click)="close()" aria-hidden="true"></div>
+
+  <!-- Panel -->
+  <div
+    class="modal-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Dividends"
+  >
+    <!-- Header -->
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Dividends</h2>
+        <p class="modal-subtitle">{{ entry.taxYear }}</p>
+      </div>
+      <button
+        class="modal-close"
+        type="button"
+        aria-label="Close dividends editor"
+        (click)="close()"
+      >✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+
+      <!-- UK dividends -->
+      <p class="modal-hint">Enter dividend income for the tax year.</p>
+
+      <div class="expense-grid">
+        <div class="expense-row expense-row--header" aria-hidden="true">
+          <span>Type</span>
+          <span>Amount (£)</span>
+        </div>
+
+        <div class="expense-row">
+          <label class="expense-label" for="div-uk">UK Dividends</label>
+          <input
+            class="expense-input"
+            type="number" min="0" step="0.01" placeholder="0.00"
+            id="div-uk"
+            [value]="entry.ukDividends ?? ''"
+            (input)="onUkInput('ukDividends', $event)"
+          />
+        </div>
+
+        <div class="expense-row">
+          <label class="expense-label" for="div-other-uk">Other UK Dividends</label>
+          <input
+            class="expense-input"
+            type="number" min="0" step="0.01" placeholder="0.00"
+            id="div-other-uk"
+            [value]="entry.otherUkDividends ?? ''"
+            (input)="onUkInput('otherUkDividends', $event)"
+          />
+        </div>
+      </div>
+
+      <!-- Foreign dividends -->
+      <div class="foreign-section">
+        <div class="foreign-section-header">
+          <span class="foreign-section-title">Foreign Dividends</span>
+          <button
+            class="btn btn--add"
+            type="button"
+            aria-label="Add foreign dividend row"
+            (click)="addRow()"
+          >+ Add</button>
+        </div>
+
+        @if ((entry.foreignDividends ?? []).length > 0) {
+          <div class="foreign-grid">
+            <div class="foreign-row foreign-row--header" aria-hidden="true">
+              <span>Country</span>
+              <span>Amount (£)</span>
+              <span>Tax taken off (£)</span>
+              <span></span>
+            </div>
+
+            @for (fd of entry.foreignDividends ?? []; track $index) {
+              <div class="foreign-row">
+                <input
+                  class="expense-input expense-input--code"
+                  type="text"
+                  maxlength="2"
+                  placeholder="DE"
+                  [attr.aria-label]="'Country code for row ' + ($index + 1)"
+                  [value]="fd.countryCode"
+                  (input)="onForeignInput($index, 'countryCode', $event)"
+                />
+                <input
+                  class="expense-input"
+                  type="number" min="0" step="0.01" placeholder="0.00"
+                  [attr.aria-label]="'Amount for row ' + ($index + 1)"
+                  [value]="fd.amount"
+                  (input)="onForeignInput($index, 'amount', $event)"
+                />
+                <input
+                  class="expense-input"
+                  type="number" min="0" step="0.01" placeholder="0.00"
+                  [attr.aria-label]="'Tax taken off for row ' + ($index + 1)"
+                  [value]="fd.taxTakenOff ?? ''"
+                  (input)="onForeignInput($index, 'taxTakenOff', $event)"
+                />
+                <button
+                  class="btn btn--remove"
+                  type="button"
+                  [attr.aria-label]="'Remove foreign dividend row ' + ($index + 1)"
+                  (click)="removeRow($index)"
+                >✕</button>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="no-foreign">No foreign dividends added.</p>
+        }
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn btn--primary" type="button" (click)="close()">Done</button>
+    </div>
+  </div>
+}

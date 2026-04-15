@@ -63,6 +63,14 @@
       aria-label="Allowances"
     >
       @if (selectedAllowances(); as entry) {
+        <div class="panel-actions">
+          <button
+            class="btn btn--outline"
+            type="button"
+            [attr.aria-label]="'Edit allowances for ' + sourceLabel(entry.typeOfBusiness)"
+            (click)="openAllowancesModal()"
+          >Edit</button>
+        </div>
         <table class="fields-table">
           <caption class="sr-only">Allowances for {{ sourceLabel(entry.typeOfBusiness) }}, {{ entry.taxYear }}</caption>
           <thead>
@@ -119,6 +127,14 @@
       aria-label="Adjustments"
     >
       @if (selectedAdjustments(); as entry) {
+        <div class="panel-actions">
+          <button
+            class="btn btn--outline"
+            type="button"
+            [attr.aria-label]="'Edit adjustments for ' + sourceLabel(entry.typeOfBusiness)"
+            (click)="openAdjustmentsModal()"
+          >Edit</button>
+        </div>
         @if (entry.calculationId) {
           <p class="calc-id">Calc ID: <code>{{ entry.calculationId }}</code></p>
         }
@@ -178,6 +194,14 @@
       aria-label="Dividends"
     >
       @if (store.dividends(); as entry) {
+        <div class="panel-actions">
+          <button
+            class="btn btn--outline"
+            type="button"
+            aria-label="Edit dividend income"
+            (click)="openDividendsModal()"
+          >Edit</button>
+        </div>
         <table class="fields-table">
           <caption class="sr-only">Dividend income, {{ entry.taxYear }}</caption>
           <thead>
@@ -229,6 +253,17 @@
         Load test data
       </button>
     </div>
+  }
+
+  <!-- Edit modals (rendered at component root to avoid stacking context issues) -->
+  @if (store.activeAllowancesSource()) {
+    <app-allowances-modal />
+  }
+  @if (store.activeAdjustmentsSource()) {
+    <app-adjustments-modal />
+  }
+  @if (store.dividendsModalOpen()) {
+    <app-dividends-modal />
   }
 
 </div>

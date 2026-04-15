@@ -1,0 +1,64 @@
+@if (store.activeAllowancesEntry(); as entry) {
+  <!-- Backdrop -->
+  <div class="modal-backdrop" (click)="close()" aria-hidden="true"></div>
+
+  <!-- Panel -->
+  <div
+    class="modal-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Allowances — ' + sourceTitle"
+  >
+    <!-- Header -->
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Allowances</h2>
+        <p class="modal-subtitle">{{ sourceTitle }} · {{ entry.taxYear }}</p>
+      </div>
+      <button
+        class="modal-close"
+        type="button"
+        aria-label="Close allowances editor"
+        (click)="close()"
+      >✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <p class="modal-hint">
+        Enter annual allowance amounts for this income source.
+        Leave blank to exclude a field.
+      </p>
+
+      <div class="expense-grid">
+        <div class="expense-row expense-row--header" aria-hidden="true">
+          <span>Allowance</span>
+          <span>Amount (£)</span>
+        </div>
+
+        @for (row of rows; track row.field) {
+          <div class="expense-row">
+            <label class="expense-label" [for]="'allow-' + row.field">
+              {{ row.label }}
+            </label>
+            <input
+              class="expense-input"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              [id]="'allow-' + row.field"
+              [value]="entry[row.field] ?? ''"
+              (input)="onInput(row.field, $event)"
+            />
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn btn--primary" type="button" (click)="close()">Done</button>
+    </div>
+  </div>
+}
