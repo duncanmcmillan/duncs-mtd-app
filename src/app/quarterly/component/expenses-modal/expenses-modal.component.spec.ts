@@ -9,6 +9,7 @@ describe('ExpensesModalComponent', () => {
   let fixture: ComponentFixture<ExpensesModalComponent>;
 
   beforeEach(async () => {
+    TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [ExpensesModalComponent],
       providers: [

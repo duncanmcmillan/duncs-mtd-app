@@ -3,7 +3,7 @@
  * obligation period, allowing the user to enter income and expense figures,
  * save drafts, and submit to HMRC.
  */
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, linkedSignal } from '@angular/core';
 import { DatePipe, CurrencyPipe } from '@angular/common';
 import { QuarterlyStore } from '../store/quarterly.store';
 import { ExpensesModalComponent } from './expenses-modal/expenses-modal.component';
@@ -34,9 +34,34 @@ export class QuarterlyComponent implements OnInit {
   /** @internal */
   protected readonly store = inject(QuarterlyStore);
 
+  /**
+   * Tracks which period tab is selected; automatically selects the first draft
+   * whenever the draft list changes (e.g. after init or seedTestDrafts).
+   */
+  protected readonly selectedKey = linkedSignal(() => {
+    const list = this.store.draftList();
+    return list.length > 0 ? draftKey(list[0].businessId, list[0].periodStartDate) : null;
+  });
+
+  /** The currently selected draft, or `null` when no drafts are loaded. */
+  protected readonly selectedDraft = computed((): QuarterlyDraft | null => {
+    const key = this.selectedKey();
+    return key ? (this.store.drafts()[key] ?? null) : null;
+  });
+
   /** @inheritdoc */
   ngOnInit(): void {
     void this.store.init();
+  }
+
+  // ─── Tab navigation ────────────────────────────────────────────────────────
+
+  /**
+   * Selects the given period tab.
+   * @param key - Draft key from {@link draftKey}.
+   */
+  protected selectTab(key: string): void {
+    this.selectedKey.set(key);
   }
 
   // ─── Template helpers ──────────────────────────────────────────────────────

@@ -26,10 +26,46 @@
     </div>
   }
 
-  <!-- One card per open obligation period -->
-  @for (draft of store.draftList(); track keyFor(draft)) {
+  <!-- ── Period sub-tab bar ─────────────────────────────────────────────────── -->
+  @if (store.draftList().length > 0) {
+    <nav class="period-tabs" role="tablist" aria-label="Quarterly periods">
+      @for (draft of store.draftList(); track keyFor(draft)) {
+        <button
+          class="period-tab"
+          [class.period-tab--active]="selectedKey() === keyFor(draft)"
+          [class.period-tab--submitted]="draft.status === 'submitted'"
+          [class.period-tab--error]="draft.status === 'error'"
+          [class.period-tab--submitting]="draft.status === 'submitting'"
+          role="tab"
+          type="button"
+          [attr.aria-selected]="selectedKey() === keyFor(draft)"
+          [attr.aria-controls]="'panel-' + keyFor(draft)"
+          (click)="selectTab(keyFor(draft))"
+        >
+          <span class="tab-period">
+            {{ draft.periodStartDate | date:'MMM' }}–{{ draft.periodEndDate | date:'MMM yyyy' }}
+          </span>
+          <span class="tab-business">{{ draft.businessName }}</span>
+          <span class="tab-status-row">
+            <span class="tab-status-dot" aria-hidden="true"></span>
+            <span class="tab-status-label">
+              @if (draft.status === 'submitted') { Submitted }
+              @else if (draft.status === 'submitting') { Submitting… }
+              @else if (draft.status === 'error') { Error }
+              @else { In Draft }
+            </span>
+          </span>
+        </button>
+      }
+    </nav>
+  }
+
+  <!-- ── Active period panel ────────────────────────────────────────────────── -->
+  @if (selectedDraft(); as draft) {
     <article
       class="period-card"
+      role="tabpanel"
+      [id]="'panel-' + keyFor(draft)"
       [class.period-card--submitted]="draft.status === 'submitted'"
       [attr.aria-label]="draft.businessName + ' — ' + (draft.periodStartDate | date:'MMM yyyy') + ' to ' + (draft.periodEndDate | date:'MMM yyyy')"
     >
@@ -92,10 +128,7 @@
 
             @if (draft.businessType === 'self-employment') {
               <div class="figure-row">
-                <label
-                  class="figure-label"
-                  [for]="'se-turnover-' + keyFor(draft)"
-                >
+                <label class="figure-label" [for]="'se-turnover-' + keyFor(draft)">
                   Sales / Turnover
                 </label>
                 <input
@@ -111,10 +144,7 @@
                 />
               </div>
               <div class="figure-row">
-                <label
-                  class="figure-label"
-                  [for]="'se-other-' + keyFor(draft)"
-                >
+                <label class="figure-label" [for]="'se-other-' + keyFor(draft)">
                   Other income
                 </label>
                 <input
@@ -133,10 +163,7 @@
 
             @if (draft.businessType === 'uk-property') {
               <div class="figure-row">
-                <label
-                  class="figure-label"
-                  [for]="'prop-rent-' + keyFor(draft)"
-                >
+                <label class="figure-label" [for]="'prop-rent-' + keyFor(draft)">
                   Rent income
                 </label>
                 <input
@@ -152,10 +179,7 @@
                 />
               </div>
               <div class="figure-row">
-                <label
-                  class="figure-label"
-                  [for]="'prop-other-' + keyFor(draft)"
-                >
+                <label class="figure-label" [for]="'prop-other-' + keyFor(draft)">
                   Other income
                 </label>
                 <input
