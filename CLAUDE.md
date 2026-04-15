@@ -49,6 +49,32 @@ Strict mode is enabled. Angular-specific strict options are on: `strictTemplates
 - API calls through services, never directly in components
 - Barrel exports (`index.ts`) for every feature folder
 
+## Sub-tab navigation
+
+Feature tabs that display **multiple items** (e.g. one per period, obligation, or business) use a **horizontal sub-tab bar** rather than a vertically scrolling list.
+
+**Pattern:**
+- A `<nav role="tablist">` bar sits below the page header with one `<button role="tab">` per item.
+- Each tab shows: primary label (e.g. period range), secondary label (e.g. business name), and a status dot + text.
+- The **left border** of each tab is colour-coded by item status:
+  - `draft` → `var(--neutral-300)` (default)
+  - `submitted` → `#15803d` (green)
+  - `error` → `var(--color-error)` (red)
+  - `submitting` → `#f59e0b` (amber)
+- Active tab: white background + subtle drop shadow; no override of status border colour.
+- Use `linkedSignal` in the component to auto-select the first item; `selectTab(key)` allows user override.
+- Only the selected item's content is rendered via `@if (selectedDraft(); as draft)`.
+- Reference implementation: `src/app/quarterly/component/quarterly.component`.
+
+## Test data / seed pattern
+
+Every feature tab whose content depends on authentication must provide a way to load synthetic data for browser-mode development (`npm start`):
+
+- Add a `seedTestDrafts()` (or equivalent) method to the feature's store that calls `patchState` directly — no API calls, no auth required.
+- Show a low-prominence **"Load test data"** button in the empty-state block (visible when the list is empty).
+- Use `btn--outline` styling with reduced opacity so it doesn't dominate the empty state.
+- Reference implementation: `QuarterlyStore.seedTestDrafts()` / `QuarterlyComponent`.
+
 ## API service READMEs
 
 Every feature service directory that makes HMRC API calls **must** contain a `README.md` alongside the service file. Keep it up to date whenever the service changes.

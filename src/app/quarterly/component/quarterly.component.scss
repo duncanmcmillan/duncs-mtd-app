@@ -1,6 +1,9 @@
+/* ── Page header ───────────────────────────────────────────────────────────── */
+
 .view-header {
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
+
 .view-label {
   display: block;
   font-size: 10px;
@@ -10,6 +13,7 @@
   color: var(--neutral-400);
   margin-bottom: 6px;
 }
+
 .view-title {
   font-family: var(--font-heading);
   font-size: 24px;
@@ -17,9 +21,499 @@
   color: var(--neutral-700);
   letter-spacing: -0.02em;
 }
-.loading, .error {
+
+/* ── Status messages ───────────────────────────────────────────────────────── */
+
+.status {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--neutral-400);
+  padding: 12px 0;
+
+  &--error {
+    color: var(--color-error);
+  }
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.seed-btn {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* ── Period sub-tabs ───────────────────────────────────────────────────────── */
+
+.period-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.period-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px 10px 12px;
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-left: 4px solid var(--neutral-300);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  min-width: 150px;
+  transition: background 0.15s, box-shadow 0.15s;
+
+  &:hover:not(.period-tab--active) {
+    background: var(--neutral-100);
+  }
+
+  &--active {
+    background: var(--neutral-0);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  &--submitted {
+    border-left-color: #15803d;
+    .tab-status-dot { background: #15803d; }
+    .tab-status-label { color: #15803d; }
+  }
+
+  &--error {
+    border-left-color: var(--color-error);
+    .tab-status-dot { background: var(--color-error); }
+    .tab-status-label { color: var(--color-error); }
+  }
+
+  &--submitting {
+    border-left-color: #f59e0b;
+    .tab-status-dot { background: #f59e0b; }
+    .tab-status-label { color: #b45309; }
+  }
+}
+
+.tab-period {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--neutral-700);
+}
+
+.tab-business {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--neutral-400);
+}
+
+.tab-status-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.tab-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--neutral-300);
+  flex-shrink: 0;
+}
+
+.tab-status-label {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--neutral-400);
+}
+
+/* ── Period cards ──────────────────────────────────────────────────────────── */
+
+.period-card {
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: 10px;
+  overflow: hidden;
+
+  &--submitted {
+    border-color: var(--color-success);
+    opacity: 0.85;
+  }
+}
+
+/* ── Card header ───────────────────────────────────────────────────────────── */
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 20px 14px;
+  background: var(--neutral-50);
+  border-bottom: 1px solid var(--neutral-150);
+}
+
+.card-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.business-type-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  width: fit-content;
+
+  &--self-employment {
+    background: var(--orange-100);
+    color: var(--orange-700);
+  }
+
+  &--uk-property {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--neutral-800);
+  margin: 0;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--neutral-400);
+  background: var(--neutral-100);
+  padding: 2px 8px;
+  border-radius: 10px;
+  width: fit-content;
+
+  &--submitted {
+    background: rgba(74, 222, 128, 0.15);
+    color: #15803d;
+  }
+
+  &--error {
+    background: rgba(248, 113, 113, 0.15);
+    color: #b91c1c;
+  }
+
+  &--submitting {
+    background: rgba(96, 165, 250, 0.15);
+    color: #1d4ed8;
+  }
+}
+
+.business-name {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--neutral-400);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Period info row ───────────────────────────────────────────────────────── */
+
+.period-info {
+  display: flex;
+  gap: 0;
+  padding: 12px 20px;
+  background: var(--neutral-0);
+  border-bottom: 1px solid var(--neutral-150);
+}
+
+.period-info-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 20px;
+
+  + .period-info-item {
+    padding-left: 20px;
+    padding-right: 0;
+    border-left: 1px solid var(--neutral-150);
+  }
+}
+
+.period-info-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--neutral-400);
+}
+
+.period-info-value {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--neutral-700);
+}
+
+/* ── Step sections ─────────────────────────────────────────────────────────── */
+
+.step-section {
+  padding: 20px;
+  border-bottom: 1px solid var(--neutral-100);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--neutral-150);
+  color: var(--neutral-500);
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.step-title {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--neutral-700);
+  margin: 0 0 2px;
+}
+
+.step-hint {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--neutral-400);
+  margin: 0;
+}
+
+/* ── Figures layout ────────────────────────────────────────────────────────── */
+
+.figures-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.figures-subsection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subsection-title {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--neutral-400);
+  margin: 0 0 8px;
+}
+
+.figure-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+
+  &--total {
+    border-top: 1px solid var(--neutral-150);
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+
+  &--expenses-summary {
+    padding: 6px 0;
+  }
+}
+
+.figure-label {
   font-size: 13px;
   font-weight: 300;
   color: var(--neutral-500);
+  flex: 1;
 }
-.error { color: var(--color-error); }
+
+.figure-input {
+  width: 130px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--neutral-700);
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 5px;
+  text-align: right;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+
+  &:focus {
+    outline: none;
+    border-color: var(--orange-400);
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.12);
+  }
+
+  /* Hide spin buttons */
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+}
+
+.figure-total {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--neutral-700);
+  min-width: 130px;
+  text-align: right;
+}
+
+.expenses-link-row {
+  margin-top: 6px;
+}
+
+.view-details-link {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--orange-600);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--orange-700);
+  }
+}
+
+/* ── Confirm section ───────────────────────────────────────────────────────── */
+
+.confirm-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--neutral-600);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.confirm-checkbox {
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--orange-500);
+  cursor: pointer;
+}
+
+.last-saved {
+  font-size: 11px;
+  color: var(--neutral-400);
+  margin-top: 8px;
+  font-weight: 300;
+}
+
+/* ── Submit section ────────────────────────────────────────────────────────── */
+
+.status-message {
+  font-size: 13px;
+  font-weight: 300;
+  margin-bottom: 12px;
+
+  &--error {
+    color: var(--color-error);
+  }
+
+  &--success {
+    color: #15803d;
+
+    code {
+      font-size: 11px;
+      background: var(--neutral-100);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────────── */
+
+.btn {
+  padding: 8px 18px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s, border-color 0.15s;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: var(--orange-500);
+    color: var(--neutral-0);
+    border: 1px solid transparent;
+
+    &:hover:not(:disabled) {
+      background: var(--orange-600);
+    }
+  }
+
+  &--outline {
+    background: transparent;
+    color: var(--neutral-600);
+    border: 1px solid var(--neutral-300);
+
+    &:hover:not(:disabled) {
+      border-color: var(--neutral-400);
+      color: var(--neutral-700);
+    }
+  }
+}

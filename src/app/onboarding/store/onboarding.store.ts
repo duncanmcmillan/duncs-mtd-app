@@ -69,6 +69,10 @@ export const OnboardingStore = signalStore(
         return ONBOARDING_STEPS.find(s => s.id === 'NAVIGATE_TO_SOURCES') ?? null;
       }
 
+      if (!completed.includes('QUARTERLY_TAB') && route.startsWith('/quarterly')) {
+        return ONBOARDING_STEPS.find(s => s.id === 'QUARTERLY_TAB') ?? null;
+      }
+
       return null;
     }),
   })),
