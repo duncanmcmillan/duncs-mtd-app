@@ -1,7 +1,60 @@
 <div class="obligations-view">
+
+  <!-- Page header — title left, tax-year + source navs right -->
   <header class="view-header">
-    <span class="view-label">MTD ITSA · Quarterly obligations</span>
-    <h1 class="view-title">Obligations</h1>
+    <div class="view-header-left">
+      <span class="view-label">MTD ITSA · Quarterly obligations</span>
+      <h1 class="view-title">Obligations</h1>
+    </div>
+
+    <div class="view-header-right">
+      <!-- Level 1: Tax year selector -->
+      @if (taxYearList().length > 0) {
+        <nav class="period-nav" role="tablist" aria-label="Tax years">
+          @for (year of taxYearList(); track year) {
+            <button
+              class="period-nav-btn"
+              [class.period-nav-btn--active]="selectedTaxYear() === year"
+              role="tab"
+              type="button"
+              [attr.aria-selected]="selectedTaxYear() === year"
+              (click)="selectTaxYear(year)"
+            >{{ year }}</button>
+          }
+        </nav>
+      }
+
+      <!-- Level 2: Income source tabs for selected year -->
+      @if (sourceList().length > 0) {
+        <nav class="source-tabs" role="tablist" aria-label="Income sources">
+          @for (type of sourceList(); track type) {
+            @let status = sourceStatus(type, selectedTaxYear()!);
+            <button
+              class="source-tab"
+              [class.source-tab--active]="selectedSource() === type"
+              [class.source-tab--fulfilled]="status === 'fulfilled'"
+              [class.source-tab--open]="status === 'open'"
+              [class.source-tab--overdue]="status === 'overdue'"
+              role="tab"
+              type="button"
+              [attr.aria-selected]="selectedSource() === type"
+              [attr.aria-controls]="'panel-obl-' + type"
+              (click)="selectSource(type)"
+            >
+              <span class="source-tab-type">{{ sourceLabel(type) }}</span>
+              <span class="tab-status-row">
+                <span class="tab-status-dot" aria-hidden="true"></span>
+                <span class="tab-status-label">
+                  @if (status === 'fulfilled') { All fulfilled }
+                  @else if (status === 'overdue') { Overdue }
+                  @else { Open }
+                </span>
+              </span>
+            </button>
+          }
+        </nav>
+      }
+    </div>
   </header>
 
   @if (store.isLoading()) {
@@ -12,24 +65,24 @@
     <p class="status status--error" role="alert">{{ store.error() }}</p>
   }
 
-  @if (store.obligationRows().length > 0) {
-    <table class="obligations-table" aria-label="HMRC reporting obligations">
+  <!-- Selected source's obligations table -->
+  @if (selectedRows().length > 0) {
+    <table
+      class="obligations-table"
+      role="tabpanel"
+      [id]="'panel-obl-' + selectedSource()"
+      [attr.aria-label]="sourceLabel(selectedSource()!) + ' obligations'"
+    >
       <thead>
         <tr>
-          <th scope="col">Source</th>
           <th scope="col">Period</th>
           <th scope="col">Due date</th>
           <th scope="col">Status</th>
         </tr>
       </thead>
       <tbody>
-        @for (row of store.obligationRows(); track row.periodStartDate + (row.businessId ?? '') + row.typeOfBusiness) {
+        @for (row of selectedRows(); track row.periodStartDate) {
           <tr>
-            <td class="cell-source">
-              <span class="source-badge source-badge--{{ row.typeOfBusiness }}">
-                {{ sourceLabel(row.typeOfBusiness) }}
-              </span>
-            </td>
             <td class="cell-period">
               {{ row.periodStartDate | date:'d MMM yyyy' }}&nbsp;–&nbsp;{{ row.periodEndDate | date:'d MMM yyyy' }}
             </td>
@@ -71,4 +124,5 @@
       </button>
     </div>
   }
+
 </div>
