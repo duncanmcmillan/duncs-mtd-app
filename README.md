@@ -244,6 +244,73 @@ Manual steps to verify the GDPR features are working correctly:
 - [ ] Click **Delete All My Data** → `hmrc-tokens.enc`, `hmrc-config.enc`, and `gdpr-consent.json` are removed from `userData`; user is redirected to `/auth`
 - [ ] After deletion, re-launch the app → privacy notice dialog appears again (consent was cleared)
 
+## MTD App End-To-End Journey Summary
+
+> Reference: [HMRC Income Tax MTD End-to-End Service Guide — Customer Journey](https://developer.service.hmrc.gov.uk/guides/income-tax-mtd-end-to-end-service-guide/documentation/customer-journey.html)
+
+### 1. Income Sources and Obligations
+
+Once authorised, the user should navigate to both the Sources tab then the Obligations tab.
+
+| Step | API / Tab details                  | Notes | Task Type |
+|------|------------------------------------|-------|-----------|
+| 3    | Business Details (Lists Businesses)| —     | API       |
+| 4    | Obligations                        | —     | API       |
+| 6    | View updated Obligations           | —     | TAB       |
+
+### 2. Quarterly Submissions
+
+Navigate to the Quarterly Tab and progress entering data for all relevant periods and income sources. Repeat the steps below. Navigate to the Obligations Tab to see real-time updates.
+
+| Step  | API / Tab details                                   | Notes           | Task Type |
+|-------|-----------------------------------------------------|-----------------|-----------|
+| 8     | View status of all Quarterly Submissions            | —               | TAB       |
+| 10    | Self Employment Period Summary — cumulative         | —               | API       |
+| 10a/b | Property Period Summary — cumulative                | —               | API       |
+| 10d   | Obligations (update)                                | —               | API       |
+| 14    | Individual Calculations — in-year (user optional)  | —               | API       |
+
+### 3. Allowances
+
+Several business allowance types exist that can be declared during or before an SATR submission. The user can declare these and submit to HMRC as follows using the Allowances Tab (new).
+
+| Step | API / Tab details                       | Notes | Task Type |
+|------|-----------------------------------------|-------|-----------|
+| 16   | Self Employment Annual Submission       | —     | API       |
+| 18   | View Confirmation of Allowances change  | —     | TAB       |
+
+### 4. Adjustments
+
+Several business adjustment types exist that can be declared during or before an SATR submission. The user can declare these and submit to HMRC as follows using the Adjustments Tab.
+
+| Step | API / Tab details                             | Notes      | Task Type |
+|------|-----------------------------------------------|------------|-----------|
+| 22   | Trigger Business Source Adjustment Summary    | use calcID | API       |
+| 24   | Submit Business Source Adjustment Summary     | —          | API       |
+| 26   | View Confirmation of Adjustment change        | —          | TAB       |
+
+### 5. Dividends
+
+Dividends are classed as an income source and therefore can affect tax calculations; they are usually declared once during a Tax Year. The user can declare these and submit to HMRC as follows using the Dividends Tab (new).
+
+| Step  | API / Tab details                             | Notes | Task Type |
+|-------|-----------------------------------------------|-------|-----------|
+| 29    | Individuals Dividend Income (create & amend)  | —     | API       |
+| 31/32 | View Confirmation of Dividend entries         | —     | TAB       |
+
+### 6. Individual Calculations — Self Assessment
+
+All Annual Self Assessment Obligations and submissions can be declared and submitted to HMRC as follows using the Self Assessment Tab.
+
+| Step | API / Tab details                                    | Notes      | Task Type |
+|------|------------------------------------------------------|------------|-----------|
+| 34   | Individual Calculations 'intent-to-finalise'         | —          | API       |
+| 38   | Individual Calculations — Retrieve a SAT calc        | use calcID | API       |
+| 41   | View Tax Calculation results                         | —          | TAB       |
+| 42   | Confirm Tax Calculation results                      | —          | TAB       |
+| 43   | Individual Calculations — submit a SAT calc          | —          | API       |
+| 45   | View confirmation of submission (SA & Obligation)    | —          | TAB       |
+
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
