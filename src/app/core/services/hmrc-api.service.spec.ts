@@ -14,6 +14,7 @@ describe('HmrcApiService', () => {
   let httpController: HttpTestingController;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
@@ -26,6 +27,7 @@ describe('HmrcApiService', () => {
 
   afterEach(() => {
     httpController.verify();
+    TestBed.resetTestingModule();
   });
 
   // ── environment signal ─────────────────────────────────────────────────────
@@ -49,6 +51,7 @@ describe('HmrcApiService', () => {
 
   it('get() — sends GET to the sandbox base URL', async () => {
     const promise = service.get<{ id: string }>('/test/path', 'my-token');
+    await Promise.resolve(); // allow fraudPrevention.getHeaders() microtask to resolve
 
     const req = httpController.expectOne('https://test-api.service.hmrc.gov.uk/test/path');
     expect(req.request.method).toBe('GET');
@@ -60,6 +63,7 @@ describe('HmrcApiService', () => {
 
   it('get() — sends correct Authorization header', async () => {
     const promise = service.get('/any', 'bearer-token');
+    await Promise.resolve();
 
     const req = httpController.expectOne('https://test-api.service.hmrc.gov.uk/any');
     expect(req.request.headers.get('Authorization')).toBe('Bearer bearer-token');
@@ -69,6 +73,7 @@ describe('HmrcApiService', () => {
 
   it('get() — sends correct Accept header', async () => {
     const promise = service.get('/any', 'tok');
+    await Promise.resolve();
 
     const req = httpController.expectOne('https://test-api.service.hmrc.gov.uk/any');
     expect(req.request.headers.get('Accept')).toBe('application/vnd.hmrc.1.0+json');
@@ -79,6 +84,7 @@ describe('HmrcApiService', () => {
   it('get() — uses live base URL when environment is live', async () => {
     service.setEnvironment('live');
     const promise = service.get('/live-path', 'tok');
+    await Promise.resolve();
 
     const req = httpController.expectOne('https://api.service.hmrc.gov.uk/live-path');
     req.flush({});
@@ -90,6 +96,7 @@ describe('HmrcApiService', () => {
   it('post() — sends POST with JSON body', async () => {
     const body    = { amount: 100 };
     const promise = service.post<{ ok: boolean }>('/submit', body, 'tok');
+    await Promise.resolve();
 
     const req = httpController.expectOne('https://test-api.service.hmrc.gov.uk/submit');
     expect(req.request.method).toBe('POST');
@@ -102,6 +109,7 @@ describe('HmrcApiService', () => {
 
   it('post() — sends Content-Type application/json', async () => {
     const promise = service.post('/submit', {}, 'tok');
+    await Promise.resolve();
 
     const req = httpController.expectOne('https://test-api.service.hmrc.gov.uk/submit');
     expect(req.request.headers.get('Content-Type')).toBe('application/json');
