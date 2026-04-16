@@ -86,6 +86,14 @@ export class AuthComponent implements OnInit {
   }
 
   /**
+   * Toggles test-data mode on or off, controlling seed button visibility
+   * across all feature tabs.
+   */
+  protected toggleTestData(): void {
+    this.appStore.setTestDataMode(!this.appStore.testDataMode());
+  }
+
+  /**
    * Signs out the current user and clears the in-memory client secret.
    */
   protected async signOut(): Promise<void> {

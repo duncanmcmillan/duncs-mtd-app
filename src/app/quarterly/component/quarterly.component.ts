@@ -6,6 +6,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, linkedSignal, signal } from '@angular/core';
 import { DatePipe, CurrencyPipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { AppStore } from '../../core';
 import { QuarterlyStore } from '../store/quarterly.store';
 import { SelfAssessmentStore } from '../../self-assessment/store/self-assessment.store';
 import { ExpensesModalComponent } from './expenses-modal/expenses-modal.component';
@@ -56,6 +57,7 @@ interface ObligationsNavState {
 export class QuarterlyComponent implements OnInit {
   /** @internal */
   protected readonly store = inject(QuarterlyStore);
+  protected readonly appStore = inject(AppStore);
   private readonly saStore = inject(SelfAssessmentStore);
   private readonly router = inject(Router);
 
