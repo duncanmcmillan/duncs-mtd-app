@@ -8,6 +8,7 @@ describe('ObligationsComponent', () => {
   let fixture: ComponentFixture<ObligationsComponent>;
 
   beforeEach(async () => {
+    TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [ObligationsComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()],
@@ -16,6 +17,10 @@ describe('ObligationsComponent', () => {
     fixture = TestBed.createComponent(ObligationsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
   it('creates', () => {
