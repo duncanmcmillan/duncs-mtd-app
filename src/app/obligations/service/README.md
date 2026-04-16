@@ -124,7 +124,7 @@ interface Obligation {
 
 The service provides a default ~1-year window that covers both the current and prior tax year obligations:
 
-- **`fromDate`**: 6 April of *two* tax years ago (e.g. in tax year 2025–26, this is `2024-04-06`)
+- **`fromDate`**: 6 April of the previous (most recently completed) tax year (e.g. in tax year 2025–26, this is `2024-04-06`)
 - **`toDate`**: 5 April of the most recently *completed* tax year (e.g. in tax year 2025–26, this is `2025-04-05`)
 
 This keeps the window within HMRC's 366-day limit while ensuring prior-year sandbox test data is visible.

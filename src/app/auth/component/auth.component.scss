@@ -52,12 +52,18 @@
 }
 
 /* ── Environment toggle ── */
+.env-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
 .env-toggle {
   display: inline-flex;
   border: 1px solid var(--neutral-200);
   border-radius: 4px;
   overflow: hidden;
-  margin-top: 8px;
 }
 
 .env-btn {

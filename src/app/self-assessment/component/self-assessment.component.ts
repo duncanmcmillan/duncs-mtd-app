@@ -5,6 +5,7 @@
  */
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { AppStore } from '../../core';
 import { SelfAssessmentStore } from '../store/self-assessment.store';
 
 /**
@@ -20,6 +21,7 @@ import { SelfAssessmentStore } from '../store/self-assessment.store';
 })
 export class SelfAssessmentComponent implements OnInit {
   protected readonly store = inject(SelfAssessmentStore);
+  protected readonly appStore = inject(AppStore);
 
   /**
    * The UK tax year to display in the page header.

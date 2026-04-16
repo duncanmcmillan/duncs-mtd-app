@@ -273,6 +273,8 @@ export const QuarterlyStore = signalStore(
             };
             applyToDraft(key, () => submitted);
             service.saveDraft({ ...store.drafts()[key] });
+            // Best-effort: refresh so the Obligations tab reflects the fulfilled status.
+            void obligationsStore.loadObligations();
           } catch (e: unknown) {
             applyToDraft(key, () => ({
               status: 'error',

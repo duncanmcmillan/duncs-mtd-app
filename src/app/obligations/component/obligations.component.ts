@@ -5,6 +5,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, linkedSignal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { AppStore } from '../../core';
 import { ObligationsStore } from '../store/obligations.store';
 import { ObligationRow } from '../model/obligations.model';
 
@@ -22,6 +23,7 @@ import { ObligationRow } from '../model/obligations.model';
 })
 export class ObligationsComponent implements OnInit {
   protected readonly store = inject(ObligationsStore);
+  protected readonly appStore = inject(AppStore);
   private readonly router = inject(Router);
 
   // ── Two-level navigation ────────────────────────────────────────────────────

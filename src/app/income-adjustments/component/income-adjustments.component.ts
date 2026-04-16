@@ -5,6 +5,7 @@
  */
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, linkedSignal, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
+import { AppStore } from '../../core';
 import { IncomeAdjustmentsStore } from '../store/income-adjustments.store';
 import { IncomeAdjustmentsSection, AllowanceEntry, AdjustmentEntry } from '../model/income-adjustments.model';
 import { AllowancesModalComponent } from './allowances-modal/allowances-modal.component';
@@ -30,6 +31,7 @@ interface AdjGroup { heading: string; rows: AdjRow[]; }
 })
 export class IncomeAdjustmentsComponent implements OnInit {
   protected readonly store = inject(IncomeAdjustmentsStore);
+  protected readonly appStore = inject(AppStore);
 
   // ── Section navigation (level 1) ────────────────────────────────────────────
 

@@ -158,4 +158,21 @@ describe('AppStore', () => {
     store.setError(null);
     expect(store.error()).toBeNull();
   });
+
+  // ── setTestDataMode ─────────────────────────────────────────────────────────
+
+  it('initialises testDataMode as false', () => {
+    expect(store.testDataMode()).toBe(false);
+  });
+
+  it('setTestDataMode(true) — enables test data mode', () => {
+    store.setTestDataMode(true);
+    expect(store.testDataMode()).toBe(true);
+  });
+
+  it('setTestDataMode(false) — disables test data mode', () => {
+    store.setTestDataMode(true);
+    store.setTestDataMode(false);
+    expect(store.testDataMode()).toBe(false);
+  });
 });
