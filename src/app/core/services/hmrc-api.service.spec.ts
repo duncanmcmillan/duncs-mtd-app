@@ -51,7 +51,7 @@ describe('HmrcApiService', () => {
 
   it('get() — sends GET to the sandbox base URL', async () => {
     const promise = service.get<{ id: string }>('/test/path', 'my-token');
-    await Promise.resolve();
+    await Promise.resolve(); // allow fraudPrevention.getHeaders() microtask to resolve
 
     const req = httpController.expectOne('https://test-api.service.hmrc.gov.uk/test/path');
     expect(req.request.method).toBe('GET');
