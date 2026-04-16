@@ -1,0 +1,104 @@
+@if (store.activeAdjustmentsEntry(); as entry) {
+  <!-- Backdrop -->
+  <div class="modal-backdrop" (click)="close()" aria-hidden="true"></div>
+
+  <!-- Panel -->
+  <div
+    class="modal-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Adjustments — ' + sourceTitle"
+  >
+    <!-- Header -->
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Adjustments</h2>
+        <p class="modal-subtitle">{{ sourceTitle }} · {{ entry.taxYear }}</p>
+      </div>
+      <button
+        class="modal-close"
+        type="button"
+        aria-label="Close adjustments editor"
+        (click)="close()"
+      >✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <p class="modal-hint">
+        Enter the BSAS adjustment figures for this income source.
+        A Calculation ID is required to trigger the adjustment via the API.
+      </p>
+
+      <!-- Calculation ID (text, not currency) -->
+      <div class="calc-id-row">
+        <label class="expense-label" for="adj-calc-id">Calculation ID</label>
+        <input
+          class="expense-input expense-input--text"
+          type="text"
+          id="adj-calc-id"
+          placeholder="e.g. 717f3a7a-db8e-11e9-8a34-2a2ae2dbcce4"
+          [value]="entry.calculationId ?? ''"
+          (input)="onCalcIdInput($event)"
+        />
+      </div>
+
+      <div class="section-divider" aria-hidden="true"></div>
+
+      <div class="expense-grid">
+        <div class="expense-row expense-row--header" aria-hidden="true">
+          <span>Adjustment</span>
+          <span>Amount (£)</span>
+        </div>
+
+        @for (row of rows; track row.field) {
+          <div class="expense-row">
+            <label class="expense-label" [for]="'adj-' + row.field">
+              {{ row.label }}
+            </label>
+            <input
+              class="expense-input"
+              type="number"
+              [attr.min]="row.allowNegative ? null : 0"
+              step="0.01"
+              placeholder="0.00"
+              [id]="'adj-' + row.field"
+              [value]="entry[row.field] ?? ''"
+              (input)="onInput(row.field, $event)"
+            />
+          </div>
+        }
+      </div>
+
+      <!-- Boolean flags (property sources only) -->
+      @if (flagRows.length > 0) {
+        <div class="section-divider" aria-hidden="true"></div>
+        <div class="flag-section">
+          <p class="flag-section-title">Elections &amp; Status Flags</p>
+          @for (flag of flagRows; track flag.field) {
+            <label class="flag-row" [for]="'adj-flag-' + flag.field">
+              <input
+                class="flag-check"
+                type="checkbox"
+                [id]="'adj-flag-' + flag.field"
+                [checked]="entry[flag.field] ?? false"
+                (change)="onFlagChange(flag.field, $event)"
+              />
+              <div>
+                <span class="flag-label">{{ flag.label }}</span>
+                @if (flag.note) {
+                  <p class="field-note">{{ flag.note }}</p>
+                }
+              </div>
+            </label>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn btn--primary" type="button" (click)="close()">Done</button>
+    </div>
+  </div>
+}
