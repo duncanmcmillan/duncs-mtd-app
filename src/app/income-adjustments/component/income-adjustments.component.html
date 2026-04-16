@@ -89,11 +89,6 @@
             >{{ allowancesSubmitStatus() === 'submitting' ? 'Submitting…' : 'Confirm & Submit to HMRC' }}</button>
           }
         </div>
-        @if (showAllowancesHistory()) {
-          <div class="history-panel" role="region" aria-label="Previous allowances submissions">
-            <p>No previous submissions retrieved.</p>
-          </div>
-        }
         <table class="fields-table">
           <caption class="sr-only">Allowances for {{ sourceLabel(entry.typeOfBusiness) }}, {{ entry.taxYear }}</caption>
           <thead>
@@ -135,6 +130,11 @@
             }
           </tbody>
         </table>
+        @if (showAllowancesHistory()) {
+          <div class="history-panel" role="region" aria-label="Previous allowances submissions">
+            <p>No previous submissions retrieved.</p>
+          </div>
+        }
       } @else {
         <p class="status">No allowances recorded for this source.</p>
       }

@@ -117,6 +117,15 @@
   }
 }
 
+.expense-group-heading {
+  padding: 14px 0 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--neutral-400);
+}
+
 .expense-label {
   font-size: 13px;
   font-weight: 300;

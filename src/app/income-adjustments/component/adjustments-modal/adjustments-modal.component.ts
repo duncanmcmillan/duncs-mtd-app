@@ -29,6 +29,14 @@ interface AdjustmentRow {
   allowNegative?: boolean;
 }
 
+/** A labelled group of numeric adjustment rows shown in the modal. */
+interface AdjustmentGroup {
+  /** Display heading for the group (Income, Expenses, Additions). */
+  heading: string;
+  /** Ordered rows within the group. */
+  rows: AdjustmentRow[];
+}
+
 /** Field descriptor for a boolean status flag row. */
 interface FlagRow {
   /** Property key (boolean fields only). */
@@ -39,24 +47,44 @@ interface FlagRow {
   note?: string;
 }
 
-const SE_ADJUSTMENT_ROWS: AdjustmentRow[] = [
-  { field: 'includedNonTaxableProfits', label: 'Included Non-Taxable Profits' },
-  { field: 'basisAdjustment', label: 'Basis Adjustment', allowNegative: true },
-  { field: 'overlapReliefUsed', label: 'Overlap Relief Used' },
-  { field: 'accountingAdjustment', label: 'Accounting Adjustment' },
-  { field: 'averagingAdjustment', label: 'Averaging Adjustment', allowNegative: true },
-  { field: 'outstandingBusinessIncome', label: 'Outstanding Business Income' },
-  { field: 'balancingChargeBpra', label: 'Balancing Charge (BPRA)' },
-  { field: 'balancingChargeOther', label: 'Balancing Charge (Other)' },
-  { field: 'goodsAndServicesOwnUse', label: 'Goods and Services Own Use' },
-  { field: 'transitionProfitAmount', label: 'Transition Profit Amount' },
-  { field: 'transitionProfitAccelerationAmount', label: 'Transition Profit Acceleration' },
+const SE_ADJUSTMENT_GROUPS: AdjustmentGroup[] = [
+  {
+    heading: 'Income',
+    rows: [
+      { field: 'includedNonTaxableProfits', label: 'Included Non-Taxable Profits' },
+      { field: 'basisAdjustment', label: 'Basis Adjustment', allowNegative: true },
+      { field: 'overlapReliefUsed', label: 'Overlap Relief Used' },
+      { field: 'accountingAdjustment', label: 'Accounting Adjustment' },
+      { field: 'averagingAdjustment', label: 'Averaging Adjustment', allowNegative: true },
+      { field: 'outstandingBusinessIncome', label: 'Outstanding Business Income' },
+    ],
+  },
+  {
+    heading: 'Expenses',
+    rows: [
+      { field: 'balancingChargeBpra', label: 'Balancing Charge (BPRA)' },
+      { field: 'balancingChargeOther', label: 'Balancing Charge (Other)' },
+    ],
+  },
+  {
+    heading: 'Additions',
+    rows: [
+      { field: 'goodsAndServicesOwnUse', label: 'Goods and Services Own Use' },
+      { field: 'transitionProfitAmount', label: 'Transition Profit Amount' },
+      { field: 'transitionProfitAccelerationAmount', label: 'Transition Profit Acceleration' },
+    ],
+  },
 ];
 
-const PROP_ADJUSTMENT_ROWS: AdjustmentRow[] = [
-  { field: 'privateUseAdjustment', label: 'Private Use Adjustment' },
-  { field: 'balancingCharge', label: 'Balancing Charge' },
-  { field: 'businessPremisesRenovationAllowanceBalancingCharges', label: 'BPRA Balancing Charges' },
+const PROP_ADJUSTMENT_GROUPS: AdjustmentGroup[] = [
+  {
+    heading: 'Adjustments',
+    rows: [
+      { field: 'privateUseAdjustment', label: 'Private Use Adjustment' },
+      { field: 'balancingCharge', label: 'Balancing Charge' },
+      { field: 'businessPremisesRenovationAllowanceBalancingCharges', label: 'BPRA Balancing Charges' },
+    ],
+  },
 ];
 
 const PROP_FLAG_ROWS: FlagRow[] = [
@@ -90,11 +118,15 @@ const PROP_FLAG_ROWS: FlagRow[] = [
 export class AdjustmentsModalComponent {
   protected readonly store = inject(IncomeAdjustmentsStore);
 
-  /** Numeric adjustment rows for the active source type. */
-  protected get rows(): AdjustmentRow[] {
+  /**
+   * Numeric adjustment groups for the active source type.
+   * SE sources have three groups (Income / Expenses / Additions);
+   * property sources have a single group.
+   */
+  protected get groups(): AdjustmentGroup[] {
     const entry = this.store.activeAdjustmentsEntry();
     if (!entry) return [];
-    return entry.typeOfBusiness === 'self-employment' ? SE_ADJUSTMENT_ROWS : PROP_ADJUSTMENT_ROWS;
+    return entry.typeOfBusiness === 'self-employment' ? SE_ADJUSTMENT_GROUPS : PROP_ADJUSTMENT_GROUPS;
   }
 
   /** Boolean flag rows — only shown for property source types. */
