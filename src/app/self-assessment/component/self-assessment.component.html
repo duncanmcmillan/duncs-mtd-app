@@ -1,14 +1,221 @@
-<div class="self-assessment-view">
+<div class="sa-view">
+
+  <!-- Page header -->
   <header class="view-header">
-    <span class="view-label">Tab 2 — End of Period Statement and Final Declaration</span>
-    <h1 class="view-title">SelfAssessment</h1>
+    <div class="view-header-left">
+      <span class="view-label">MTD ITSA · Individual Calculations</span>
+      <h1 class="view-title">Self Assessment</h1>
+    </div>
   </header>
 
   @if (store.isLoading()) {
-    <div class="loading">Loading…</div>
+    <p class="status" aria-live="polite" aria-busy="true">Loading…</p>
   }
 
   @if (store.hasError()) {
-    <div class="error">{{ store.error() }}</div>
+    <p class="status status--error" role="alert">{{ store.error() }}</p>
   }
+
+  <!-- Workflow step indicator -->
+  @if (!store.isLoading()) {
+    <div class="workflow-steps" role="list" aria-label="Submission steps">
+      <div
+        class="workflow-step"
+        [class.workflow-step--active]="store.status() === 'idle'"
+        [class.workflow-step--done]="store.status() !== 'idle'"
+        role="listitem"
+      >
+        <span class="step-icon" aria-hidden="true">
+          @if (store.status() !== 'idle') { ✓ } @else { 1 }
+        </span>
+        <span class="step-label">Trigger Calculation</span>
+      </div>
+
+      <div class="workflow-connector" aria-hidden="true"></div>
+
+      <div
+        class="workflow-step"
+        [class.workflow-step--active]="store.status() === 'ready'"
+        [class.workflow-step--done]="store.status() === 'crystallised'"
+        role="listitem"
+      >
+        <span class="step-icon" aria-hidden="true">
+          @if (store.status() === 'crystallised') { ✓ } @else { 2 }
+        </span>
+        <span class="step-label">Review Results</span>
+      </div>
+
+      <div class="workflow-connector" aria-hidden="true"></div>
+
+      <div
+        class="workflow-step"
+        [class.workflow-step--active]="store.status() === 'crystallised'"
+        role="listitem"
+      >
+        <span class="step-icon" aria-hidden="true">3</span>
+        <span class="step-label">Final Declaration</span>
+      </div>
+    </div>
+  }
+
+  <!-- ── Idle state ───────────────────────────────────────────────────── -->
+  @if (store.status() === 'idle' && !store.isLoading()) {
+    <div class="idle-panel">
+      <p class="panel-description">
+        Trigger an Individual Calculations request to compute your Self Assessment
+        tax for the year. Ensure all quarterly submissions, allowances, and
+        adjustments are finalised before proceeding.
+      </p>
+      <div class="panel-actions">
+        <button
+          class="btn btn--primary"
+          type="button"
+          (click)="onTrigger()"
+        >Trigger Tax Calculation</button>
+        <button
+          class="btn btn--outline seed-btn"
+          type="button"
+          (click)="onLoadTestData()"
+        >Load test data</button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Calculation results ──────────────────────────────────────────── -->
+  @if (store.calculation(); as calc) {
+    <section
+      class="calc-panel"
+      aria-label="Tax calculation results"
+    >
+      <!-- Meta row -->
+      <div class="calc-meta">
+        <span class="calc-id">Calc ID: <code>{{ calc.calculationId }}</code></span>
+        <span class="calc-timestamp">{{ calc.calculationTimestamp | date:'d MMM yyyy, HH:mm' }}</span>
+        @if (calc.crystallised) {
+          <span class="calc-badge">Final Declaration submitted</span>
+        }
+      </div>
+
+      <!-- Summary table -->
+      <table class="summary-table">
+        <caption class="sr-only">Tax calculation for {{ calc.taxYear }}</caption>
+
+        <!-- Income section -->
+        <tbody>
+          <tr class="section-heading-row">
+            <td colspan="2">Income</td>
+          </tr>
+          @if (calc.selfEmploymentIncome != null) {
+            <tr>
+              <td>Self Employment</td>
+              <td class="cell-amount">{{ calc.selfEmploymentIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
+            </tr>
+          }
+          @if (calc.ukPropertyIncome != null) {
+            <tr>
+              <td>UK Property</td>
+              <td class="cell-amount">{{ calc.ukPropertyIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
+            </tr>
+          }
+          @if (calc.foreignPropertyIncome != null) {
+            <tr>
+              <td>Foreign Property</td>
+              <td class="cell-amount">{{ calc.foreignPropertyIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
+            </tr>
+          }
+          @if (calc.ukDividendIncome != null) {
+            <tr>
+              <td>UK Dividends</td>
+              <td class="cell-amount">{{ calc.ukDividendIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
+            </tr>
+          }
+          @if (calc.totalIncomeReceived != null) {
+            <tr class="subtotal-row">
+              <td>Total Income</td>
+              <td class="cell-amount">{{ calc.totalIncomeReceived | currency:'GBP':'symbol':'1.2-2' }}</td>
+            </tr>
+          }
+        </tbody>
+
+        <!-- Allowances & deductions section -->
+        <tbody>
+          <tr class="section-heading-row">
+            <td colspan="2">Allowances &amp; Deductions</td>
+          </tr>
+          @if (calc.personalAllowance != null) {
+            <tr>
+              <td>Personal Allowance</td>
+              <td class="cell-amount cell-amount--deduction">({{ calc.personalAllowance | currency:'GBP':'symbol':'1.2-2' }})</td>
+            </tr>
+          }
+          @if (calc.totalAllowancesAndDeductions != null) {
+            <tr class="subtotal-row">
+              <td>Total Deductions</td>
+              <td class="cell-amount cell-amount--deduction">({{ calc.totalAllowancesAndDeductions | currency:'GBP':'symbol':'1.2-2' }})</td>
+            </tr>
+          }
+          @if (calc.totalTaxableIncome != null) {
+            <tr class="taxable-row">
+              <td>Taxable Income</td>
+              <td class="cell-amount">{{ calc.totalTaxableIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
+            </tr>
+          }
+        </tbody>
+
+        <!-- Tax due section -->
+        <tbody>
+          <tr class="section-heading-row">
+            <td colspan="2">Tax Due</td>
+          </tr>
+          @if (calc.incomeTaxDue != null) {
+            <tr>
+              <td>Income Tax</td>
+              <td class="cell-amount">{{ calc.incomeTaxDue | currency:'GBP':'symbol':'1.2-2' }}</td>
+            </tr>
+          }
+          @if (calc.totalNic != null) {
+            <tr>
+              <td>National Insurance</td>
+              <td class="cell-amount">{{ calc.totalNic | currency:'GBP':'symbol':'1.2-2' }}</td>
+            </tr>
+          }
+          @if (calc.totalTaxDue != null) {
+            <tr class="total-tax-row">
+              <td>Total Tax Due</td>
+              <td class="cell-amount">{{ calc.totalTaxDue | currency:'GBP':'symbol':'1.2-2' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Actions -->
+      @if (!calc.crystallised) {
+        <div class="panel-actions">
+          <button
+            class="btn btn--primary"
+            type="button"
+            (click)="onSubmit()"
+          >Submit Final Declaration</button>
+          <button
+            class="btn btn--outline"
+            type="button"
+            (click)="onReset()"
+          >Recalculate</button>
+        </div>
+      }
+    </section>
+  }
+
+  <!-- ── Crystallised confirmation ──────────────────────────────────── -->
+  @if (store.status() === 'crystallised') {
+    <div class="confirmation-panel" role="status" aria-live="polite">
+      <p class="confirmation-title">Final Declaration submitted</p>
+      <p class="confirmation-body">
+        Your Self Assessment Tax Return for
+        {{ store.calculation()?.taxYear }} has been submitted to HMRC.
+        Your tax calculation is now crystallised.
+      </p>
+    </div>
+  }
+
 </div>
