@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { ObligationsComponent } from './obligations.component';
 
 describe('ObligationsComponent', () => {
@@ -11,7 +12,7 @@ describe('ObligationsComponent', () => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [ObligationsComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ObligationsComponent);
@@ -19,9 +20,7 @@ describe('ObligationsComponent', () => {
     fixture.detectChanges();
   });
 
-  afterEach(() => {
-    TestBed.resetTestingModule();
-  });
+  afterEach(() => TestBed.resetTestingModule());
 
   it('creates', () => {
     expect(component).toBeTruthy();

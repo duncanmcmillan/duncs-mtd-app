@@ -51,22 +51,27 @@
           <span>Amount (£)</span>
         </div>
 
-        @for (row of rows; track row.field) {
-          <div class="expense-row">
-            <label class="expense-label" [for]="'adj-' + row.field">
-              {{ row.label }}
-            </label>
-            <input
-              class="expense-input"
-              type="number"
-              [attr.min]="row.allowNegative ? null : 0"
-              step="0.01"
-              placeholder="0.00"
-              [id]="'adj-' + row.field"
-              [value]="entry[row.field] ?? ''"
-              (input)="onInput(row.field, $event)"
-            />
-          </div>
+        @for (group of groups; track group.heading) {
+          @if (groups.length > 1) {
+            <div class="expense-group-heading" aria-hidden="true">{{ group.heading }}</div>
+          }
+          @for (row of group.rows; track row.field) {
+            <div class="expense-row">
+              <label class="expense-label" [for]="'adj-' + row.field">
+                {{ row.label }}
+              </label>
+              <input
+                class="expense-input"
+                type="number"
+                [attr.min]="row.allowNegative ? null : 0"
+                step="0.01"
+                placeholder="0.00"
+                [id]="'adj-' + row.field"
+                [value]="entry[row.field] ?? ''"
+                (input)="onInput(row.field, $event)"
+              />
+            </div>
+          }
         }
       </div>
 

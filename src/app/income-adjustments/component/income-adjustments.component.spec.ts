@@ -8,6 +8,7 @@ describe('IncomeAdjustmentsComponent', () => {
   let fixture: ComponentFixture<IncomeAdjustmentsComponent>;
 
   beforeEach(async () => {
+    TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [IncomeAdjustmentsComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()],
@@ -17,6 +18,8 @@ describe('IncomeAdjustmentsComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
+
+  afterEach(() => TestBed.resetTestingModule());
 
   it('creates', () => {
     expect(component).toBeTruthy();
@@ -68,5 +71,69 @@ describe('IncomeAdjustmentsComponent', () => {
 
     const table: HTMLElement | null = fixture.nativeElement.querySelector('.fields-table');
     expect(table).toBeTruthy();
+  });
+
+  it('shows Confirm & Submit button in allowances panel after seeding', () => {
+    const store = (component as unknown as { store: { seedTestData: () => void } }).store;
+    store.seedTestData();
+    fixture.detectChanges();
+
+    const btn: HTMLElement | null = fixture.nativeElement.querySelector('.btn--primary');
+    expect(btn?.textContent?.trim()).toBe('Confirm & Submit to HMRC');
+  });
+
+  it('shows View History button in allowances panel after seeding', () => {
+    const store = (component as unknown as { store: { seedTestData: () => void } }).store;
+    store.seedTestData();
+    fixture.detectChanges();
+
+    const buttons: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.btn--outline');
+    const labels = Array.from(buttons).map(b => b.textContent?.trim());
+    expect(labels).toContain('View History');
+  });
+
+  it('shows history panel after clicking View History', () => {
+    const store = (component as unknown as { store: { seedTestData: () => void } }).store;
+    store.seedTestData();
+    fixture.detectChanges();
+
+    const historyBtn: HTMLElement = Array.from(
+      fixture.nativeElement.querySelectorAll('.btn--outline') as NodeListOf<HTMLElement>,
+    ).find(b => b.textContent?.trim() === 'View History')!;
+    historyBtn.click();
+    fixture.detectChanges();
+
+    const panel: HTMLElement | null = fixture.nativeElement.querySelector('.history-panel');
+    expect(panel).toBeTruthy();
+  });
+
+  it('shows Confirm & Submit button in dividends section after seeding', () => {
+    const store = (component as unknown as { store: { seedTestData: () => void } }).store;
+    store.seedTestData();
+    fixture.detectChanges();
+
+    // Switch to dividends section
+    const sectionBtns: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.section-nav-btn');
+    const dividendsBtn = Array.from(sectionBtns).find(b => b.textContent?.trim() === 'Dividends')!;
+    dividendsBtn.click();
+    fixture.detectChanges();
+
+    const btn: HTMLElement | null = fixture.nativeElement.querySelector('.btn--primary');
+    expect(btn?.textContent?.trim()).toBe('Confirm & Submit to HMRC');
+  });
+
+  it('shows grouped adjustment rows in adjustments section after seeding', () => {
+    const store = (component as unknown as { store: { seedTestData: () => void } }).store;
+    store.seedTestData();
+    fixture.detectChanges();
+
+    // Switch to adjustments section
+    const sectionBtns: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.section-nav-btn');
+    const adjBtn = Array.from(sectionBtns).find(b => b.textContent?.trim() === 'Adjustments')!;
+    adjBtn.click();
+    fixture.detectChanges();
+
+    const groupHeaders = fixture.nativeElement.querySelectorAll('.adj-group-header');
+    expect(groupHeaders.length).toBeGreaterThan(0);
   });
 });

@@ -3,9 +3,11 @@
  * obligation period, allowing the user to enter income and expense figures,
  * save drafts, and submit to HMRC.
  */
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, linkedSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, linkedSignal, signal } from '@angular/core';
 import { DatePipe, CurrencyPipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { QuarterlyStore } from '../store/quarterly.store';
+import { SelfAssessmentStore } from '../../self-assessment/store/self-assessment.store';
 import { ExpensesModalComponent } from './expenses-modal/expenses-modal.component';
 import {
   ForeignPropertyIncome,
@@ -31,6 +33,14 @@ interface PeriodEntry {
   dueDate: string;
 }
 
+/** Navigation state passed from the Obligations tab. */
+interface ObligationsNavState {
+  /** ISO period start date to pre-select. */
+  periodStart?: string;
+  /** Business ID to pre-select within the period. */
+  businessId?: string;
+}
+
 /**
  * Main view for the Quarterly Update tab.
  * Initialises drafts from open obligations on mount and renders a workflow
@@ -46,6 +56,15 @@ interface PeriodEntry {
 export class QuarterlyComponent implements OnInit {
   /** @internal */
   protected readonly store = inject(QuarterlyStore);
+  private readonly saStore = inject(SelfAssessmentStore);
+  private readonly router = inject(Router);
+
+  /**
+   * Navigation state captured at component creation time (during navigation).
+   * Used to pre-select the period and source when arriving from the Obligations tab.
+   */
+  private readonly navState: ObligationsNavState =
+    (this.router.getCurrentNavigation()?.extras?.state ?? {}) as ObligationsNavState;
 
   /** Unique reporting periods derived from the draft list, sorted ascending. */
   protected readonly periodList = computed((): PeriodEntry[] => {
@@ -91,9 +110,25 @@ export class QuarterlyComponent implements OnInit {
     return key ? (this.store.drafts()[key] ?? null) : null;
   });
 
+  /** Key of the draft that was most recently saved (cleared after 2 s). */
+  protected readonly savedFeedbackKey = signal<string | null>(null);
+
+  /** `true` when at least one draft in the store has been submitted. */
+  protected readonly hasAnySubmission = computed((): boolean =>
+    this.store.draftList().some(d => d.status === 'submitted'),
+  );
+
   /** @inheritdoc */
   ngOnInit(): void {
-    void this.store.init();
+    const { periodStart, businessId } = this.navState;
+    void this.store.init().then(() => {
+      if (periodStart) {
+        this.selectedPeriod.set(periodStart);
+      }
+      if (businessId && periodStart) {
+        this.selectedKey.set(draftKey(businessId, periodStart));
+      }
+    });
   }
 
   // ─── Tab navigation ────────────────────────────────────────────────────────
@@ -210,11 +245,15 @@ export class QuarterlyComponent implements OnInit {
   }
 
   /**
-   * Saves the draft to localStorage and navigates away.
+   * Saves the draft to localStorage and briefly shows a saved confirmation.
    * @param key - Draft key.
    */
   protected onSaveDraft(key: string): void {
     this.store.saveDraft(key);
+    this.savedFeedbackKey.set(key);
+    setTimeout(() => {
+      this.savedFeedbackKey.set(null);
+    }, 2000);
   }
 
   /**
@@ -231,6 +270,15 @@ export class QuarterlyComponent implements OnInit {
    */
   protected openExpensesModal(key: string): void {
     this.store.openExpensesModal(key);
+  }
+
+  /**
+   * Seeds an in-year tax calculation in the Self Assessment store and
+   * navigates to the Self Assessment tab.
+   */
+  protected onViewInYearCalc(): void {
+    this.saStore.seedTestData();
+    void this.router.navigate(['/self-assessment']);
   }
 
   /** Loads synthetic test drafts for UI development without authentication. */

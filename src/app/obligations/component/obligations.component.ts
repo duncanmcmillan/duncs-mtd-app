@@ -4,6 +4,7 @@
  */
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, linkedSignal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { ObligationsStore } from '../store/obligations.store';
 import { ObligationRow } from '../model/obligations.model';
 
@@ -21,6 +22,7 @@ import { ObligationRow } from '../model/obligations.model';
 })
 export class ObligationsComponent implements OnInit {
   protected readonly store = inject(ObligationsStore);
+  private readonly router = inject(Router);
 
   // ── Two-level navigation ────────────────────────────────────────────────────
 
@@ -153,6 +155,32 @@ export class ObligationsComponent implements OnInit {
       case 'foreign-property': return 'Foreign Property';
       case 'ITSA': return 'Annual Return';
       default: return typeOfBusiness;
+    }
+  }
+
+  /**
+   * Returns the label for the action button in a given obligation row.
+   * @param row - The obligation row.
+   */
+  protected actionLabel(row: ObligationRow): string {
+    return row.status === 'fulfilled' ? 'View' : 'Create / Amend';
+  }
+
+  /**
+   * Navigates to the appropriate tab for a given obligation row.
+   * ITSA obligations route to the Self Assessment tab; all other income sources
+   * route to the Quarterly Update tab with the period and business pre-selected.
+   * @param row - The obligation row whose action button was clicked.
+   */
+  protected onAction(row: ObligationRow): void {
+    if (row.typeOfBusiness === 'ITSA') {
+      void this.router.navigate(['/self-assessment'], {
+        state: { taxYear: this.taxYearFor(row.periodStartDate) },
+      });
+    } else {
+      void this.router.navigate(['/quarterly'], {
+        state: { periodStart: row.periodStartDate, businessId: row.businessId },
+      });
     }
   }
 

@@ -56,6 +56,17 @@ describe('ObligationsService', () => {
     await promise;
   });
 
+  it('fetchObligations() — includes typeOfBusiness as a query param', async () => {
+    const promise = service.fetchObligations('AB123456C', 'tok', 'self-employment');
+    await Promise.resolve();
+
+    const req = httpController.expectOne(
+      (r) => r.urlWithParams.includes('typeOfBusiness=self-employment'),
+    );
+    req.flush({ obligations: [] });
+    await promise;
+  });
+
   it('fetchObligations() — uses default date range when none provided', async () => {
     const promise = service.fetchObligations('AB123456C', 'tok', 'self-employment');
     await Promise.resolve();

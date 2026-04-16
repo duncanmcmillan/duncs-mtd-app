@@ -78,6 +78,7 @@
           <th scope="col">Period</th>
           <th scope="col">Due date</th>
           <th scope="col">Status</th>
+          <th scope="col" class="col-action">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -105,6 +106,16 @@
                   @else { {{ -days }} days overdue }
                 </span>
               }
+            </td>
+            <td class="cell-action">
+              <button
+                class="action-btn"
+                [class.action-btn--view]="row.status === 'fulfilled'"
+                [class.action-btn--amend]="row.status !== 'fulfilled'"
+                type="button"
+                [attr.aria-label]="actionLabel(row) + ' — ' + (row.periodStartDate | date:'MMM yyyy')"
+                (click)="onAction(row)"
+              >{{ actionLabel(row) }}</button>
             </td>
           </tr>
         }

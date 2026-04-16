@@ -3,13 +3,18 @@
  * Presents annual allowances, BSAS adjustments, and dividend declarations
  * across three income sources via a two-level section + source navigation.
  */
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, linkedSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, linkedSignal, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { IncomeAdjustmentsStore } from '../store/income-adjustments.store';
 import { IncomeAdjustmentsSection, AllowanceEntry, AdjustmentEntry } from '../model/income-adjustments.model';
 import { AllowancesModalComponent } from './allowances-modal/allowances-modal.component';
 import { AdjustmentsModalComponent } from './adjustments-modal/adjustments-modal.component';
 import { DividendsModalComponent } from './dividends-modal/dividends-modal.component';
+
+/** A single numeric row within an adjustment group. */
+interface AdjRow { label: string; value: number; }
+/** A named group of adjustment rows shown in the Adjustments panel. */
+interface AdjGroup { heading: string; rows: AdjRow[]; }
 
 /**
  * Displays HMRC annual allowances, BSAS adjustments, and dividend income using
@@ -75,6 +80,81 @@ export class IncomeAdjustmentsComponent implements OnInit {
     this.store.allowances() !== null || this.store.adjustments() !== null || this.store.dividends() !== null
   );
 
+  // ── Submit status signals ────────────────────────────────────────────────────
+
+  /**
+   * Submit status for the allowances section.
+   * Auto-resets to `'idle'` whenever the selected source changes.
+   */
+  protected readonly allowancesSubmitStatus = linkedSignal<'idle' | 'submitting' | 'submitted'>(() => {
+    this.selectedSource();
+    return 'idle';
+  });
+
+  /**
+   * Submit status for the adjustments section.
+   * Auto-resets to `'idle'` whenever the selected source changes.
+   */
+  protected readonly adjustmentsSubmitStatus = linkedSignal<'idle' | 'submitting' | 'submitted'>(() => {
+    this.selectedSource();
+    return 'idle';
+  });
+
+  /** Submit status for the dividends section. */
+  protected readonly dividendsSubmitStatus = signal<'idle' | 'submitting' | 'submitted'>('idle');
+
+  /**
+   * Whether the historical allowances panel is expanded.
+   * Auto-resets to `false` when the selected source changes.
+   */
+  protected readonly showAllowancesHistory = linkedSignal<boolean>(() => {
+    this.selectedSource();
+    return false;
+  });
+
+  // ── Adjustment groups ────────────────────────────────────────────────────────
+
+  /**
+   * Adjustment rows for the selected source, grouped into Income, Expenses, and Additions.
+   * Groups with no non-null values are omitted.
+   */
+  protected readonly adjustmentGroups = computed((): AdjGroup[] => {
+    const entry = this.selectedAdjustments();
+    if (!entry) return [];
+
+    const pair = (label: string, v: number | undefined): AdjRow | null =>
+      v != null ? { label, value: v } : null;
+
+    const income: AdjRow[] = [
+      pair('Included Non-Taxable Profits', entry.includedNonTaxableProfits),
+      pair('Basis Adjustment', entry.basisAdjustment),
+      pair('Overlap Relief Used', entry.overlapReliefUsed),
+      pair('Accounting Adjustment', entry.accountingAdjustment),
+      pair('Averaging Adjustment', entry.averagingAdjustment),
+      pair('Outstanding Business Income', entry.outstandingBusinessIncome),
+    ].filter((r): r is AdjRow => r !== null);
+
+    const expenses: AdjRow[] = [
+      pair('Balancing Charge (BPRA)', entry.balancingChargeBpra),
+      pair('Balancing Charge (Other)', entry.balancingChargeOther),
+      pair('Private Use Adjustment', entry.privateUseAdjustment),
+      pair('Balancing Charge', entry.balancingCharge),
+      pair('BPRA Balancing Charges', entry.businessPremisesRenovationAllowanceBalancingCharges),
+    ].filter((r): r is AdjRow => r !== null);
+
+    const additions: AdjRow[] = [
+      pair('Goods & Services Own Use', entry.goodsAndServicesOwnUse),
+      pair('Transition Profit', entry.transitionProfitAmount),
+      pair('Transition Profit Acceleration', entry.transitionProfitAccelerationAmount),
+    ].filter((r): r is AdjRow => r !== null);
+
+    return [
+      { heading: 'Income', rows: income },
+      { heading: 'Expenses', rows: expenses },
+      { heading: 'Additions', rows: additions },
+    ].filter(g => g.rows.length > 0);
+  });
+
   /** @inheritdoc */
   ngOnInit(): void {
     void this.store.loadData();
@@ -119,6 +199,40 @@ export class IncomeAdjustmentsComponent implements OnInit {
   /** Opens the dividends edit modal. */
   protected openDividendsModal(): void {
     this.store.openDividendsModal();
+  }
+
+  // ── Submit / history handlers ────────────────────────────────────────────────
+
+  /**
+   * Stubs submission of allowances to HMRC.
+   * Sets status to `'submitting'` then resolves to `'submitted'` after a short delay.
+   */
+  protected onSubmitAllowances(): void {
+    this.allowancesSubmitStatus.set('submitting');
+    setTimeout(() => this.allowancesSubmitStatus.set('submitted'), 1200);
+  }
+
+  /**
+   * Stubs submission of adjustments to HMRC.
+   * Sets status to `'submitting'` then resolves to `'submitted'` after a short delay.
+   */
+  protected onSubmitAdjustments(): void {
+    this.adjustmentsSubmitStatus.set('submitting');
+    setTimeout(() => this.adjustmentsSubmitStatus.set('submitted'), 1200);
+  }
+
+  /**
+   * Stubs submission of dividends to HMRC.
+   * Sets status to `'submitting'` then resolves to `'submitted'` after a short delay.
+   */
+  protected onSubmitDividends(): void {
+    this.dividendsSubmitStatus.set('submitting');
+    setTimeout(() => this.dividendsSubmitStatus.set('submitted'), 1200);
+  }
+
+  /** Toggles the historical allowances panel visibility. */
+  protected onToggleAllowancesHistory(): void {
+    this.showAllowancesHistory.update(v => !v);
   }
 
   // ── Template helpers ─────────────────────────────────────────────────────────

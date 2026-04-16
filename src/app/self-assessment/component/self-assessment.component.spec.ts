@@ -10,6 +10,7 @@ describe('SelfAssessmentComponent', () => {
   let store: InstanceType<typeof SelfAssessmentStore>;
 
   beforeEach(async () => {
+    TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [SelfAssessmentComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()],
@@ -20,6 +21,8 @@ describe('SelfAssessmentComponent', () => {
     store = TestBed.inject(SelfAssessmentStore);
     fixture.detectChanges();
   });
+
+  afterEach(() => TestBed.resetTestingModule());
 
   it('creates the component', () => {
     expect(component).toBeTruthy();
