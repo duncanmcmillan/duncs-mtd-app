@@ -305,6 +305,7 @@ export const QuarterlyStore = signalStore(
           const propQ1Key = draftKey('test-biz-prop', '2024-04-06');
           const fpQ1Key   = draftKey('test-biz-fp',   '2024-04-06');
 
+          // Q1 drafts are seeded as already-submitted so the in-year calc prompt is visible.
           const seQ1Draft: QuarterlyDraft = {
             businessId: 'test-biz-se', businessName: 'Test Shop',
             businessType: 'self-employment',
@@ -315,7 +316,8 @@ export const QuarterlyStore = signalStore(
             seDisallowableExpenses: emptySEDisallowable(),
             propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
             foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
-            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
+            confirmed: true, lastSaved: '2024-08-01T10:00:00.000Z',
+            submissionId: 'sub-se-q1-test', status: 'submitted', error: null,
           };
 
           const propQ1Draft: QuarterlyDraft = {
@@ -327,7 +329,8 @@ export const QuarterlyStore = signalStore(
             propIncome: { rentAmount: 4800, rentTaxDeducted: null, premiumsOfLeaseGrant: null, reversePremiums: null, otherIncome: null },
             propExpenses: { ...emptyPropExpenses(), premisesRunningCosts: 350, repairsAndMaintenance: 120 },
             foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
-            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
+            confirmed: true, lastSaved: '2024-08-01T10:05:00.000Z',
+            submissionId: 'sub-prop-q1-test', status: 'submitted', error: null,
           };
 
           const fpQ1Draft: QuarterlyDraft = {
@@ -343,7 +346,8 @@ export const QuarterlyStore = signalStore(
               foreignTaxPaidOrDeducted: 240, specialWithholdingTaxOrUkTaxPaid: null,
             },
             foreignPropExpenses: { ...emptyForeignPropExpenses(), premisesRunningCosts: 280, repairsAndMaintenance: 95 },
-            confirmed: false, lastSaved: null, submissionId: null, status: 'draft', error: null,
+            confirmed: true, lastSaved: '2024-08-01T10:10:00.000Z',
+            submissionId: 'sub-fp-q1-test', status: 'submitted', error: null,
           };
 
           // ── Q2: Jul 6 – Oct 5 2024 ──────────────────────────────────────
