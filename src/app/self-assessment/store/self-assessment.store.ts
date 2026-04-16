@@ -77,16 +77,21 @@ export const SelfAssessmentStore = signalStore(
 
     /**
      * Submits the Final Declaration (crystallisation) for the current calculation.
+     * When authenticated, calls the HMRC API; without auth (e.g. test data),
+     * the API call is skipped and the state is updated locally.
      */
     async submitFinalDeclaration(): Promise<void> {
       const calc = store.calculation();
+      if (!calc) return;
+
       const token = appStore.accessToken();
       const nino = appStore.nino();
-      if (!calc || !token || !nino) return;
 
       patchState(store, { isLoading: true, error: null });
       try {
-        await service.submitFinalDeclaration(nino, token, calc.taxYear, calc.calculationId);
+        if (token && nino) {
+          await service.submitFinalDeclaration(nino, token, calc.taxYear, calc.calculationId);
+        }
         patchState(store, {
           isLoading: false,
           status: 'crystallised',
