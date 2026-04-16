@@ -128,7 +128,9 @@
 
   &--active {
     background: var(--neutral-0);
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    border-color: var(--orange-400);
+    border-left-color: var(--orange-500);
+    box-shadow: 0 1px 6px rgba(249, 115, 22, 0.15);
   }
 
   &--submitted {
@@ -184,6 +186,46 @@
   font-weight: 400;
   letter-spacing: 0.04em;
   color: var(--neutral-400);
+}
+
+/* ── In-year calculation prompt ────────────────────────────────────────────── */
+
+.inyear-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 18px;
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-left: 4px solid var(--orange-500);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.inyear-prompt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inyear-prompt-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--neutral-700);
+}
+
+.inyear-prompt-desc {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--neutral-400);
+}
+
+.inyear-btn {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 6px 14px;
 }
 
 /* ── Period cards ──────────────────────────────────────────────────────────── */
@@ -547,8 +589,21 @@
 
 .action-buttons {
   display: flex;
+  align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.save-feedback {
+  font-size: 12px;
+  font-weight: 400;
+  color: #15803d;
+  animation: fade-out 2s ease-in-out forwards;
+}
+
+@keyframes fade-out {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* ── Buttons ───────────────────────────────────────────────────────────────── */

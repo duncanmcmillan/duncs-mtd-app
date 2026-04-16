@@ -9,6 +9,7 @@ describe('QuarterlyComponent', () => {
   let fixture: ComponentFixture<QuarterlyComponent>;
 
   beforeEach(async () => {
+    TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [QuarterlyComponent],
       providers: [

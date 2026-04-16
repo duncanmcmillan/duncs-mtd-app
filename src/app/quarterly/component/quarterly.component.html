@@ -84,6 +84,24 @@
     </div>
   }
 
+  <!-- ── In-year calculation prompt ───────────────────────────────────────── -->
+  @if (hasAnySubmission()) {
+    <div class="inyear-prompt" role="region" aria-label="In-year tax calculation">
+      <div class="inyear-prompt-body">
+        <span class="inyear-prompt-title">In-year tax estimate available</span>
+        <span class="inyear-prompt-desc">
+          You have submitted at least one quarterly update. View an estimated tax
+          calculation based on figures submitted so far.
+        </span>
+      </div>
+      <button
+        class="btn btn--primary inyear-btn"
+        type="button"
+        (click)="onViewInYearCalc()"
+      >View In-year Tax Calculation</button>
+    </div>
+  }
+
   <!-- ── Active period panel ────────────────────────────────────────────────── -->
   @if (selectedDraft(); as draft) {
     <article
@@ -386,8 +404,11 @@
               [disabled]="draft.status === 'submitting'"
               (click)="onSaveDraft(keyFor(draft))"
             >
-              Save as Draft &amp; Exit
+              Save Draft
             </button>
+            @if (savedFeedbackKey() === keyFor(draft)) {
+              <span class="save-feedback" role="status" aria-live="polite">Saved</span>
+            }
           </div>
         }
       </section>

@@ -9,6 +9,7 @@ describe('ObligationsService', () => {
   let httpController: HttpTestingController;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
@@ -18,21 +19,23 @@ describe('ObligationsService', () => {
 
   afterEach(() => {
     httpController.verify();
+    TestBed.resetTestingModule();
   });
 
   it('creates', () => {
     expect(service).toBeTruthy();
   });
 
-  it('fetchObligations() — GETs /obligations/details/{nino} with auth header', async () => {
+  it('fetchObligations() — GETs /obligations/details/{nino}/income-and-expenditure with auth header', async () => {
     const nino = 'AB123456C';
     const token = 'test-token';
     const mockResponse: ObligationsResponse = { obligations: [] };
 
-    const promise = service.fetchObligations(nino, token, '2025-04-06', '2026-04-05');
+    const promise = service.fetchObligations(nino, token, 'self-employment');
+    await Promise.resolve();
 
     const req = httpController.expectOne(
-      (r) => r.url.includes(`/obligations/details/${nino}`),
+      (r) => r.url.includes(`/obligations/details/${nino}/income-and-expenditure`),
     );
     expect(req.request.headers.get('Authorization')).toBe(`Bearer ${token}`);
     req.flush(mockResponse);
@@ -41,7 +44,10 @@ describe('ObligationsService', () => {
   });
 
   it('fetchObligations() — includes fromDate and toDate as query params', async () => {
-    const promise = service.fetchObligations('AB123456C', 'tok', '2025-04-06', '2026-04-05');
+    const promise = service.fetchObligations(
+      'AB123456C', 'tok', 'self-employment', undefined, '2025-04-06', '2026-04-05',
+    );
+    await Promise.resolve();
 
     const req = httpController.expectOne(
       (r) =>
@@ -52,8 +58,20 @@ describe('ObligationsService', () => {
     await promise;
   });
 
+  it('fetchObligations() — includes typeOfBusiness as a query param', async () => {
+    const promise = service.fetchObligations('AB123456C', 'tok', 'self-employment');
+    await Promise.resolve();
+
+    const req = httpController.expectOne(
+      (r) => r.urlWithParams.includes('typeOfBusiness=self-employment'),
+    );
+    req.flush({ obligations: [] });
+    await promise;
+  });
+
   it('fetchObligations() — uses default date range when none provided', async () => {
     const promise = service.fetchObligations('AB123456C', 'tok', 'self-employment');
+    await Promise.resolve();
 
     const req = httpController.expectOne(
       (r) => r.urlWithParams.includes('fromDate=') && r.urlWithParams.includes('toDate='),
