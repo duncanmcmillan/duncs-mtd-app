@@ -11,6 +11,19 @@ import {
 } from '../model/self-assessment.model';
 import { AppStore, extractErrorMessage } from '../../core';
 
+/**
+ * Derives the current UK tax year string (e.g. `'2025-26'`) from today's date.
+ * The UK tax year runs from 6 April to 5 April.
+ */
+function currentTaxYear(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  const start = m > 4 || (m === 4 && d >= 6) ? y : y - 1;
+  return `${start}-${String(start + 1).slice(2)}`;
+}
+
 const initialState: SelfAssessmentState = {
   isLoading: false,
   error: null,
@@ -63,7 +76,7 @@ export const SelfAssessmentStore = signalStore(
 
       patchState(store, { isLoading: true, error: null });
       try {
-        const taxYear = '2024-25'; // TODO: derive from AppStore or user selection
+        const taxYear = currentTaxYear();
         const calculationId = await service.triggerCalculation(nino, token, taxYear);
         const calculation = await service.retrieveCalculation(nino, token, taxYear, calculationId);
         patchState(store, { isLoading: false, status: 'ready', calculation });

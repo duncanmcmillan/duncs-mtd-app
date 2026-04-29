@@ -51,6 +51,12 @@ interface RawNicsSection {
   class4Nics?: { totalAmount?: number };
 }
 
+/** Dividend income received section from the retrieve response. */
+interface RawDividendsIncome {
+  /** Total UK dividends received (£, whole pounds). */
+  totalUkDividends?: number;
+}
+
 /** Per-source income/profit entry returned within the retrieve response. */
 interface RawBusinessProfitAndLoss {
   /**
@@ -79,6 +85,8 @@ interface RawCalculationResponse {
     };
     /** Per-income-source profit/loss breakdown. */
     businessProfitAndLoss?: RawBusinessProfitAndLoss[];
+    /** Dividend income received from all sources. */
+    dividendsIncome?: RawDividendsIncome;
   };
 }
 
@@ -180,6 +188,7 @@ function mapCalculation(raw: RawCalculationResponse): TaxCalculationSummary {
   const incomeTax = taxCalc?.incomeTax;
   const nics     = taxCalc?.nics;
   const bpl      = raw.calculation?.businessProfitAndLoss ?? [];
+  const divs     = raw.calculation?.dividendsIncome;
 
   // Aggregate per-source income from the businessProfitAndLoss array.
   const seIncome = bpl.find(b => b.typeOfBusiness === 'self-employment')
@@ -204,6 +213,7 @@ function mapCalculation(raw: RawCalculationResponse): TaxCalculationSummary {
     selfEmploymentIncome:       seIncome,
     ukPropertyIncome:           ukPropIncome,
     foreignPropertyIncome:      fpIncome,
+    ukDividendIncome:           divs?.totalUkDividends,
     totalIncomeReceived:        incomeTax?.totalIncomeReceivedFromAllSources,
     personalAllowance:          incomeTax?.personalAllowance,
     totalAllowancesAndDeductions: incomeTax?.totalAllowancesAndDeductions,
