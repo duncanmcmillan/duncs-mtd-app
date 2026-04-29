@@ -1,6 +1,6 @@
 /**
  * @fileoverview NgRx Signal Store for the Income & Adjustments feature.
- * Manages allowances, adjustments, dividend state, modal visibility, and seed data.
+ * Manages allowances, BSAS adjustments, dividend state, modal visibility, and seed data.
  */
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withComputed, withMethods, patchState } from '@ngrx/signals';
@@ -85,6 +85,111 @@ export const IncomeAdjustmentsStore = signalStore(
           error: extractErrorMessage(e, 'Failed to load income adjustments'),
           isLoading: false,
         });
+      }
+    },
+
+    // ── Allowances submit ──────────────────────────────────────────────────────
+
+    /**
+     * Submits annual allowances for the given income source to HMRC.
+     * No-op when the user is not authenticated.
+     * @param source - The `typeOfBusiness` of the entry to submit.
+     */
+    async submitAllowances(source: string): Promise<void> {
+      const token = appStore.accessToken();
+      const nino = appStore.nino();
+      if (!token || !nino) return;
+
+      const entry = (store.allowances() ?? []).find(e => e.typeOfBusiness === source);
+      if (!entry) return;
+
+      patchState(store, { isLoading: true, error: null });
+      try {
+        await service.submitAllowances(entry, nino, token);
+        patchState(store, { isLoading: false });
+      } catch (e: unknown) {
+        patchState(store, {
+          error: extractErrorMessage(e, 'Failed to submit allowances'),
+          isLoading: false,
+        });
+        throw e;
+      }
+    },
+
+    // ── BSAS Adjustments submit ────────────────────────────────────────────────
+
+    /**
+     * Triggers a BSAS and submits SE accounting adjustments for the given source.
+     * If the entry already has a `calculationId`, the trigger step is skipped.
+     * No-op when the user is not authenticated.
+     * @param source - The `typeOfBusiness` of the entry to submit.
+     */
+    async submitAdjustments(source: string): Promise<void> {
+      const token = appStore.accessToken();
+      const nino = appStore.nino();
+      if (!token || !nino) return;
+
+      const entry = (store.adjustments() ?? []).find(e => e.typeOfBusiness === source);
+      if (!entry) return;
+
+      patchState(store, { isLoading: true, error: null });
+      try {
+        let calculationId = entry.calculationId;
+
+        if (!calculationId) {
+          // Step 22: trigger the BSAS to obtain a calculationId
+          calculationId = await service.triggerBsas(entry, nino, token);
+          // Persist the calculationId so the user can see it and re-use it
+          patchState(store, {
+            adjustments: (store.adjustments() ?? []).map(e =>
+              e.typeOfBusiness === source ? { ...e, calculationId } : e,
+            ),
+          });
+        }
+
+        // Step 24: submit the accounting adjustments
+        const updatedEntry = { ...entry, calculationId };
+        await service.submitBsasAdjustments(updatedEntry, nino, token);
+        patchState(store, { isLoading: false });
+      } catch (e: unknown) {
+        patchState(store, {
+          error: extractErrorMessage(e, 'Failed to submit BSAS adjustments'),
+          isLoading: false,
+        });
+        throw e;
+      }
+    },
+
+    // ── Dividends submit ───────────────────────────────────────────────────────
+
+    /**
+     * Submits dividend income declarations to HMRC.
+     * Calls the UK dividends sub-endpoint and/or the foreign dividends endpoint
+     * depending on which fields are populated.
+     * No-op when the user is not authenticated.
+     */
+    async submitDividends(): Promise<void> {
+      const token = appStore.accessToken();
+      const nino = appStore.nino();
+      if (!token || !nino) return;
+
+      const entry = store.dividends();
+      if (!entry) return;
+
+      patchState(store, { isLoading: true, error: null });
+      try {
+        const hasUk = entry.ukDividends != null || entry.otherUkDividends != null;
+        const hasForeign = (entry.foreignDividends ?? []).length > 0;
+
+        if (hasUk) await service.submitUkDividends(entry, nino, token);
+        if (hasForeign) await service.submitForeignDividends(entry, nino, token);
+        patchState(store, { isLoading: false });
+      } catch (e: unknown) {
+        patchState(store, {
+          error: extractErrorMessage(e, 'Failed to submit dividends'),
+          isLoading: false,
+        });
+        throw e;
       }
     },
 
@@ -197,9 +302,8 @@ export const IncomeAdjustmentsStore = signalStore(
     // ── Seed data ────────────────────────────────────────────────────────────
 
     /**
-     * Loads synthetic allowances, adjustments, and dividends covering all
-     * three income source types for the 2024-25 tax year, for UI development
-     * without authentication.
+     * Loads synthetic allowances, adjustments, and dividends covering SE
+     * for the 2024-25 tax year, for UI development without authentication.
      */
     seedTestData(): void {
       const allowances: AllowanceEntry[] = [
@@ -237,19 +341,18 @@ export const IncomeAdjustmentsStore = signalStore(
           businessId: 'test-biz-se',
           typeOfBusiness: 'self-employment',
           taxYear: '2024-25',
-          calculationId: 'calc-se-2024',
-          includedNonTaxableProfits: 500,
-          basisAdjustment: -250,
-          overlapReliefUsed: 1200,
-          accountingAdjustment: 300,
-          goodsAndServicesOwnUse: 450,
-          transitionProfitAmount: 2000,
+          // BSAS income adjustments
+          turnover: 500,
+          otherIncome: 200,
+          // BSAS expense adjustments
+          costOfGoods: -150,
+          wagesAndStaffCosts: 300,
+          professionalFees: -75,
         },
         {
           businessId: 'test-biz-prop',
           typeOfBusiness: 'uk-property',
           taxYear: '2024-25',
-          calculationId: 'calc-prop-2024',
           privateUseAdjustment: 1500,
           balancingCharge: 800,
           nonResidentLandlord: false,
@@ -259,7 +362,6 @@ export const IncomeAdjustmentsStore = signalStore(
           businessId: 'test-biz-fp',
           typeOfBusiness: 'foreign-property',
           taxYear: '2024-25',
-          calculationId: 'calc-fp-2024',
           privateUseAdjustment: 600,
           nonResidentLandlord: true,
         },
@@ -270,8 +372,8 @@ export const IncomeAdjustmentsStore = signalStore(
         ukDividends: 2500,
         otherUkDividends: 800,
         foreignDividends: [
-          { countryCode: 'DE', amount: 300, taxTakenOff: 45 },
-          { countryCode: 'US', amount: 750, taxTakenOff: 112 },
+          { countryCode: 'DEU', amount: 300, taxableAmount: 255, taxTakenOff: 45 },
+          { countryCode: 'USA', amount: 750, taxableAmount: 638, taxTakenOff: 112 },
         ],
       };
 

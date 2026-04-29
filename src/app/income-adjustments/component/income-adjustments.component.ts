@@ -117,8 +117,9 @@ export class IncomeAdjustmentsComponent implements OnInit {
   // ── Adjustment groups ────────────────────────────────────────────────────────
 
   /**
-   * Adjustment rows for the selected source, grouped into Income, Expenses, and Additions.
-   * Groups with no non-null values are omitted.
+   * Adjustment rows for the selected source, grouped by category.
+   * SE sources show BSAS income/expenses/additions; property sources show
+   * annual submission adjustment fields. Groups with no non-null values are omitted.
    */
   protected readonly adjustmentGroups = computed((): AdjGroup[] => {
     const entry = this.selectedAdjustments();
@@ -127,34 +128,64 @@ export class IncomeAdjustmentsComponent implements OnInit {
     const pair = (label: string, v: number | undefined): AdjRow | null =>
       v != null ? { label, value: v } : null;
 
-    const income: AdjRow[] = [
-      pair('Included Non-Taxable Profits', entry.includedNonTaxableProfits),
-      pair('Basis Adjustment', entry.basisAdjustment),
-      pair('Overlap Relief Used', entry.overlapReliefUsed),
-      pair('Accounting Adjustment', entry.accountingAdjustment),
-      pair('Averaging Adjustment', entry.averagingAdjustment),
-      pair('Outstanding Business Income', entry.outstandingBusinessIncome),
+    if (entry.typeOfBusiness === 'self-employment') {
+      // ── SE: BSAS accounting adjustments ──────────────────────────────────
+      const income: AdjRow[] = [
+        pair('Turnover',     entry.turnover),
+        pair('Other Income', entry.otherIncome),
+      ].filter((r): r is AdjRow => r !== null);
+
+      const expenses: AdjRow[] = [
+        pair('Cost of Goods',                 entry.costOfGoods),
+        pair('Payments to Subcontractors',    entry.paymentsToSubcontractors),
+        pair('Wages and Staff Costs',         entry.wagesAndStaffCosts),
+        pair('Car, Van and Travel Expenses',  entry.carVanTravelExpenses),
+        pair('Premises Running Costs',        entry.premisesRunningCosts),
+        pair('Maintenance Costs',             entry.maintenanceCosts),
+        pair('Admin Costs',                   entry.adminCosts),
+        pair('Interest on Bank / Other Loans', entry.interestOnBankOtherLoans),
+        pair('Finance Charges',               entry.financeCharges),
+        pair('Irrecoverable Debts',           entry.irrecoverableDebts),
+        pair('Professional Fees',             entry.professionalFees),
+        pair('Depreciation',                  entry.depreciation),
+        pair('Other Expenses',                entry.otherExpenses),
+        pair('Advertising Costs',             entry.advertisingCosts),
+        pair('Business Entertainment Costs',  entry.businessEntertainmentCosts),
+      ].filter((r): r is AdjRow => r !== null);
+
+      const additions: AdjRow[] = [
+        pair('Cost of Goods (Disallowable)',                entry.costOfGoodsDisallowable),
+        pair('Payments to Subcontractors (Disallowable)',   entry.paymentsToSubcontractorsDisallowable),
+        pair('Wages and Staff Costs (Disallowable)',        entry.wagesAndStaffCostsDisallowable),
+        pair('Car, Van and Travel (Disallowable)',          entry.carVanTravelExpensesDisallowable),
+        pair('Premises Running Costs (Disallowable)',       entry.premisesRunningCostsDisallowable),
+        pair('Maintenance Costs (Disallowable)',            entry.maintenanceCostsDisallowable),
+        pair('Admin Costs (Disallowable)',                  entry.adminCostsDisallowable),
+        pair('Interest on Loans (Disallowable)',            entry.interestOnBankOtherLoansDisallowable),
+        pair('Finance Charges (Disallowable)',              entry.financeChargesDisallowable),
+        pair('Irrecoverable Debts (Disallowable)',          entry.irrecoverableDebtsDisallowable),
+        pair('Professional Fees (Disallowable)',            entry.professionalFeesDisallowable),
+        pair('Depreciation (Disallowable)',                 entry.depreciationDisallowable),
+        pair('Other Expenses (Disallowable)',               entry.otherExpensesDisallowable),
+        pair('Advertising Costs (Disallowable)',            entry.advertisingCostsDisallowable),
+        pair('Business Entertainment (Disallowable)',       entry.businessEntertainmentCostsDisallowable),
+      ].filter((r): r is AdjRow => r !== null);
+
+      return [
+        { heading: 'Income',               rows: income },
+        { heading: 'Expenses',             rows: expenses },
+        { heading: 'Additions (Disallowable)', rows: additions },
+      ].filter(g => g.rows.length > 0);
+    }
+
+    // ── Property: annual submission adjustments ─────────────────────────────
+    const propRows: AdjRow[] = [
+      pair('Private Use Adjustment',  entry.privateUseAdjustment),
+      pair('Balancing Charge',        entry.balancingCharge),
+      pair('BPRA Balancing Charges',  entry.businessPremisesRenovationAllowanceBalancingCharges),
     ].filter((r): r is AdjRow => r !== null);
 
-    const expenses: AdjRow[] = [
-      pair('Balancing Charge (BPRA)', entry.balancingChargeBpra),
-      pair('Balancing Charge (Other)', entry.balancingChargeOther),
-      pair('Private Use Adjustment', entry.privateUseAdjustment),
-      pair('Balancing Charge', entry.balancingCharge),
-      pair('BPRA Balancing Charges', entry.businessPremisesRenovationAllowanceBalancingCharges),
-    ].filter((r): r is AdjRow => r !== null);
-
-    const additions: AdjRow[] = [
-      pair('Goods & Services Own Use', entry.goodsAndServicesOwnUse),
-      pair('Transition Profit', entry.transitionProfitAmount),
-      pair('Transition Profit Acceleration', entry.transitionProfitAccelerationAmount),
-    ].filter((r): r is AdjRow => r !== null);
-
-    return [
-      { heading: 'Income', rows: income },
-      { heading: 'Expenses', rows: expenses },
-      { heading: 'Additions', rows: additions },
-    ].filter(g => g.rows.length > 0);
+    return [{ heading: 'Adjustments', rows: propRows }].filter(g => g.rows.length > 0);
   });
 
   /** @inheritdoc */
@@ -206,30 +237,56 @@ export class IncomeAdjustmentsComponent implements OnInit {
   // ── Submit / history handlers ────────────────────────────────────────────────
 
   /**
-   * Stubs submission of allowances to HMRC.
-   * Sets status to `'submitting'` then resolves to `'submitted'` after a short delay.
+   * Submits annual allowances for the selected source to HMRC.
+   * When authenticated, calls the SE Annual Submission API v5.0.
+   * Falls back to a simulated delay when not authenticated (test data mode).
    */
   protected onSubmitAllowances(): void {
     this.allowancesSubmitStatus.set('submitting');
-    setTimeout(() => this.allowancesSubmitStatus.set('submitted'), 1200);
+    const src = this.selectedSource();
+    if (this.appStore.isAuthenticated() && src) {
+      void this.store.submitAllowances(src).then(
+        () => this.allowancesSubmitStatus.set('submitted'),
+        () => this.allowancesSubmitStatus.set('idle'),
+      );
+    } else {
+      setTimeout(() => this.allowancesSubmitStatus.set('submitted'), 1200);
+    }
   }
 
   /**
-   * Stubs submission of adjustments to HMRC.
-   * Sets status to `'submitting'` then resolves to `'submitted'` after a short delay.
+   * Triggers a BSAS and submits SE accounting adjustments for the selected source.
+   * When authenticated, calls the BSAS API v7.0 (trigger + submit).
+   * Falls back to a simulated delay when not authenticated (test data mode).
    */
   protected onSubmitAdjustments(): void {
     this.adjustmentsSubmitStatus.set('submitting');
-    setTimeout(() => this.adjustmentsSubmitStatus.set('submitted'), 1200);
+    const src = this.selectedSource();
+    if (this.appStore.isAuthenticated() && src) {
+      void this.store.submitAdjustments(src).then(
+        () => this.adjustmentsSubmitStatus.set('submitted'),
+        () => this.adjustmentsSubmitStatus.set('idle'),
+      );
+    } else {
+      setTimeout(() => this.adjustmentsSubmitStatus.set('submitted'), 1200);
+    }
   }
 
   /**
-   * Stubs submission of dividends to HMRC.
-   * Sets status to `'submitting'` then resolves to `'submitted'` after a short delay.
+   * Submits dividend income declarations to HMRC.
+   * When authenticated, calls the Individuals Dividends Income API v2.0.
+   * Falls back to a simulated delay when not authenticated (test data mode).
    */
   protected onSubmitDividends(): void {
     this.dividendsSubmitStatus.set('submitting');
-    setTimeout(() => this.dividendsSubmitStatus.set('submitted'), 1200);
+    if (this.appStore.isAuthenticated()) {
+      void this.store.submitDividends().then(
+        () => this.dividendsSubmitStatus.set('submitted'),
+        () => this.dividendsSubmitStatus.set('idle'),
+      );
+    } else {
+      setTimeout(() => this.dividendsSubmitStatus.set('submitted'), 1200);
+    }
   }
 
   /** Toggles the historical allowances panel visibility. */
