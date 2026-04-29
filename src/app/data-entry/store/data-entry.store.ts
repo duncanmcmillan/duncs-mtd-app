@@ -104,7 +104,12 @@ export const DataEntryStore = signalStore(
       }
     },
 
-    /** Loads persisted settings from safeStorage on app startup. */
+    /**
+     * Loads persisted settings from safeStorage on app startup.
+     * When the service returns `null` (browser / no Electron bridge), the
+     * existing in-memory state is preserved so in-session changes survive
+     * subsequent route activations that call `init()` again.
+     */
     async init(): Promise<void> {
       patchState(store, { isLoading: true, error: null });
       try {
@@ -113,8 +118,8 @@ export const DataEntryStore = signalStore(
           settingsService.loadNotifications(),
         ]);
         patchState(store, {
-          dataEntry: dataEntry ?? defaultDataEntry,
-          notifications: notifications ?? defaultNotifications,
+          dataEntry: dataEntry ?? store.dataEntry(),
+          notifications: notifications ?? store.notifications(),
           isLoading: false,
         });
       } catch (e: unknown) {

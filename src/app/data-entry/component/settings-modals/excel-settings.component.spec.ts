@@ -34,9 +34,9 @@ describe('ExcelSettingsComponent', () => {
     expect(title.textContent?.trim()).toContain('Local Excel Settings');
   });
 
-  it('renders two input fields', () => {
+  it('renders three input fields', () => {
     const inputs: NodeList = fixture.nativeElement.querySelectorAll('input[matInput]');
-    expect(inputs.length).toBe(2);
+    expect(inputs.length).toBe(3);
   });
 
   it('renders cancel and save buttons', () => {

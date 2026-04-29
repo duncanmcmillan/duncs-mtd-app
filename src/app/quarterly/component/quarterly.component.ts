@@ -9,7 +9,10 @@ import { Router } from '@angular/router';
 import { AppStore } from '../../core';
 import { QuarterlyStore } from '../store/quarterly.store';
 import { SelfAssessmentStore } from '../../self-assessment/store/self-assessment.store';
+import { DataEntryStore } from '../../data-entry';
 import { ExpensesModalComponent } from './expenses-modal/expenses-modal.component';
+import { FieldMappingBtnComponent, MappingChangeEvent } from '../../data-entry/component/field-mapping-btn/field-mapping-btn.component';
+import { DataEntryBannerComponent } from '../../data-entry/component/data-entry-banner/data-entry-banner.component';
 import {
   ForeignPropertyIncome,
   QuarterlyDraft,
@@ -49,7 +52,7 @@ interface ObligationsNavState {
  */
 @Component({
   selector: 'app-quarterly',
-  imports: [DatePipe, CurrencyPipe, ExpensesModalComponent],
+  imports: [DatePipe, CurrencyPipe, ExpensesModalComponent, FieldMappingBtnComponent, DataEntryBannerComponent],
   templateUrl: './quarterly.component.html',
   styleUrl: './quarterly.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,6 +61,7 @@ export class QuarterlyComponent implements OnInit {
   /** @internal */
   protected readonly store = inject(QuarterlyStore);
   protected readonly appStore = inject(AppStore);
+  protected readonly deStore = inject(DataEntryStore);
   private readonly saStore = inject(SelfAssessmentStore);
   private readonly router = inject(Router);
 
@@ -119,6 +123,20 @@ export class QuarterlyComponent implements OnInit {
   protected readonly hasAnySubmission = computed((): boolean =>
     this.store.draftList().some(d => d.status === 'submitted'),
   );
+
+  /** `true` when a mappable data-entry method (Excel or AirTable) is active. */
+  protected readonly isMappingActive = computed((): boolean => {
+    const de = this.deStore.dataEntry();
+    return de.excelEnabled || de.airtableEnabled;
+  });
+
+  /** The active fieldMappings from Excel or AirTable settings, or empty object. */
+  protected readonly activeMappings = computed((): Record<string, string> => {
+    const de = this.deStore.dataEntry();
+    if (de.excelEnabled && de.excel?.fieldMappings) return de.excel.fieldMappings;
+    if (de.airtableEnabled && de.airtable?.fieldMappings) return de.airtable.fieldMappings;
+    return {};
+  });
 
   /** @inheritdoc */
   ngOnInit(): void {
@@ -293,6 +311,45 @@ export class QuarterlyComponent implements OnInit {
   /** Loads synthetic test drafts for UI development without authentication. */
   protected onLoadTestData(): void {
     this.store.seedTestDrafts();
+  }
+
+  /**
+   * Persists an updated field mapping to the active data-entry settings.
+   * Removes the key when `columnName` is empty.
+   * @param e - The mapping change event from {@link FieldMappingBtnComponent}.
+   */
+  protected async onMappingChange(e: MappingChangeEvent): Promise<void> {
+    const de = this.deStore.dataEntry();
+    if (de.excelEnabled) {
+      const excel = de.excel ?? { filePath: '', sheetName: '', dateColumn: '', fieldMappings: {} };
+      const fieldMappings = { ...excel.fieldMappings };
+      if (e.columnName) {
+        fieldMappings[e.fieldKey] = e.columnName;
+      } else {
+        delete fieldMappings[e.fieldKey];
+      }
+      await this.deStore.saveDataEntry({ ...de, excel: { ...excel, fieldMappings } });
+    } else if (de.airtableEnabled) {
+      const airtable = de.airtable ?? { apiKey: '', baseId: '', tableId: '', dateColumn: '', fieldMappings: {} };
+      const fieldMappings = { ...airtable.fieldMappings };
+      if (e.columnName) {
+        fieldMappings[e.fieldKey] = e.columnName;
+      } else {
+        delete fieldMappings[e.fieldKey];
+      }
+      await this.deStore.saveDataEntry({ ...de, airtable: { ...airtable, fieldMappings } });
+    }
+  }
+
+  /**
+   * Triggers pre-filling the currently selected draft from the active data source.
+   * No-op until ExcelService / AirtableService are implemented.
+   */
+  protected onRefreshFromSource(): void {
+    const draft = this.selectedDraft();
+    if (draft) {
+      void this.store.prefillFromSource(draft);
+    }
   }
 }
 

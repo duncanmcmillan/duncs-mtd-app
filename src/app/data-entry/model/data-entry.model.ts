@@ -23,6 +23,10 @@ export interface AirtableSettings {
   baseId: string;
   /** ID of the specific table within the base. */
   tableId: string;
+  /** Column header used to identify the period row (e.g. `"Quarter End Date"`). */
+  dateColumn: string;
+  /** Maps dotted MTD field paths (e.g. `"se.income.turnover"`) to column header names. */
+  fieldMappings: Record<string, string>;
 }
 
 /** Settings for importing data from a local Excel file. */
@@ -31,6 +35,10 @@ export interface ExcelSettings {
   filePath: string;
   /** Name of the sheet within the workbook to read from. */
   sheetName: string;
+  /** Column header used to identify the period row (e.g. `"Quarter End Date"`). */
+  dateColumn: string;
+  /** Maps dotted MTD field paths (e.g. `"se.income.turnover"`) to column header names. */
+  fieldMappings: Record<string, string>;
 }
 
 /** Settings for the Google Sheets integration. */

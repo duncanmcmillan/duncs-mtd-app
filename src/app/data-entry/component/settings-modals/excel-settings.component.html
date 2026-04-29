@@ -29,6 +29,17 @@
           aria-required="true"
         />
       </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Date Column</mat-label>
+        <input
+          matInput
+          [value]="form().dateColumn"
+          (input)="setField('dateColumn', $any($event.target).value)"
+          autocomplete="off"
+          placeholder="Quarter End Date"
+        />
+      </mat-form-field>
     </div>
 
     @if (store.hasError()) {

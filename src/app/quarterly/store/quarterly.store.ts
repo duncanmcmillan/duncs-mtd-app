@@ -406,6 +406,17 @@ export const QuarterlyStore = signalStore(
             error: null,
           });
         },
+
+        /**
+         * Pre-fills the given draft with figures read from the active data source.
+         * Values populate the form but remain editable.
+         * @param _draft - The draft to pre-fill.
+         * @returns A promise that resolves when the pre-fill is complete.
+         * @todo Call ExcelService / AirtableService in follow-up PR.
+         */
+        async prefillFromSource(_draft: QuarterlyDraft): Promise<void> {
+          // TODO: implement in follow-up PR once ExcelService / AirtableService exist.
+        },
       };
     },
   ),

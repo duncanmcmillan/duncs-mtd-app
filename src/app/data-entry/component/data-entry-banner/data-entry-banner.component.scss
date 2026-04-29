@@ -1,0 +1,63 @@
+.de-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  background: var(--color-mapping-bg);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-left: 4px solid var(--color-mapping);
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+
+.de-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.de-banner-icon {
+  color: var(--color-mapping);
+  flex-shrink: 0;
+}
+
+.de-banner-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-mapping);
+}
+
+.de-banner-detail {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--neutral-500);
+
+  &::before {
+    content: '·';
+    margin-right: 8px;
+    color: var(--neutral-300);
+  }
+}
+
+.de-banner-refresh {
+  background: none;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--color-mapping);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: var(--color-mapping);
+  }
+}

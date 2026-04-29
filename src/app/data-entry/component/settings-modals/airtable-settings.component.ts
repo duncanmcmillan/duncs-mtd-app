@@ -26,9 +26,11 @@ export class AirtableSettingsComponent {
   protected readonly store = inject(DataEntryStore);
 
   protected readonly form = signal<AirtableSettings>({
-    apiKey: this.store.dataEntry().airtable?.apiKey ?? '',
-    baseId: this.store.dataEntry().airtable?.baseId ?? '',
-    tableId: this.store.dataEntry().airtable?.tableId ?? '',
+    apiKey:        this.store.dataEntry().airtable?.apiKey        ?? '',
+    baseId:        this.store.dataEntry().airtable?.baseId        ?? '',
+    tableId:       this.store.dataEntry().airtable?.tableId       ?? '',
+    dateColumn:    this.store.dataEntry().airtable?.dateColumn    ?? '',
+    fieldMappings: this.store.dataEntry().airtable?.fieldMappings ?? {},
   });
 
   /** Updates a single field in the form signal. */

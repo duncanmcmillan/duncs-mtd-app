@@ -3,8 +3,10 @@
  * of expenses for a quarterly update draft. Supports self-employment
  * (allowable + non-allowable), UK property, and foreign property expense categories.
  */
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { QuarterlyStore } from '../../store/quarterly.store';
+import { DataEntryStore } from '../../../data-entry';
+import { FieldMappingBtnComponent, MappingChangeEvent } from '../../../data-entry/component/field-mapping-btn/field-mapping-btn.component';
 import {
   QuarterlyDraft,
   SelfEmploymentExpenses,
@@ -91,7 +93,7 @@ const FOREIGN_PROP_EXPENSE_ROWS: ExpenseRow<ForeignPropertyExpenses>[] = [
  */
 @Component({
   selector: 'app-expenses-modal',
-  imports: [],
+  imports: [FieldMappingBtnComponent],
   templateUrl: './expenses-modal.component.html',
   styleUrl: './expenses-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,6 +101,22 @@ const FOREIGN_PROP_EXPENSE_ROWS: ExpenseRow<ForeignPropertyExpenses>[] = [
 export class ExpensesModalComponent {
   /** @internal */
   protected readonly store = inject(QuarterlyStore);
+  /** @internal */
+  protected readonly deStore = inject(DataEntryStore);
+
+  /** `true` when a mappable data-entry method (Excel or AirTable) is active. */
+  protected readonly isMappingActive = computed((): boolean => {
+    const de = this.deStore.dataEntry();
+    return de.excelEnabled || de.airtableEnabled;
+  });
+
+  /** The active fieldMappings from Excel or AirTable settings, or empty object. */
+  protected readonly activeMappings = computed((): Record<string, string> => {
+    const de = this.deStore.dataEntry();
+    if (de.excelEnabled && de.excel?.fieldMappings) return de.excel.fieldMappings;
+    if (de.airtableEnabled && de.airtable?.fieldMappings) return de.airtable.fieldMappings;
+    return {};
+  });
 
   /** @internal */
   protected readonly seExpenseRows = SE_EXPENSE_ROWS;
@@ -177,6 +195,34 @@ export class ExpensesModalComponent {
   ): void {
     const value = parseNullableNumber((event.target as HTMLInputElement).value);
     this.store.patchForeignPropExpenses(key, { [field]: value } as Partial<ForeignPropertyExpenses>);
+  }
+
+  /**
+   * Persists an updated field mapping to the active data-entry settings.
+   * Removes the key when `columnName` is empty.
+   * @param e - The mapping change event from {@link FieldMappingBtnComponent}.
+   */
+  protected async onMappingChange(e: MappingChangeEvent): Promise<void> {
+    const de = this.deStore.dataEntry();
+    if (de.excelEnabled) {
+      const excel = de.excel ?? { filePath: '', sheetName: '', dateColumn: '', fieldMappings: {} };
+      const fieldMappings = { ...excel.fieldMappings };
+      if (e.columnName) {
+        fieldMappings[e.fieldKey] = e.columnName;
+      } else {
+        delete fieldMappings[e.fieldKey];
+      }
+      await this.deStore.saveDataEntry({ ...de, excel: { ...excel, fieldMappings } });
+    } else if (de.airtableEnabled) {
+      const airtable = de.airtable ?? { apiKey: '', baseId: '', tableId: '', dateColumn: '', fieldMappings: {} };
+      const fieldMappings = { ...airtable.fieldMappings };
+      if (e.columnName) {
+        fieldMappings[e.fieldKey] = e.columnName;
+      } else {
+        delete fieldMappings[e.fieldKey];
+      }
+      await this.deStore.saveDataEntry({ ...de, airtable: { ...airtable, fieldMappings } });
+    }
   }
 
   /** Closes the modal via the store. */

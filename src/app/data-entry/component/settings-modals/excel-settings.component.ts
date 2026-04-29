@@ -26,8 +26,10 @@ export class ExcelSettingsComponent {
   protected readonly store = inject(DataEntryStore);
 
   protected readonly form = signal<ExcelSettings>({
-    filePath:  this.store.dataEntry().excel?.filePath  ?? '',
-    sheetName: this.store.dataEntry().excel?.sheetName ?? '',
+    filePath:      this.store.dataEntry().excel?.filePath      ?? '',
+    sheetName:     this.store.dataEntry().excel?.sheetName     ?? '',
+    dateColumn:    this.store.dataEntry().excel?.dateColumn    ?? '',
+    fieldMappings: this.store.dataEntry().excel?.fieldMappings ?? {},
   });
 
   /** Updates a single field in the form signal. */

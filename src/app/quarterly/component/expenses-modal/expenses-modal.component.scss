@@ -127,7 +127,7 @@
 
 .expense-row {
   display: grid;
-  grid-template-columns: 1fr 160px;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 16px;
   padding: 6px 0;
@@ -149,8 +149,14 @@
   color: var(--neutral-600);
 }
 
+.expense-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .expense-input {
-  width: 100%;
+  width: 140px;
   padding: 6px 10px;
   font-size: 13px;
   font-family: var(--font-body);
