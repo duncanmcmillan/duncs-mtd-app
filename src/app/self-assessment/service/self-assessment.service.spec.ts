@@ -152,6 +152,25 @@ describe('SelfAssessmentService', () => {
     expect(result.foreignPropertyIncome).toBe(6000);
   });
 
+  it('retrieveCalculation — maps totalUkDividends from dividendsIncome', async () => {
+    const promise = service.retrieveCalculation(NINO, TOKEN, TAX_YEAR, CALC_ID);
+    await Promise.resolve();
+
+    const req = http.expectOne(r => r.url.includes(CALC_ID) && r.method === 'GET');
+    req.flush({
+      metadata: {
+        calculationId: CALC_ID, taxYear: TAX_YEAR,
+        calculationTimestamp: '2025-01-15T14:32:00Z', finalDeclaration: false,
+      },
+      calculation: {
+        dividendsIncome: { totalUkDividends: 3300 },
+      },
+    });
+
+    const result = await promise;
+    expect(result.ukDividendIncome).toBe(3300);
+  });
+
   it('retrieveCalculation — leaves income fields undefined when absent', async () => {
     const promise = service.retrieveCalculation(NINO, TOKEN, TAX_YEAR, CALC_ID);
     await Promise.resolve();

@@ -95,7 +95,10 @@ interface TriggerCalculationResponse {
         typeOfBusiness: 'foreign-property' | 'foreign-property-fhl-eea'; // → foreignPropertyIncome (summed)
         totalBusinessIncomeTaxableProfit: number;
       }
-    ]
+    ],
+    dividendsIncome: {
+      totalUkDividends: number;  // → ukDividendIncome
+    }
   }
 }
 ```
