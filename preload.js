@@ -70,6 +70,12 @@ contextBridge.exposeInMainWorld('settings', {
   saveNotifications: (settings) => ipcRenderer.invoke('settings:save-notifications', settings),
 });
 
+// ── Excel bridge ────────────────────────────────────────────────────────────
+contextBridge.exposeInMainWorld('excel', {
+  /** Reads the row matching periodEndDate and returns fieldKey → numeric value. */
+  readRow: (params) => ipcRenderer.invoke('excel:read-row', params),
+});
+
 // ── HMRC API bridge ────────────────────────────────────────────────────────
 contextBridge.exposeInMainWorld('hmrc', {
   /** Open system browser with HMRC auth URL, resolves with { code, state } */

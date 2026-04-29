@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const { randomUUID } = require('node:crypto');
 const { URL } = require('node:url');
+const XLSX = require('xlsx');
 
 // ── Paths ──────────────────────────────────────────────────────────────────
 const TOKEN_PATH        = () => path.join(app.getPath('userData'), 'hmrc-tokens.enc');
@@ -131,6 +132,34 @@ function safeRead(filePath) {
 
 function safeDelete(filePath) {
   if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+}
+
+// ── Excel helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Normalises an Excel cell value to ISO YYYY-MM-DD for date comparison.
+ * Handles JS Date objects, Excel serial numbers, UK date strings (DD/MM/YYYY),
+ * and ISO strings. Returns null when the value cannot be parsed.
+ */
+function toIsoDate(val) {
+  if (!val && val !== 0) return null;
+  if (val instanceof Date) return val.toISOString().slice(0, 10);
+  if (typeof val === 'number') {
+    const parsed = XLSX.SSF.parse_date_code(val);
+    if (!parsed) return null;
+    const mm = String(parsed.m).padStart(2, '0');
+    const dd = String(parsed.d).padStart(2, '0');
+    return `${parsed.y}-${mm}-${dd}`;
+  }
+  const s = String(val).trim();
+  // UK date format DD/MM/YYYY (primary format for UK users)
+  const ukMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (ukMatch) {
+    const [, dd, mm, yyyy] = ukMatch;
+    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+  }
+  try { return new Date(s).toISOString().slice(0, 10); }
+  catch { return null; }
 }
 
 // ── Window ─────────────────────────────────────────────────────────────────
@@ -336,6 +365,33 @@ app.whenReady().then(() => {
   // ── Settings: save notification settings ─────────────────────────────
   ipcMain.handle('settings:save-notifications', (_e, settings) => {
     safeWrite(NOTIFICATION_SETTINGS_PATH(), settings);
+  });
+
+  // ── Excel: read a single data row from a local .xlsx file ─────────────
+  ipcMain.handle('excel:read-row', async (_event, { filePath, sheetName, dateColumn, periodEndDate, fieldMappings }) => {
+    const workbook = XLSX.readFile(filePath);
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) throw new Error(`Sheet "${sheetName}" not found in ${filePath}`);
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null });
+    if (rows.length === 0) return {};
+
+    // First row is headers
+    const headers = rows[0].map(h => (h == null ? '' : String(h).trim()));
+    const dateColIdx = headers.indexOf(dateColumn);
+    if (dateColIdx === -1) throw new Error(`Date column "${dateColumn}" not found`);
+
+    // Find matching row
+    const dataRow = rows.slice(1).find(row => toIsoDate(row[dateColIdx]) === periodEndDate);
+    if (!dataRow) return {};
+
+    // Build result: fieldKey → numeric value
+    const result = {};
+    for (const [fieldKey, colHeader] of Object.entries(fieldMappings)) {
+      const colIdx = headers.indexOf(colHeader);
+      const raw = colIdx === -1 ? null : dataRow[colIdx];
+      result[fieldKey] = (typeof raw === 'number' && isFinite(raw)) ? raw : null;
+    }
+    return result;
   });
 
   // ── GDPR: delete all locally stored personal data ─────────────────────
