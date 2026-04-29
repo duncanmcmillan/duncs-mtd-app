@@ -20,6 +20,16 @@ module.exports = {
   },
   hooks: {
     /**
+     * Builds the Angular app before packaging so the bundled dist is always
+     * up to date with the current source.
+     */
+    preMake: async () => {
+      const { execSync } = require('child_process');
+      console.log('[forge] Running ng build…');
+      execSync('npm run build', { stdio: 'inherit' });
+    },
+
+    /**
      * Re-sign the packaged .app with ad-hoc identity after the FusesPlugin has
      * modified the Electron binaries.  @electron/osx-sign (used by packagerConfig.osxSign)
      * runs before Fuses modifies the binary, so its signature is immediately stale.
