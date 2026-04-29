@@ -84,8 +84,8 @@
                 <input
                   class="expense-input expense-input--code"
                   type="text"
-                  maxlength="2"
-                  placeholder="DE"
+                  maxlength="3"
+                  placeholder="DEU"
                   [attr.aria-label]="'Country code for row ' + ($index + 1)"
                   [value]="fd.countryCode"
                   (input)="onForeignInput($index, 'countryCode', $event)"

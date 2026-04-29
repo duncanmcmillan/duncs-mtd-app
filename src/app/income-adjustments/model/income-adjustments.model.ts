@@ -9,7 +9,7 @@ export type IncomeAdjustmentsSection = 'allowances' | 'adjustments' | 'dividends
 
 /**
  * Allowance declarations for a single income source in a given tax year.
- * SE fields: Self Employment Business Annual Submission API (v3+).
+ * SE fields: Self Employment Business Annual Submission API (v5+).
  * Property fields: Property Business Annual Submission API (v4+).
  * Fields not applicable to a source type should be left `undefined`.
  */
@@ -58,10 +58,16 @@ export interface AllowanceEntry {
 }
 
 /**
- * Annual adjustment declarations for a single income source in a given tax year.
- * SE fields: Self Employment Business Annual Submission API `adjustments` object.
- * Property fields: Property Business Annual Submission API `adjustments` object.
- * The `calculationId` is used separately for triggering BSAS via the BSAS API.
+ * BSAS accounting adjustment declarations for a self-employment business.
+ * Submitted via the Business Source Adjustable Summary (BSAS) API v7.0.
+ *
+ * SE fields map to the `income`, `expenses`, and `additions` objects in the
+ * BSAS "Submit Self-Employment Accounting Adjustments" endpoint.
+ * Property fields map to the Property Business Annual Submission API `adjustments`
+ * object and are placeholders for a future implementation step.
+ *
+ * All numeric values can be negative (an adjustment can increase or decrease the
+ * originally reported figure).
  */
 export interface AdjustmentEntry {
   /** HMRC business identifier. */
@@ -70,42 +76,89 @@ export interface AdjustmentEntry {
   typeOfBusiness: 'self-employment' | 'uk-property' | 'foreign-property';
   /** Tax year string, e.g. `'2024-25'`. */
   taxYear: string;
-  /** Calculation ID used to trigger and submit the BSAS (required for BSAS API calls). */
+  /**
+   * BSAS calculation ID returned by the BSAS trigger endpoint.
+   * Required before submitting SE accounting adjustments.
+   */
   calculationId?: string;
 
-  // ── Self-employment adjustments ─────────────────────────────────────────
-  /** Income included in business figures that is not taxable as business profit. SE only. */
-  includedNonTaxableProfits?: number;
-  /** Modification for differences between basis period and accounting period (can be negative). SE only. */
-  basisAdjustment?: number;
-  /** Overlap relief used this year. SE only. */
-  overlapReliefUsed?: number;
-  /** Adjustment for change of accounting practice. SE only. */
-  accountingAdjustment?: number;
-  /** Averaging adjustment (farmers, market gardeners, literary/artistic creators only). SE only. */
-  averagingAdjustment?: number;
-  /** Other business income not included elsewhere. SE only. */
-  outstandingBusinessIncome?: number;
-  /** Gain on disposal of asset where Business Premises Renovation Allowance applies. SE only. */
-  balancingChargeBpra?: number;
-  /** Balancing charge on sale or cessation of business use (non-BPRA). SE only. */
-  balancingChargeOther?: number;
-  /** Normal sale price of goods or stock taken out of the business for personal use. SE only. */
-  goodsAndServicesOwnUse?: number;
-  /** Transition profit arising in the current tax year (basis period reform). SE only. */
-  transitionProfitAmount?: number;
-  /** Additional elected transition profit brought forward. SE only. */
-  transitionProfitAccelerationAmount?: number;
+  // ── SE BSAS income adjustments ──────────────────────────────────────────
+  /** Adjustment to business turnover / fees / sales. SE only. */
+  turnover?: number;
+  /** Adjustment to any other business income not included in turnover. SE only. */
+  otherIncome?: number;
 
-  // ── Property adjustments (numeric) ──────────────────────────────────────
+  // ── SE BSAS expense adjustments ─────────────────────────────────────────
+  /** Adjustment to cost of goods bought for resale or goods used. SE only. */
+  costOfGoods?: number;
+  /** Adjustment to payments to subcontractors. SE only. */
+  paymentsToSubcontractors?: number;
+  /** Adjustment to wages, salaries, and other staff costs. SE only. */
+  wagesAndStaffCosts?: number;
+  /** Adjustment to car, van, and travel expenses. SE only. */
+  carVanTravelExpenses?: number;
+  /** Adjustment to rent, rates, and power costs. SE only. */
+  premisesRunningCosts?: number;
+  /** Adjustment to repairs and maintenance. SE only. */
+  maintenanceCosts?: number;
+  /** Adjustment to phone, stationery, and other office costs. SE only. */
+  adminCosts?: number;
+  /** Adjustment to interest on bank loans and similar. SE only. */
+  interestOnBankOtherLoans?: number;
+  /** Adjustment to bank, credit card, and other finance charges. SE only. */
+  financeCharges?: number;
+  /** Adjustment to bad debts and provisions. SE only. */
+  irrecoverableDebts?: number;
+  /** Adjustment to accountancy, legal, and professional fees. SE only. */
+  professionalFees?: number;
+  /** Adjustment to depreciation and loss or profit on sale of assets. SE only. */
+  depreciation?: number;
+  /** Adjustment to other allowable business expenses. SE only. */
+  otherExpenses?: number;
+  /** Adjustment to advertising and marketing costs. SE only. */
+  advertisingCosts?: number;
+  /** Adjustment to business entertainment costs. SE only. */
+  businessEntertainmentCosts?: number;
+
+  // ── SE BSAS additions (disallowable counterparts) ────────────────────────
+  /** Disallowable portion of cost of goods. SE only. */
+  costOfGoodsDisallowable?: number;
+  /** Disallowable portion of payments to subcontractors. SE only. */
+  paymentsToSubcontractorsDisallowable?: number;
+  /** Disallowable portion of wages and staff costs. SE only. */
+  wagesAndStaffCostsDisallowable?: number;
+  /** Disallowable portion of car, van, and travel expenses. SE only. */
+  carVanTravelExpensesDisallowable?: number;
+  /** Disallowable portion of premises running costs. SE only. */
+  premisesRunningCostsDisallowable?: number;
+  /** Disallowable portion of maintenance costs. SE only. */
+  maintenanceCostsDisallowable?: number;
+  /** Disallowable portion of admin costs. SE only. */
+  adminCostsDisallowable?: number;
+  /** Disallowable portion of interest on bank / other loans. SE only. */
+  interestOnBankOtherLoansDisallowable?: number;
+  /** Disallowable portion of finance charges. SE only. */
+  financeChargesDisallowable?: number;
+  /** Disallowable portion of irrecoverable debts. SE only. */
+  irrecoverableDebtsDisallowable?: number;
+  /** Disallowable portion of professional fees. SE only. */
+  professionalFeesDisallowable?: number;
+  /** Disallowable portion of depreciation. SE only. */
+  depreciationDisallowable?: number;
+  /** Disallowable portion of other expenses. SE only. */
+  otherExpensesDisallowable?: number;
+  /** Disallowable portion of advertising costs. SE only. */
+  advertisingCostsDisallowable?: number;
+  /** Disallowable portion of business entertainment costs. SE only. */
+  businessEntertainmentCostsDisallowable?: number;
+
+  // ── Property adjustment fields (annual submission — future implementation) ──
   /** Adjustments that are not solely for the property business. Property only. */
   privateUseAdjustment?: number;
   /** Recovery charge when a capital-allowance asset is sold or leaves use. Property only. */
   balancingCharge?: number;
   /** Income from sale of BPRA-renovated premises within 7 years. Property only. */
   businessPremisesRenovationAllowanceBalancingCharges?: number;
-
-  // ── Property adjustment flags (boolean) ─────────────────────────────────
   /** Non-resident landlord status. Property only. */
   nonResidentLandlord?: boolean;
   /**
@@ -119,24 +172,34 @@ export interface AdjustmentEntry {
 
 /** A single foreign dividend item within a {@link DividendEntry}. */
 export interface ForeignDividend {
-  /** ISO 3166-1 alpha-2 country code, e.g. `'DE'`. */
+  /** ISO 3166-1 Alpha-3 country code, e.g. `'DEU'`. */
   countryCode: string;
-  /** Gross dividend amount (£). */
+  /** Gross dividend amount before tax (£). Maps to `amountBeforeTax` in the HMRC API. */
   amount: number;
+  /**
+   * The taxable amount of this dividend (£).
+   * Required by the Individuals Dividends Income API v2.0.
+   * Defaults to {@link amount} when not set.
+   */
+  taxableAmount?: number;
   /** Tax taken off at source (£). */
   taxTakenOff?: number;
+  /** `true` if Foreign Tax Credit Relief is claimed for this dividend. */
+  foreignTaxCreditRelief?: boolean;
 }
 
 /**
  * Dividend income declared for a single tax year.
- * Submitted via the Individuals Dividend Income API.
+ * UK dividends are submitted via `PUT /individuals/dividends-income/uk/{nino}/{taxYear}`.
+ * Foreign dividends are submitted via `PUT /individuals/dividends-income/{nino}/{taxYear}`.
+ * Both endpoints use the Individuals Dividends Income API v2.0.
  */
 export interface DividendEntry {
   /** Tax year string, e.g. `'2024-25'`. */
   taxYear: string;
-  /** UK dividends received (£). */
+  /** UK dividends received from companies and unit trusts (£). */
   ukDividends?: number;
-  /** Other UK dividends received (£). */
+  /** Other UK dividends from authorised unit trusts and OEICs (£). */
   otherUkDividends?: number;
   /** Foreign dividend details, one entry per source country. */
   foreignDividends?: ForeignDividend[];
