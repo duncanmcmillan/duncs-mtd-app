@@ -75,16 +75,24 @@
               >
                 {{ row.label }}
               </label>
-              <input
-                class="expense-input"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                [id]="'se-exp-' + row.field + '-' + draftKey(draft)"
-                [value]="draft.seExpenses[row.field] ?? ''"
-                (input)="onSEExpenseInput(draftKey(draft), row.field, $event)"
-              />
+              <div class="expense-input-wrap">
+                <input
+                  class="expense-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [id]="'se-exp-' + row.field + '-' + draftKey(draft)"
+                  [value]="draft.seExpenses[row.field] ?? ''"
+                  (input)="onSEExpenseInput(draftKey(draft), row.field, $event)"
+                />
+                <app-field-mapping-btn
+                  [fieldKey]="'se.exp.' + row.field"
+                  [mappings]="activeMappings()"
+                  [active]="isMappingActive()"
+                  (mappingChange)="onMappingChange($event)"
+                />
+              </div>
             </div>
           }
 
@@ -135,16 +143,24 @@
               >
                 {{ row.label }}
               </label>
-              <input
-                class="expense-input"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                [id]="'se-dis-' + row.field + '-' + draftKey(draft)"
-                [value]="draft.seDisallowableExpenses[row.field] ?? ''"
-                (input)="onSEDisallowableInput(draftKey(draft), row.field, $event)"
-              />
+              <div class="expense-input-wrap">
+                <input
+                  class="expense-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [id]="'se-dis-' + row.field + '-' + draftKey(draft)"
+                  [value]="draft.seDisallowableExpenses[row.field] ?? ''"
+                  (input)="onSEDisallowableInput(draftKey(draft), row.field, $event)"
+                />
+                <app-field-mapping-btn
+                  [fieldKey]="'se.dis.' + row.field"
+                  [mappings]="activeMappings()"
+                  [active]="isMappingActive()"
+                  (mappingChange)="onMappingChange($event)"
+                />
+              </div>
             </div>
           }
         </div>
@@ -171,16 +187,24 @@
               >
                 {{ row.label }}
               </label>
-              <input
-                class="expense-input"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                [id]="'prop-exp-' + row.field + '-' + draftKey(draft)"
-                [value]="draft.propExpenses[row.field] ?? ''"
-                (input)="onPropExpenseInput(draftKey(draft), row.field, $event)"
-              />
+              <div class="expense-input-wrap">
+                <input
+                  class="expense-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [id]="'prop-exp-' + row.field + '-' + draftKey(draft)"
+                  [value]="draft.propExpenses[row.field] ?? ''"
+                  (input)="onPropExpenseInput(draftKey(draft), row.field, $event)"
+                />
+                <app-field-mapping-btn
+                  [fieldKey]="'ukprop.exp.' + row.field"
+                  [mappings]="activeMappings()"
+                  [active]="isMappingActive()"
+                  (mappingChange)="onMappingChange($event)"
+                />
+              </div>
             </div>
           }
 
@@ -230,16 +254,24 @@
               >
                 {{ row.label }}
               </label>
-              <input
-                class="expense-input"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                [id]="'fp-exp-' + row.field + '-' + draftKey(draft)"
-                [value]="draft.foreignPropExpenses[row.field] ?? ''"
-                (input)="onForeignPropExpenseInput(draftKey(draft), row.field, $event)"
-              />
+              <div class="expense-input-wrap">
+                <input
+                  class="expense-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [id]="'fp-exp-' + row.field + '-' + draftKey(draft)"
+                  [value]="draft.foreignPropExpenses[row.field] ?? ''"
+                  (input)="onForeignPropExpenseInput(draftKey(draft), row.field, $event)"
+                />
+                <app-field-mapping-btn
+                  [fieldKey]="'fprop.exp.' + row.field"
+                  [mappings]="activeMappings()"
+                  [active]="isMappingActive()"
+                  (mappingChange)="onMappingChange($event)"
+                />
+              </div>
             </div>
           }
 

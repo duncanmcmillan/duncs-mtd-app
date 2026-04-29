@@ -11,6 +11,8 @@ const CONFIG_PATH       = () => path.join(app.getPath('userData'), 'hmrc-config.
 const CONSENT_PATH      = () => path.join(app.getPath('userData'), 'gdpr-consent.json');
 const DEVICE_ID_PATH    = () => path.join(app.getPath('userData'), 'hmrc-device-id.txt');
 const ONBOARDING_PATH   = () => path.join(app.getPath('userData'), 'onboarding.json');
+const DATA_ENTRY_SETTINGS_PATH   = () => path.join(app.getPath('userData'), 'data-entry-settings.enc');
+const NOTIFICATION_SETTINGS_PATH = () => path.join(app.getPath('userData'), 'notification-settings.enc');
 
 // ── OAuth callback state ───────────────────────────────────────────────────
 let oauthResolve = null;
@@ -314,6 +316,28 @@ app.whenReady().then(() => {
     fs.writeFileSync(ONBOARDING_PATH(), JSON.stringify(data), 'utf8');
   });
 
+  // ── Settings: load data-entry settings ───────────────────────────────
+  ipcMain.handle('settings:load-data-entry', () => {
+    const json = safeRead(DATA_ENTRY_SETTINGS_PATH());
+    return json ? JSON.parse(json) : null;
+  });
+
+  // ── Settings: save data-entry settings ───────────────────────────────
+  ipcMain.handle('settings:save-data-entry', (_e, settings) => {
+    safeWrite(DATA_ENTRY_SETTINGS_PATH(), settings);
+  });
+
+  // ── Settings: load notification settings ─────────────────────────────
+  ipcMain.handle('settings:load-notifications', () => {
+    const json = safeRead(NOTIFICATION_SETTINGS_PATH());
+    return json ? JSON.parse(json) : null;
+  });
+
+  // ── Settings: save notification settings ─────────────────────────────
+  ipcMain.handle('settings:save-notifications', (_e, settings) => {
+    safeWrite(NOTIFICATION_SETTINGS_PATH(), settings);
+  });
+
   // ── GDPR: delete all locally stored personal data ─────────────────────
   ipcMain.handle('gdpr:delete-all-data', () => {
     safeDelete(TOKEN_PATH());
@@ -322,6 +346,9 @@ app.whenReady().then(() => {
     // Device ID is a pseudonymous identifier — delete on full data erasure
     safeDelete(DEVICE_ID_PATH());
     safeDelete(ONBOARDING_PATH());
+    // Data Entry & Notifications settings
+    safeDelete(DATA_ENTRY_SETTINGS_PATH());
+    safeDelete(NOTIFICATION_SETTINGS_PATH());
   });
 
   createWindow();

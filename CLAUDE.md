@@ -66,6 +66,34 @@ Feature tabs that display **multiple items** (e.g. one per period, obligation, o
 - Only the selected item's content is rendered via `@if (selectedItem(); as item)`.
 - Reference implementation: `src/app/quarterly/component/quarterly.component`.
 
+## Field mapping (spreadsheet → MTD form)
+
+When a spreadsheet data-entry method (Local Excel or AirTable) is active, each numeric input in the quarterly form and expenses modal shows a chain-link icon button (`FieldMappingBtnComponent`) that lets the user map a column header name to that field.
+
+**Key convention** — `fieldMappings: Record<string, string>` stored inside `ExcelSettings` / `AirtableSettings`:
+
+| Prefix | Fields |
+|---|---|
+| `se.income.*` | `turnover`, `other` |
+| `se.exp.*` | `costOfGoods`, `paymentsToSubcontractors`, `wagesAndStaffCosts`, `carVanTravelExpenses`, `premisesRunningCosts`, `maintenanceCosts`, `adminCosts`, `businessEntertainmentCosts`, `advertisingCosts`, `interestOnBankOtherLoans`, `financeCharges`, `irrecoverableDebts`, `professionalFees`, `depreciation`, `otherExpenses` |
+| `se.dis.*` | same 15 fields with `Disallowable` suffix (e.g. `costOfGoodsDisallowable`) |
+| `ukprop.income.*` | `rentAmount`, `otherIncome` |
+| `ukprop.exp.*` | `premisesRunningCosts`, `repairsAndMaintenance`, `financialCosts`, `professionalFees`, `costOfServices`, `travelCosts`, `residentialFinancialCost`, `broughtFwdResidentialFinancialCost`, `other` |
+| `fprop.income.*` | `rentIncome`, `otherPropertyIncome`, `foreignTaxPaidOrDeducted` |
+| `fprop.exp.*` | `premisesRunningCosts`, `repairsAndMaintenance`, `financialCosts`, `professionalFees`, `costOfServices`, `travelCosts`, `other` |
+
+Checkbox/text fields (`foreignTaxCreditRelief`, `countryCode`) are **not** mappable.
+
+**Components:**
+- `FieldMappingBtnComponent` (`src/app/data-entry/component/field-mapping-btn/`) — chain-link button + inline popover. Inputs: `fieldKey`, `mappings`, `active`. Output: `mappingChange`.
+- `DataEntryBannerComponent` (`src/app/data-entry/component/data-entry-banner/`) — indigo left-border strip shown above the quarterly form when a mappable method is active.
+
+**Colour tokens** (in `src/styles.scss`):
+- `--color-mapping: #6366f1` — indigo accent for mapped state
+- `--color-mapping-bg: rgba(99, 102, 241, 0.08)` — indigo tint background
+
+**Persisting mappings** — call `deStore.saveDataEntry(...)` with updated `fieldMappings` nested inside the active method's settings object. Always initialise the sub-object with defaults if it doesn't exist yet (the user may not have opened the settings modal).
+
 ## Test data / seed pattern
 
 Every feature tab whose content depends on authentication must provide a way to load synthetic data for browser-mode development (`npm start`):

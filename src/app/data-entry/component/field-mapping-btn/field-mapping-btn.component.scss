@@ -1,0 +1,120 @@
+.mapping-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* ── Toggle button ────────────────────────────────────────────────────────── */
+
+.mapping-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--neutral-200);
+  border-radius: 4px;
+  color: var(--neutral-400);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    color: var(--neutral-600);
+    border-color: var(--neutral-300);
+    background: var(--neutral-50);
+  }
+
+  &--mapped {
+    color: var(--color-mapping);
+    border-color: var(--color-mapping);
+    background: var(--color-mapping-bg);
+
+    &:hover {
+      background: var(--color-mapping-bg);
+      border-color: var(--color-mapping);
+    }
+  }
+}
+
+/* ── Popover ─────────────────────────────────────────────────────────────── */
+
+.mapping-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+}
+
+.popover-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--neutral-400);
+}
+
+.popover-input {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--neutral-700);
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 4px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-mapping);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.12);
+  }
+}
+
+.popover-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.popover-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+
+  &--set {
+    background: var(--color-mapping);
+    color: var(--neutral-0);
+    border: 1px solid transparent;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+
+  &--clear {
+    background: transparent;
+    color: var(--neutral-500);
+    border: 1px solid var(--neutral-200);
+
+    &:hover {
+      border-color: var(--neutral-300);
+      color: var(--neutral-700);
+    }
+  }
+}

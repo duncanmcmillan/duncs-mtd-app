@@ -55,6 +55,21 @@ contextBridge.exposeInMainWorld('onboarding', {
     ipcRenderer.invoke('onboarding:reset', { clientId }),
 });
 
+// ── Settings bridge (Data Entry & Notifications) ────────────────────────────
+contextBridge.exposeInMainWorld('settings', {
+  /** Loads persisted data-entry settings from encrypted storage. */
+  loadDataEntry: () => ipcRenderer.invoke('settings:load-data-entry'),
+
+  /** Saves data-entry settings to encrypted storage. */
+  saveDataEntry: (settings) => ipcRenderer.invoke('settings:save-data-entry', settings),
+
+  /** Loads persisted notification settings from encrypted storage. */
+  loadNotifications: () => ipcRenderer.invoke('settings:load-notifications'),
+
+  /** Saves notification settings to encrypted storage. */
+  saveNotifications: (settings) => ipcRenderer.invoke('settings:save-notifications', settings),
+});
+
 // ── HMRC API bridge ────────────────────────────────────────────────────────
 contextBridge.exposeInMainWorld('hmrc', {
   /** Open system browser with HMRC auth URL, resolves with { code, state } */

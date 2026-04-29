@@ -1,0 +1,42 @@
+@if (active()) {
+  <div class="mapping-wrap">
+    <!-- Chain-link toggle button -->
+    <button
+      class="mapping-btn"
+      [class.mapping-btn--mapped]="isMapped()"
+      type="button"
+      [attr.aria-label]="isMapped() ? 'Edit column mapping: ' + currentMapping() : 'Map to spreadsheet column'"
+      [attr.aria-expanded]="open()"
+      (click)="toggle()"
+    >
+      <!-- Chain link SVG icon -->
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+    </button>
+
+    <!-- Inline popover -->
+    @if (open()) {
+      <div class="mapping-popover" role="dialog" aria-label="Map spreadsheet column">
+        <label class="popover-label" [for]="'mapping-' + fieldKey()">Column header</label>
+        <input
+          class="popover-input"
+          type="text"
+          [id]="'mapping-' + fieldKey()"
+          [value]="draft()"
+          placeholder="e.g. Revenue"
+          autocomplete="off"
+          (input)="draft.set($any($event.target).value)"
+          (keydown.enter)="save()"
+        />
+        <div class="popover-actions">
+          <button class="popover-btn popover-btn--set" type="button" (click)="save()">Set</button>
+          @if (isMapped()) {
+            <button class="popover-btn popover-btn--clear" type="button" (click)="clear()">Clear</button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}

@@ -472,6 +472,13 @@
   flex: 1;
 }
 
+.figure-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .figure-input {
   width: 130px;
   padding: 6px 10px;

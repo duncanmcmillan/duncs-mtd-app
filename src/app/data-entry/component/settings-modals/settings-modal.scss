@@ -1,0 +1,78 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0 0 0 / 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--neutral-0, #fff);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0 0 0 / 0.18);
+  width: 420px;
+  max-width: 95vw;
+  padding: 28px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--neutral-700);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--neutral-400);
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+
+    &:hover {
+      background: var(--neutral-100);
+      color: var(--neutral-600);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+  }
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+}
