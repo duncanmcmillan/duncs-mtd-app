@@ -1,0 +1,63 @@
+<div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="google-sheets-modal-title">
+  <div class="modal">
+    <header class="modal__header">
+      <h2 class="modal__title" id="google-sheets-modal-title">Google Sheets Settings</h2>
+      <button type="button" class="modal__close" aria-label="Close Google Sheets settings" (click)="onCancel()">&#x2715;</button>
+    </header>
+
+    <div class="modal__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Spreadsheet ID</mat-label>
+        <input
+          matInput
+          [value]="form().spreadsheetId"
+          (input)="setField('spreadsheetId', $any($event.target).value)"
+          autocomplete="off"
+          placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
+          aria-required="true"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Sheet Name</mat-label>
+        <input
+          matInput
+          [value]="form().sheetName"
+          (input)="setField('sheetName', $any($event.target).value)"
+          autocomplete="off"
+          placeholder="Sheet1"
+          aria-required="true"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>API Key</mat-label>
+        <input
+          matInput
+          type="password"
+          [value]="form().apiKey"
+          (input)="setField('apiKey', $any($event.target).value)"
+          autocomplete="off"
+          aria-required="true"
+        />
+      </mat-form-field>
+    </div>
+
+    @if (store.hasError()) {
+      <p class="modal__error" role="alert" aria-live="polite">{{ store.error() }}</p>
+    }
+
+    <div class="modal__actions">
+      <button type="button" mat-button (click)="onCancel()">Cancel</button>
+      <button
+        type="button"
+        mat-flat-button
+        color="primary"
+        [disabled]="store.isLoading()"
+        (click)="onSubmit()"
+      >
+        {{ store.isLoading() ? 'Saving…' : 'Save' }}
+      </button>
+    </div>
+  </div>
+</div>

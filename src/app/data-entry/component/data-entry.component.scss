@@ -1,25 +1,72 @@
 .view-header {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
-.view-label {
-  display: block;
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--neutral-400);
-  margin-bottom: 6px;
-}
+
 .view-title {
   font-family: var(--font-heading);
   font-size: 24px;
   font-weight: 200;
   color: var(--neutral-700);
   letter-spacing: -0.02em;
+  margin: 0;
 }
-.loading, .error {
+
+// ── Sub-tab bar ──────────────────────────────────────────────────────────────
+
+.sub-tab-bar {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--neutral-200);
+  margin-bottom: 24px;
+}
+
+.sub-tab {
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--neutral-500);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: var(--neutral-700);
+  }
+
+  &--active {
+    color: var(--neutral-800);
+    border-bottom-color: var(--color-primary);
+    font-weight: 500;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+// ── Method list ──────────────────────────────────────────────────────────────
+
+.method-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 560px;
+}
+
+// ── Status messages ──────────────────────────────────────────────────────────
+
+.status-msg {
   font-size: 13px;
   font-weight: 300;
   color: var(--neutral-500);
+  margin: 0 0 12px;
+
+  &--error {
+    color: var(--color-error);
+  }
 }
-.error { color: var(--color-error); }
