@@ -281,9 +281,11 @@
   @if (!store.isLoading() && !store.hasError() && !hasData()) {
     <div class="empty-state">
       <p class="status">Not authenticated — sign in to load data.</p>
-      <button class="btn btn--outline seed-btn" type="button" (click)="onLoadTestData()">
-        Load test data
-      </button>
+      @if (appStore.testDataMode()) {
+        <button class="btn btn--outline seed-btn" type="button" (click)="onLoadTestData()">
+          Load test data
+        </button>
+      }
     </div>
   }
 

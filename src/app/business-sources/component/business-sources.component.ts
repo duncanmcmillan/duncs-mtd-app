@@ -3,6 +3,7 @@
  * sources for the authenticated user.
  */
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { AppStore } from '../../core';
 import { BusinessSourcesStore } from '../store/business-sources.store';
 
 /**
@@ -18,6 +19,7 @@ import { BusinessSourcesStore } from '../store/business-sources.store';
 })
 export class BusinessSourcesComponent implements OnInit {
   protected readonly store = inject(BusinessSourcesStore);
+  protected readonly appStore = inject(AppStore);
 
   /** @inheritdoc */
   ngOnInit(): void {

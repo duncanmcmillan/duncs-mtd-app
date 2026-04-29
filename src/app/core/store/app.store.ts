@@ -23,6 +23,8 @@ interface AppState {
   isLoading: boolean;
   /** Last error message; `null` when no error. */
   error: string | null;
+  /** Whether test-data mode is active; shows seed buttons across all feature tabs. */
+  testDataMode: boolean;
 }
 
 const initialState: AppState = {
@@ -32,6 +34,7 @@ const initialState: AppState = {
   businessSources: [],
   isLoading: false,
   error: null,
+  testDataMode: false,
 };
 
 /**
@@ -87,6 +90,14 @@ export const AppStore = signalStore(
      */
     setBusinessSources(businessSources: BusinessSource[]): void {
       patchState(store, { businessSources });
+    },
+
+    /**
+     * Toggles whether test-data seed buttons are visible across all feature tabs.
+     * @param enabled - `true` to show seed buttons.
+     */
+    setTestDataMode(enabled: boolean): void {
+      patchState(store, { testDataMode: enabled });
     },
 
     /**

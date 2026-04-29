@@ -10,19 +10,32 @@
     <div class="auth-card">
       <div class="card-section">
         <span class="field-label">Environment</span>
-        <div class="env-toggle">
-          <button
-            class="env-btn"
-            [class.active]="store.environment() === 'sandbox'"
-            (click)="setEnvironment('sandbox')">
-            Sandbox
-          </button>
-          <button
-            class="env-btn"
-            [class.active]="store.environment() === 'live'"
-            (click)="setEnvironment('live')">
-            Live
-          </button>
+        <div class="env-row">
+          <div class="env-toggle">
+            <button
+              class="env-btn"
+              [class.active]="store.environment() === 'sandbox'"
+              (click)="setEnvironment('sandbox')">
+              Sandbox
+            </button>
+            <button
+              class="env-btn"
+              [class.active]="store.environment() === 'live'"
+              (click)="setEnvironment('live')">
+              Live
+            </button>
+          </div>
+          <div class="env-toggle">
+            <button
+              class="env-btn"
+              type="button"
+              [class.active]="appStore.testDataMode()"
+              [attr.aria-pressed]="appStore.testDataMode()"
+              aria-label="Toggle test data mode"
+              (click)="toggleTestData()">
+              Test Data
+            </button>
+          </div>
         </div>
       </div>
 
@@ -86,6 +99,17 @@
         <span class="env-badge" [class.live]="store.environment() === 'live'">
           {{ store.environment() }}
         </span>
+        <div class="env-toggle">
+          <button
+            class="env-btn"
+            type="button"
+            [class.active]="appStore.testDataMode()"
+            [attr.aria-pressed]="appStore.testDataMode()"
+            aria-label="Toggle test data mode"
+            (click)="toggleTestData()">
+            Test Data
+          </button>
+        </div>
       </div>
 
       <div class="meta-grid">

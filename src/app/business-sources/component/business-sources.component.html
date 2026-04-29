@@ -12,9 +12,11 @@
   } @else if (store.businesses() === null) {
     <div class="empty-state">
       <p class="status status--empty">Sign in and set your NINO on the Auth tab to load business sources.</p>
-      <button class="btn btn--outline seed-btn" type="button" (click)="onLoadTestData()">
-        Load test data
-      </button>
+      @if (appStore.testDataMode()) {
+        <button class="btn btn--outline seed-btn" type="button" (click)="onLoadTestData()">
+          Load test data
+        </button>
+      }
     </div>
   } @else if (store.isEmpty()) {
     <div class="empty-state empty-state--card">

@@ -76,6 +76,30 @@ export const SelfAssessmentStore = signalStore(
     },
 
     /**
+     * Triggers an in-year Individual Calculations request and retrieves the result.
+     * Called from the Quarterly Update tab to provide an estimated tax liability
+     * based on figures submitted so far in the current tax year.
+     * @param taxYear - Tax year string derived from the submitted quarterly drafts.
+     */
+    async triggerInYearCalculation(taxYear: string): Promise<void> {
+      const token = appStore.accessToken();
+      const nino = appStore.nino();
+      if (!token || !nino) return;
+
+      patchState(store, { isLoading: true, error: null, status: 'idle' });
+      try {
+        const calculationId = await service.triggerCalculation(nino, token, taxYear, 'in-year');
+        const calculation = await service.retrieveCalculation(nino, token, taxYear, calculationId);
+        patchState(store, { isLoading: false, status: 'ready', calculation });
+      } catch (e: unknown) {
+        patchState(store, {
+          error: extractErrorMessage(e, 'Failed to retrieve in-year tax estimate'),
+          isLoading: false,
+        });
+      }
+    },
+
+    /**
      * Submits the Final Declaration (crystallisation) for the current calculation.
      * When authenticated, calls the HMRC API; without auth (e.g. test data),
      * the API call is skipped and the state is updated locally.
