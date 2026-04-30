@@ -46,7 +46,7 @@ export class DataEntryBannerComponent {
   protected readonly activeDetail = computed((): string => {
     const de = this.store.dataEntry();
     if (de.excelEnabled && de.excel) {
-      return [de.excel.filePath, de.excel.sheetName].filter(Boolean).join(' · ');
+      return de.excel.filePath || '';
     }
     if (de.airtableEnabled && de.airtable) {
       return `Base: ${de.airtable.baseId}`;

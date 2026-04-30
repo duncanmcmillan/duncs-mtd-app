@@ -30,6 +30,18 @@
           (input)="draft.set($any($event.target).value)"
           (keydown.enter)="save()"
         />
+        @if (filtered().length) {
+          <ul class="popover-dropdown" role="listbox" aria-label="Available columns">
+            @for (col of filtered(); track col) {
+              <li
+                class="popover-dropdown-item"
+                role="option"
+                [attr.aria-selected]="draft() === col"
+                (mousedown)="selectHeader(col)"
+              >{{ col }}</li>
+            }
+          </ul>
+        }
         <div class="popover-actions">
           <button class="popover-btn popover-btn--set" type="button" (click)="save()">Set</button>
           @if (isMapped()) {

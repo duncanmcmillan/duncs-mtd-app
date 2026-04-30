@@ -70,6 +70,18 @@
     }
   }
 
+  &__error {
+    font-size: 13px;
+    color: var(--color-error);
+    margin: 0;
+  }
+
+  &__automap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
   &__actions {
     display: flex;
     justify-content: flex-end;

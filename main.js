@@ -394,6 +394,16 @@ app.whenReady().then(() => {
     return result;
   });
 
+  // ── Excel: read column headers (first row) from a worksheet ───────────
+  ipcMain.handle('excel:read-headers', async (_event, { filePath, sheetName }) => {
+    const workbook = XLSX.readFile(filePath);
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) return [];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+    if (!rows.length) return [];
+    return rows[0].map(h => String(h).trim()).filter(Boolean);
+  });
+
   // ── GDPR: delete all locally stored personal data ─────────────────────
   ipcMain.handle('gdpr:delete-all-data', () => {
     safeDelete(TOKEN_PATH());

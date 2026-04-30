@@ -22,6 +22,7 @@ export interface ExcelReadParams {
 /** Shape of the Electron excel IPC bridge exposed by preload.js. */
 type ExcelBridge = {
   readRow: (params: ExcelReadParams) => Promise<Record<string, number | null>>;
+  readHeaders: (params: { filePath: string; sheetName: string }) => Promise<string[]>;
 };
 
 const bridge = (window as unknown as { excel?: ExcelBridge }).excel ?? null;
@@ -48,5 +49,17 @@ export class ExcelService {
   async readRow(params: ExcelReadParams): Promise<Record<string, number | null>> {
     if (!bridge) return {};
     return bridge.readRow(params);
+  }
+
+  /**
+   * Reads the column headers (first row) from the specified worksheet.
+   *
+   * @param filePath - Absolute path to the `.xlsx` file.
+   * @param sheetName - Name of the worksheet to read headers from.
+   * @returns Array of non-empty column header strings, or empty array when bridge is absent.
+   */
+  async readHeaders(filePath: string, sheetName: string): Promise<string[]> {
+    if (!bridge) return [];
+    return bridge.readHeaders({ filePath, sheetName });
   }
 }

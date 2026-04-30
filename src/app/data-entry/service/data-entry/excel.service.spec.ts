@@ -25,4 +25,9 @@ describe('ExcelService', () => {
     });
     expect(result).toEqual({});
   });
+
+  it('readHeaders returns empty array when bridge is absent', async () => {
+    const result = await service.readHeaders('/any.xlsx', 'Sheet1');
+    expect(result).toEqual([]);
+  });
 });

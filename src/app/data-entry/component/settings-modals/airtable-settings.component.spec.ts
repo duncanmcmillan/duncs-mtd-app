@@ -34,9 +34,9 @@ describe('AirtableSettingsComponent', () => {
     expect(title.textContent?.trim()).toContain('AirTable Settings');
   });
 
-  it('renders four input fields', () => {
+  it('renders seven input fields (apiKey, baseId, dateColumn, 3 table names, Claude key)', () => {
     const inputs: NodeList = fixture.nativeElement.querySelectorAll('input[matInput]');
-    expect(inputs.length).toBe(4);
+    expect(inputs.length).toBe(7);
   });
 
   it('renders cancel and save buttons', () => {

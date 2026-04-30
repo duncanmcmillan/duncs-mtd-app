@@ -13,6 +13,7 @@ import { ObligationRow, ObligationsStore } from '../../obligations';
 import { QuarterlyService } from '../service/quarterly.service';
 import { DataEntryStore } from '../../data-entry';
 import { ExcelService } from '../../data-entry/service/data-entry/excel.service';
+import { AirtableService } from '../../data-entry/service/data-entry/airtable.service';
 import {
   ForeignPropertyExpenses,
   ForeignPropertyIncome,
@@ -72,6 +73,7 @@ export const QuarterlyStore = signalStore(
       bizStore = inject(BusinessSourcesStore),
       obligationsStore = inject(ObligationsStore),
       excelService = inject(ExcelService),
+      airtableService = inject(AirtableService),
       deStore = inject(DataEntryStore),
     ) => {
       /** Applies a partial update to a single draft without touching others. */
@@ -412,71 +414,46 @@ export const QuarterlyStore = signalStore(
         },
 
         /**
-         * Pre-fills the given draft with figures read from the active data source.
-         * Values populate the form but remain editable.
+         * Pre-fills the given draft with figures read from the active data source
+         * (Local Excel or AirTable). Values populate the form but remain editable.
+         * Excel takes priority when both are enabled.
          * @param draft - The draft to pre-fill.
          * @returns A promise that resolves when the pre-fill is complete.
          */
         async prefillFromSource(draft: QuarterlyDraft): Promise<void> {
           const de = deStore.dataEntry();
-          if (!de.excelEnabled || !de.excel) return;
-          const { filePath, sheetName, dateColumn, fieldMappings } = de.excel;
-          if (!filePath || !sheetName || !dateColumn) return;
+          let valuesPromise: Promise<Record<string, number | null>> | null = null;
+
+          if (de.excelEnabled && de.excel) {
+            const { filePath, dateColumn, fieldMappings } = de.excel;
+            const sheetName =
+              draft.businessType === 'self-employment' ? de.excel.selfEmploymentSheet
+              : draft.businessType === 'uk-property'   ? de.excel.ukPropertySheet
+              : de.excel.foreignPropertySheet;
+            if (filePath && sheetName && dateColumn) {
+              valuesPromise = excelService.readRow({ filePath, sheetName, dateColumn, periodEndDate: draft.periodEndDate, fieldMappings });
+            }
+          } else if (de.airtableEnabled && de.airtable) {
+            const { apiKey, baseId, dateColumn, fieldMappings } = de.airtable;
+            const tableName =
+              draft.businessType === 'self-employment' ? de.airtable.selfEmploymentTable
+              : draft.businessType === 'uk-property'   ? de.airtable.ukPropertyTable
+              : de.airtable.foreignPropertyTable;
+            if (apiKey && baseId && tableName && dateColumn) {
+              valuesPromise = airtableService.readRow({ apiKey, baseId, tableId: tableName, dateColumn, periodEndDate: draft.periodEndDate, fieldMappings });
+            }
+          }
+
+          if (!valuesPromise) return;
 
           patchState(store, { isLoading: true, error: null });
           try {
-            const values = await excelService.readRow({
-              filePath,
-              sheetName,
-              dateColumn,
-              periodEndDate: draft.periodEndDate,
-              fieldMappings,
-            });
+            const values = await valuesPromise;
             const key = draftKey(draft.businessId, draft.periodStartDate);
-
-            // Dispatch values to the correct patch methods based on fieldKey prefix
-            const seIncomePatch: Partial<SelfEmploymentIncome> = {};
-            const seExpPatch: Partial<SelfEmploymentExpenses> = {};
-            const seDisPatch: Partial<SelfEmploymentDisallowableExpenses> = {};
-            const propIncomePatch: Partial<UkPropertyIncome> = {};
-            const propExpPatch: Partial<UkPropertyExpenses> = {};
-            const fpropIncomePatch: Partial<ForeignPropertyIncome> = {};
-            const fpropExpPatch: Partial<ForeignPropertyExpenses> = {};
-
-            for (const [fieldKey, value] of Object.entries(values)) {
-              const [prefix, category, field] = fieldKey.split('.');
-              if (!field) continue;
-              if (prefix === 'se' && category === 'income')           (seIncomePatch as Record<string, unknown>)[field] = value;
-              else if (prefix === 'se' && category === 'exp')         (seExpPatch as Record<string, unknown>)[field] = value;
-              else if (prefix === 'se' && category === 'dis')         (seDisPatch as Record<string, unknown>)[field] = value;
-              else if (prefix === 'ukprop' && category === 'income')  (propIncomePatch as Record<string, unknown>)[field] = value;
-              else if (prefix === 'ukprop' && category === 'exp')     (propExpPatch as Record<string, unknown>)[field] = value;
-              else if (prefix === 'fprop' && category === 'income')   (fpropIncomePatch as Record<string, unknown>)[field] = value;
-              else if (prefix === 'fprop' && category === 'exp')      (fpropExpPatch as Record<string, unknown>)[field] = value;
-            }
-
-            if (draft.businessType === 'self-employment') {
-              if (Object.keys(seIncomePatch).length)
-                applyToDraft(key, d => ({ seIncome: { ...d.seIncome, ...seIncomePatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
-              if (Object.keys(seExpPatch).length)
-                applyToDraft(key, d => ({ seExpenses: { ...d.seExpenses, ...seExpPatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
-              if (Object.keys(seDisPatch).length)
-                applyToDraft(key, d => ({ seDisallowableExpenses: { ...d.seDisallowableExpenses, ...seDisPatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
-            } else if (draft.businessType === 'uk-property') {
-              if (Object.keys(propIncomePatch).length)
-                applyToDraft(key, d => ({ propIncome: { ...d.propIncome, ...propIncomePatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
-              if (Object.keys(propExpPatch).length)
-                applyToDraft(key, d => ({ propExpenses: { ...d.propExpenses, ...propExpPatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
-            } else if (draft.businessType === 'foreign-property') {
-              if (Object.keys(fpropIncomePatch).length)
-                applyToDraft(key, d => ({ foreignPropIncome: { ...d.foreignPropIncome, ...fpropIncomePatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
-              if (Object.keys(fpropExpPatch).length)
-                applyToDraft(key, d => ({ foreignPropExpenses: { ...d.foreignPropExpenses, ...fpropExpPatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
-            }
-
+            applyMappedValues(key, values, draft.businessType, applyToDraft);
             patchState(store, { isLoading: false });
           } catch (e: unknown) {
-            patchState(store, { isLoading: false, error: extractErrorMessage(e, 'Failed to read Excel file') });
+            patchState(store, { isLoading: false, error: extractErrorMessage(e, 'Failed to read data source') });
           }
         },
       };
@@ -485,6 +462,60 @@ export const QuarterlyStore = signalStore(
 );
 
 // ─── Private helpers ────────────────────────────────────────────────────────
+
+/**
+ * Dispatches a map of field-key → value into the correct draft patch calls
+ * based on the field key prefix (`se`, `ukprop`, `fprop`) and business type.
+ * @param key - Draft key from {@link draftKey}.
+ * @param values - Field-key → numeric value map from ExcelService or AirtableService.
+ * @param businessType - The draft's business type.
+ * @param apply - The `applyToDraft` closure from the enclosing `withMethods` block.
+ */
+function applyMappedValues(
+  key: string,
+  values: Record<string, number | null>,
+  businessType: 'self-employment' | 'uk-property' | 'foreign-property',
+  apply: (key: string, updater: (d: QuarterlyDraft) => Partial<QuarterlyDraft>) => void,
+): void {
+  const seIncomePatch: Partial<SelfEmploymentIncome> = {};
+  const seExpPatch: Partial<SelfEmploymentExpenses> = {};
+  const seDisPatch: Partial<SelfEmploymentDisallowableExpenses> = {};
+  const propIncomePatch: Partial<UkPropertyIncome> = {};
+  const propExpPatch: Partial<UkPropertyExpenses> = {};
+  const fpropIncomePatch: Partial<ForeignPropertyIncome> = {};
+  const fpropExpPatch: Partial<ForeignPropertyExpenses> = {};
+
+  for (const [fieldKey, value] of Object.entries(values)) {
+    const [prefix, category, field] = fieldKey.split('.');
+    if (!field) continue;
+    if (prefix === 'se' && category === 'income')          (seIncomePatch as Record<string, unknown>)[field] = value;
+    else if (prefix === 'se' && category === 'exp')        (seExpPatch as Record<string, unknown>)[field] = value;
+    else if (prefix === 'se' && category === 'dis')        (seDisPatch as Record<string, unknown>)[field] = value;
+    else if (prefix === 'ukprop' && category === 'income') (propIncomePatch as Record<string, unknown>)[field] = value;
+    else if (prefix === 'ukprop' && category === 'exp')    (propExpPatch as Record<string, unknown>)[field] = value;
+    else if (prefix === 'fprop' && category === 'income')  (fpropIncomePatch as Record<string, unknown>)[field] = value;
+    else if (prefix === 'fprop' && category === 'exp')     (fpropExpPatch as Record<string, unknown>)[field] = value;
+  }
+
+  if (businessType === 'self-employment') {
+    if (Object.keys(seIncomePatch).length)
+      apply(key, d => ({ seIncome: { ...d.seIncome, ...seIncomePatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
+    if (Object.keys(seExpPatch).length)
+      apply(key, d => ({ seExpenses: { ...d.seExpenses, ...seExpPatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
+    if (Object.keys(seDisPatch).length)
+      apply(key, d => ({ seDisallowableExpenses: { ...d.seDisallowableExpenses, ...seDisPatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
+  } else if (businessType === 'uk-property') {
+    if (Object.keys(propIncomePatch).length)
+      apply(key, d => ({ propIncome: { ...d.propIncome, ...propIncomePatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
+    if (Object.keys(propExpPatch).length)
+      apply(key, d => ({ propExpenses: { ...d.propExpenses, ...propExpPatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
+  } else if (businessType === 'foreign-property') {
+    if (Object.keys(fpropIncomePatch).length)
+      apply(key, d => ({ foreignPropIncome: { ...d.foreignPropIncome, ...fpropIncomePatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
+    if (Object.keys(fpropExpPatch).length)
+      apply(key, d => ({ foreignPropExpenses: { ...d.foreignPropExpenses, ...fpropExpPatch }, status: d.status === 'submitted' ? d.status : 'draft' }));
+  }
+}
 
 /**
  * Creates a blank draft for an income source and open obligation period.

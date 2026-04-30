@@ -138,6 +138,19 @@ export class QuarterlyComponent implements OnInit {
     return {};
   });
 
+  /**
+   * Column headers for the currently selected draft's income type,
+   * loaded from the active spreadsheet source.
+   */
+  protected readonly activeColumnHeaders = computed((): string[] => {
+    const draft = this.selectedDraft();
+    if (!draft) return [];
+    const h = this.deStore.columnHeaders();
+    if (draft.businessType === 'self-employment') return h.selfEmployment;
+    if (draft.businessType === 'uk-property')     return h.ukProperty;
+    return h.foreignProperty;
+  });
+
   /** @inheritdoc */
   ngOnInit(): void {
     const { periodStart, businessId } = this.navState;
@@ -321,7 +334,7 @@ export class QuarterlyComponent implements OnInit {
   protected async onMappingChange(e: MappingChangeEvent): Promise<void> {
     const de = this.deStore.dataEntry();
     if (de.excelEnabled) {
-      const excel = de.excel ?? { filePath: '', sheetName: '', dateColumn: '', fieldMappings: {} };
+      const excel = de.excel ?? { filePath: '', dateColumn: '', fieldMappings: {} };
       const fieldMappings = { ...excel.fieldMappings };
       if (e.columnName) {
         fieldMappings[e.fieldKey] = e.columnName;
@@ -330,7 +343,7 @@ export class QuarterlyComponent implements OnInit {
       }
       await this.deStore.saveDataEntry({ ...de, excel: { ...excel, fieldMappings } });
     } else if (de.airtableEnabled) {
-      const airtable = de.airtable ?? { apiKey: '', baseId: '', tableId: '', dateColumn: '', fieldMappings: {} };
+      const airtable = de.airtable ?? { apiKey: '', baseId: '', dateColumn: '', fieldMappings: {} };
       const fieldMappings = { ...airtable.fieldMappings };
       if (e.columnName) {
         fieldMappings[e.fieldKey] = e.columnName;
