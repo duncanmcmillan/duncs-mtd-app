@@ -108,7 +108,14 @@ export class AirtableService {
     const result: Record<string, number | null> = {};
     for (const [fieldKey, colHeader] of Object.entries(fieldMappings)) {
       const raw = record.fields[colHeader];
-      result[fieldKey] = (typeof raw === 'number' && isFinite(raw)) ? raw : null;
+      if (typeof raw === 'number' && isFinite(raw)) {
+        result[fieldKey] = raw;
+      } else if (typeof raw === 'string' && raw.trim()) {
+        const n = parseFloat(raw.replace(/,/g, ''));
+        result[fieldKey] = isFinite(n) ? n : null;
+      } else {
+        result[fieldKey] = null;
+      }
     }
     return result;
   }

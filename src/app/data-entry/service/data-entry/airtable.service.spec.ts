@@ -80,6 +80,17 @@ describe('AirtableService', () => {
     expect(result).toEqual({ 'se.income.turnover': 12500 });
   });
 
+  it('parses string numeric values (e.g. from Text field type)', async () => {
+    const promise = service.readRow(BASE_PARAMS);
+
+    httpController.expectOne(r => r.url.includes('appTEST')).flush({
+      records: [{ id: 'rec1', fields: { 'Period End': '2024-07-05', Revenue: '12,500.50' } }],
+    });
+
+    const result = await promise;
+    expect(result['se.income.turnover']).toBeCloseTo(12500.5);
+  });
+
   it('returns null for a mapped column that is absent or non-numeric', async () => {
     const promise = service.readRow({
       ...BASE_PARAMS,
