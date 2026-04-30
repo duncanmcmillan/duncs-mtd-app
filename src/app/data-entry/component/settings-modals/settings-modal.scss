@@ -82,6 +82,24 @@
     gap: 6px;
   }
 
+  &__test {
+    display: flex;
+    align-items: center;
+
+    .btn--outline {
+      opacity: 0.8;
+      font-size: 13px;
+    }
+  }
+
+  &__test-btn--ok {
+    color: var(--color-success, #15803d) !important;
+  }
+
+  &__test-btn--failed {
+    color: var(--color-error) !important;
+  }
+
   &__actions {
     display: flex;
     justify-content: flex-end;

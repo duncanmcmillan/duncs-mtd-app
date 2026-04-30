@@ -2,11 +2,12 @@
  * @fileoverview Settings modal for the Telegram Bot notification channel.
  * Reads current settings from DataEntryStore and persists changes on submit.
  */
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { AppStore } from '../../../core';
 import { DataEntryStore } from '../../store/data-entry.store';
 import { TelegramSettings } from '../../model/data-entry.model';
 
@@ -24,11 +25,18 @@ import { TelegramSettings } from '../../model/data-entry.model';
 })
 export class TelegramSettingsComponent {
   protected readonly store = inject(DataEntryStore);
+  protected readonly appStore = inject(AppStore);
 
   protected readonly form = signal<TelegramSettings>({
     botToken: this.store.notifications().telegram?.botToken ?? '',
     chatId:   this.store.notifications().telegram?.chatId   ?? '',
   });
+
+  /** Status of the most recent Telegram test send. */
+  protected readonly testStatus = computed(() => this.store.testNotification().telegram);
+
+  /** True when the user is not authenticated (browser / test-data mode). */
+  protected readonly showTestBtn = computed(() => !this.appStore.accessToken());
 
   /** Updates a single field in the form signal. */
   protected setField(field: keyof TelegramSettings, value: string): void {

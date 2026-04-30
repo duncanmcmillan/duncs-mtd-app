@@ -1,21 +1,28 @@
 /**
- * @fileoverview Stub service for the Telegram Bot notification channel.
- * Will send messages via the Telegram Bot API. No-op implementation until wired up.
+ * @fileoverview Service for sending messages via the Telegram Bot API.
  */
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { TelegramSettings } from '../../model/data-entry.model';
 
 /**
- * Service stub for sending Telegram notifications.
- * Implement `sendMessage()` in a follow-up PR once the notification
- * trigger points and message templates are agreed.
+ * Sends messages to a Telegram chat via the Telegram Bot API.
  */
 @Injectable({ providedIn: 'root' })
 export class TelegramService {
+  private readonly http = inject(HttpClient);
+
   /**
-   * Placeholder — sends a message to the configured Telegram chat.
-   * @param message The text to send.
+   * Sends a text message to the configured Telegram chat.
+   * @param settings Telegram bot token and target chat ID.
+   * @param text The message body (Markdown supported).
+   * @throws When the HTTP call fails (non-2xx response or network error).
    */
-  async sendMessage(_message: string): Promise<void> {
-    // TODO: implement Telegram Bot API call
+  async sendMessage(settings: TelegramSettings, text: string): Promise<void> {
+    const url = `https://api.telegram.org/bot${settings.botToken}/sendMessage`;
+    await firstValueFrom(
+      this.http.post(url, { chat_id: settings.chatId, text, parse_mode: 'Markdown' }),
+    );
   }
 }

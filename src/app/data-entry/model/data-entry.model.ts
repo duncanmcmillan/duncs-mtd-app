@@ -7,6 +7,9 @@
 /** Active sub-tab within the Data Entry & Notifications view. */
 export type DataEntryTab = 'data-entry' | 'notifications';
 
+/** UI state for an in-flight or completed test notification send. */
+export type TestNotificationStatus = 'idle' | 'sending' | 'ok' | 'failed';
+
 /** Identifier for the currently open settings modal. */
 export type SettingsModal =
   | 'airtable'
@@ -135,4 +138,6 @@ export interface DataEntryState {
   isLoading: boolean;
   /** Current error message, or null if there is no error. */
   error: string | null;
+  /** Status of the most recent test notification sends. */
+  testNotification: { telegram: TestNotificationStatus; whatsapp: TestNotificationStatus };
 }

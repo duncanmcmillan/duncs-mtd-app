@@ -9,6 +9,8 @@ import { extractErrorMessage } from '../../core';
 import { SettingsService } from '../service/settings.service';
 import { ExcelService } from '../service/data-entry/excel.service';
 import { AirtableService } from '../service/data-entry/airtable.service';
+import { TelegramService } from '../service/notifications/telegram.service';
+import { WhatsAppService } from '../service/notifications/whatsapp.service';
 import {
   ColumnHeaders,
   DataEntryState,
@@ -16,6 +18,8 @@ import {
   SettingsModal,
   DataEntrySettings,
   NotificationSettings,
+  TelegramSettings,
+  WhatsAppSettings,
 } from '../model/data-entry.model';
 
 const defaultDataEntry: DataEntrySettings = {
@@ -40,6 +44,7 @@ const initialState: DataEntryState = {
   columnHeaders: emptyColumnHeaders,
   isLoading: false,
   error: null,
+  testNotification: { telegram: 'idle', whatsapp: 'idle' },
 };
 
 /**
@@ -57,6 +62,8 @@ export const DataEntryStore = signalStore(
     settingsService = inject(SettingsService),
     excelService = inject(ExcelService),
     airtableService = inject(AirtableService),
+    telegramService = inject(TelegramService),
+    whatsappService = inject(WhatsAppService),
   ) => {
     /**
      * Reads column headers from the active spreadsheet source and patches state.
@@ -105,11 +112,14 @@ export const DataEntryStore = signalStore(
       },
 
       /**
-       * Opens the settings modal for the given method.
+       * Opens the settings modal for the given method and resets test notification status.
        * @param modal The modal identifier to open.
        */
       openModal(modal: SettingsModal): void {
-        patchState(store, { activeModal: modal });
+        patchState(store, {
+          activeModal: modal,
+          testNotification: { telegram: 'idle', whatsapp: 'idle' },
+        });
       },
 
       /** Closes any open settings modal. */
@@ -183,6 +193,42 @@ export const DataEntryStore = signalStore(
             error: extractErrorMessage(e, 'Failed to load settings'),
             isLoading: false,
           });
+        }
+      },
+
+      /**
+       * Sends a test message via Telegram using the provided settings (current form values).
+       * Updates `testNotification.telegram` with the outcome.
+       * @param settings The Telegram credentials to test (typically the unsaved form values).
+       */
+      async sendTestTelegram(settings: TelegramSettings): Promise<void> {
+        patchState(store, { testNotification: { ...store.testNotification(), telegram: 'sending' } });
+        try {
+          await telegramService.sendMessage(
+            settings,
+            '🔔 *MTD App — Test Notification*\n\nYour Telegram notifications are configured correctly.',
+          );
+          patchState(store, { testNotification: { ...store.testNotification(), telegram: 'ok' } });
+        } catch {
+          patchState(store, { testNotification: { ...store.testNotification(), telegram: 'failed' } });
+        }
+      },
+
+      /**
+       * Sends a test message via WhatsApp using the provided settings (current form values).
+       * Updates `testNotification.whatsapp` with the outcome.
+       * @param settings The WhatsApp credentials to test (typically the unsaved form values).
+       */
+      async sendTestWhatsApp(settings: WhatsAppSettings): Promise<void> {
+        patchState(store, { testNotification: { ...store.testNotification(), whatsapp: 'sending' } });
+        try {
+          await whatsappService.sendMessage(
+            settings,
+            '🔔 MTD App — Test Notification\n\nYour WhatsApp notifications are configured correctly.',
+          );
+          patchState(store, { testNotification: { ...store.testNotification(), whatsapp: 'ok' } });
+        } catch {
+          patchState(store, { testNotification: { ...store.testNotification(), whatsapp: 'failed' } });
         }
       },
     };

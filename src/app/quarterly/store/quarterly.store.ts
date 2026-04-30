@@ -14,6 +14,8 @@ import { QuarterlyService } from '../service/quarterly.service';
 import { DataEntryStore } from '../../data-entry';
 import { ExcelService } from '../../data-entry/service/data-entry/excel.service';
 import { AirtableService } from '../../data-entry/service/data-entry/airtable.service';
+import { TelegramService } from '../../data-entry/service/notifications/telegram.service';
+import { WhatsAppService } from '../../data-entry/service/notifications/whatsapp.service';
 import {
   ForeignPropertyExpenses,
   ForeignPropertyIncome,
@@ -75,6 +77,8 @@ export const QuarterlyStore = signalStore(
       excelService = inject(ExcelService),
       airtableService = inject(AirtableService),
       deStore = inject(DataEntryStore),
+      telegramService = inject(TelegramService),
+      whatsappService = inject(WhatsAppService),
     ) => {
       /** Applies a partial update to a single draft without touching others. */
       function applyToDraft(
@@ -85,6 +89,23 @@ export const QuarterlyStore = signalStore(
         const draft = drafts[key];
         if (!draft) return;
         patchState(store, { drafts: { ...drafts, [key]: { ...draft, ...updater(draft) } } });
+      }
+
+      /**
+       * Fires notifications to all enabled channels.
+       * Uses Promise.allSettled so one channel failure never blocks the other.
+       * @param message The formatted text to send.
+       */
+      async function sendNotifications(message: string): Promise<void> {
+        const notif = deStore.notifications();
+        await Promise.allSettled([
+          notif.telegramEnabled && notif.telegram
+            ? telegramService.sendMessage(notif.telegram, message)
+            : Promise.resolve(),
+          notif.whatsappEnabled && notif.whatsapp
+            ? whatsappService.sendMessage(notif.whatsapp, message)
+            : Promise.resolve(),
+        ]);
       }
 
       return {
@@ -241,6 +262,7 @@ export const QuarterlyStore = signalStore(
 
         /**
          * Submits a draft to HMRC and updates the draft status on success or failure.
+         * Fires notifications to all enabled channels after the outcome is known.
          * @param key - Draft key from {@link draftKey}.
          */
         async submitDraft(key: string): Promise<void> {
@@ -281,11 +303,14 @@ export const QuarterlyStore = signalStore(
             service.saveDraft({ ...store.drafts()[key] });
             // Best-effort: refresh so the Obligations tab reflects the fulfilled status.
             void obligationsStore.loadObligations();
+            void sendNotifications(buildMessage(draft, 'ok', submissionId));
           } catch (e: unknown) {
+            const errMsg = extractErrorMessage(e, 'Submission failed — please try again');
             applyToDraft(key, () => ({
               status: 'error',
-              error: extractErrorMessage(e, 'Submission failed — please try again'),
+              error: errMsg,
             }));
+            void sendNotifications(buildMessage(draft, 'fail', undefined, errMsg));
           }
         },
 
@@ -462,6 +487,105 @@ export const QuarterlyStore = signalStore(
 );
 
 // ─── Private helpers ────────────────────────────────────────────────────────
+
+/**
+ * Formats an ISO date string as a human-readable UK date (e.g. "6 Apr 2024").
+ * @param iso - ISO date string (YYYY-MM-DD).
+ */
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/**
+ * Formats a number as a GBP amount with two decimal places and comma separators.
+ * @param n - The number to format.
+ */
+function fmt(n: number): string {
+  return n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/**
+ * Sums all SE expense fields, treating `null` as zero.
+ * @param d - The quarterly draft.
+ */
+function totalSEExp(d: QuarterlyDraft): number {
+  const e = d.seExpenses;
+  return [
+    e.costOfGoods, e.paymentsToSubcontractors, e.wagesAndStaffCosts, e.carVanTravelExpenses,
+    e.premisesRunningCosts, e.maintenanceCosts, e.adminCosts, e.businessEntertainmentCosts,
+    e.advertisingCosts, e.interestOnBankOtherLoans, e.financeCharges, e.irrecoverableDebts,
+    e.professionalFees, e.depreciation, e.otherExpenses, e.consolidatedExpenses,
+  ].reduce<number>((sum, v) => sum + (v ?? 0), 0);
+}
+
+/**
+ * Sums all UK property expense fields, treating `null` as zero.
+ * @param d - The quarterly draft.
+ */
+function totalPropExp(d: QuarterlyDraft): number {
+  const e = d.propExpenses;
+  return [
+    e.premisesRunningCosts, e.repairsAndMaintenance, e.financialCosts, e.professionalFees,
+    e.costOfServices, e.travelCosts, e.residentialFinancialCost,
+    e.broughtFwdResidentialFinancialCost, e.other, e.consolidatedExpenses,
+  ].reduce<number>((sum, v) => sum + (v ?? 0), 0);
+}
+
+/**
+ * Sums all foreign property expense fields, treating `null` as zero.
+ * @param d - The quarterly draft.
+ */
+function totalFPropExp(d: QuarterlyDraft): number {
+  const e = d.foreignPropExpenses;
+  return [
+    e.premisesRunningCosts, e.repairsAndMaintenance, e.financialCosts, e.professionalFees,
+    e.costOfServices, e.travelCosts, e.other, e.consolidatedExpenses,
+  ].reduce<number>((sum, v) => sum + (v ?? 0), 0);
+}
+
+/**
+ * Builds a formatted notification message for a submission outcome.
+ * @param draft - The draft that was submitted.
+ * @param outcome - `'ok'` for success, `'fail'` for failure.
+ * @param submissionId - HMRC submission ID (success only).
+ * @param errorMsg - Error description (failure only).
+ */
+function buildMessage(
+  draft: QuarterlyDraft,
+  outcome: 'ok' | 'fail',
+  submissionId?: string,
+  errorMsg?: string,
+): string {
+  const typeLabel =
+    draft.businessType === 'self-employment' ? 'Self Employment'
+    : draft.businessType === 'uk-property'   ? 'UK Property'
+    : 'Foreign Property';
+  const period = `${fmtDate(draft.periodStartDate)} to ${fmtDate(draft.periodEndDate)}`;
+
+  if (outcome === 'ok') {
+    let financials = '';
+    if (draft.businessType === 'self-employment') {
+      const income   = (draft.seIncome.turnover ?? 0) + (draft.seIncome.other ?? 0);
+      const expenses = totalSEExp(draft);
+      const profit   = income - expenses;
+      financials = `\nTurnover: £${fmt(draft.seIncome.turnover ?? 0)}\nExpenses: £${fmt(expenses)}\nNet profit: £${fmt(profit)}`;
+    } else if (draft.businessType === 'uk-property') {
+      const income   = (draft.propIncome.rentAmount ?? 0) + (draft.propIncome.otherIncome ?? 0);
+      const expenses = totalPropExp(draft);
+      const profit   = income - expenses;
+      financials = `\nIncome: £${fmt(income)}\nExpenses: £${fmt(expenses)}\nNet profit: £${fmt(profit)}`;
+    } else {
+      const income   = (draft.foreignPropIncome.rentIncome ?? 0) + (draft.foreignPropIncome.otherPropertyIncome ?? 0);
+      const expenses = totalFPropExp(draft);
+      const profit   = income - expenses;
+      financials = `\nIncome: £${fmt(income)}\nExpenses: £${fmt(expenses)}\nNet profit: £${fmt(profit)}`;
+    }
+    return `✅ MTD Quarterly Submitted\n\n${draft.businessName} — ${typeLabel}\n${period}\nSubmission: ${submissionId ?? ''}${financials}`;
+  }
+
+  return `❌ MTD Quarterly Submission Failed\n\n${draft.businessName} — ${typeLabel}\n${period}\n\nError: ${errorMsg ?? 'Unknown error'}`;
+}
 
 /**
  * Dispatches a map of field-key → value into the correct draft patch calls

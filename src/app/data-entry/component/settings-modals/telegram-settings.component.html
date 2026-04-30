@@ -32,6 +32,27 @@
       </mat-form-field>
     </div>
 
+    @if (showTestBtn()) {
+      <div class="modal__test">
+        <button
+          class="btn btn--outline"
+          [class.modal__test-btn--ok]="testStatus() === 'ok'"
+          [class.modal__test-btn--failed]="testStatus() === 'failed'"
+          type="button"
+          [disabled]="testStatus() === 'sending'"
+          (click)="store.sendTestTelegram(form())"
+          aria-live="polite"
+        >
+          @switch (testStatus()) {
+            @case ('sending') { Sending… }
+            @case ('ok')      { ✓ Message sent }
+            @case ('failed')  { ✗ Failed — check credentials }
+            @default          { Send test message }
+          }
+        </button>
+      </div>
+    }
+
     @if (store.hasError()) {
       <p class="modal__error" role="alert" aria-live="polite">{{ store.error() }}</p>
     }
