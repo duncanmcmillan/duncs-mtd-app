@@ -124,17 +124,18 @@ export class QuarterlyComponent implements OnInit {
     this.store.draftList().some(d => d.status === 'submitted'),
   );
 
-  /** `true` when a mappable data-entry method (Excel or AirTable) is active. */
+  /** `true` when a mappable data-entry method (Excel, AirTable, or Google Sheets) is active. */
   protected readonly isMappingActive = computed((): boolean => {
     const de = this.deStore.dataEntry();
-    return de.excelEnabled || de.airtableEnabled;
+    return de.excelEnabled || de.airtableEnabled || de.googleSheetsEnabled;
   });
 
-  /** The active fieldMappings from Excel or AirTable settings, or empty object. */
+  /** The active fieldMappings from the enabled spreadsheet source, or empty object. */
   protected readonly activeMappings = computed((): Record<string, string> => {
     const de = this.deStore.dataEntry();
     if (de.excelEnabled && de.excel?.fieldMappings) return de.excel.fieldMappings;
     if (de.airtableEnabled && de.airtable?.fieldMappings) return de.airtable.fieldMappings;
+    if (de.googleSheetsEnabled && de.googleSheets?.fieldMappings) return de.googleSheets.fieldMappings;
     return {};
   });
 
@@ -351,12 +352,20 @@ export class QuarterlyComponent implements OnInit {
         delete fieldMappings[e.fieldKey];
       }
       await this.deStore.saveDataEntry({ ...de, airtable: { ...airtable, fieldMappings } });
+    } else if (de.googleSheetsEnabled) {
+      const gs = de.googleSheets ?? { spreadsheetId: '', apiKey: '', dateColumn: '', fieldMappings: {} };
+      const fieldMappings = { ...gs.fieldMappings };
+      if (e.columnName) {
+        fieldMappings[e.fieldKey] = e.columnName;
+      } else {
+        delete fieldMappings[e.fieldKey];
+      }
+      await this.deStore.saveDataEntry({ ...de, googleSheets: { ...gs, fieldMappings } });
     }
   }
 
   /**
    * Triggers pre-filling the currently selected draft from the active data source.
-   * No-op until ExcelService / AirtableService are implemented.
    */
   protected onRefreshFromSource(): void {
     const draft = this.selectedDraft();
