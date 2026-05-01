@@ -53,13 +53,13 @@ describe('SelfAssessmentComponent', () => {
     store.seedTestData();
     fixture.detectChanges();
 
-    const table = fixture.nativeElement.querySelector('.summary-table');
-    expect(table).toBeTruthy();
+    const sections = fixture.nativeElement.querySelectorAll('.sa-section');
+    expect(sections.length).toBeGreaterThan(0);
 
     const cells = fixture.nativeElement.querySelectorAll('td');
     const texts = Array.from(cells).map((c: unknown) => (c as HTMLElement).textContent?.trim());
-    expect(texts).toContain('Self Employment');
-    expect(texts).toContain('Total Tax Due');
+    expect(texts).toContain('Net business profit');
+    expect(texts).toContain('Total tax due');
   });
 
   it('shows Submit Final Declaration button when ready', () => {
