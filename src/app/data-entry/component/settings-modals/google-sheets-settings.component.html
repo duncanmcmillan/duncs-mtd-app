@@ -5,6 +5,7 @@
       <button type="button" class="modal__close" aria-label="Close Google Sheets settings" (click)="onCancel()">&#x2715;</button>
     </header>
 
+    <div class="modal__body">
     <div class="modal__fields">
       <mat-form-field appearance="outline">
         <mat-label>Spreadsheet ID</mat-label>
@@ -46,13 +47,13 @@
     @if (store.hasError()) {
       <p class="modal__error" role="alert" aria-live="polite">{{ store.error() }}</p>
     }
+    </div>
 
-    <div class="modal__actions">
-      <button type="button" mat-button (click)="onCancel()">Cancel</button>
+    <div class="modal__footer">
+      <button type="button" class="btn btn--ghost" (click)="onCancel()">Cancel</button>
       <button
         type="button"
-        mat-flat-button
-        color="primary"
+        class="btn btn--primary"
         [disabled]="store.isLoading()"
         (click)="onSubmit()"
       >

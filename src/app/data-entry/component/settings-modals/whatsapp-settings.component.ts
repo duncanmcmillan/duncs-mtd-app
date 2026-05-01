@@ -4,7 +4,6 @@
  */
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AppStore } from '../../../core';
@@ -18,7 +17,7 @@ import { WhatsAppSettings } from '../../model/data-entry.model';
 @Component({
   selector: 'app-whatsapp-settings',
   standalone: true,
-  imports: [FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [FormsModule, MatFormFieldModule, MatInputModule],
   templateUrl: './whatsapp-settings.component.html',
   styleUrl: './settings-modal.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
