@@ -17,13 +17,26 @@ module.exports = {
         CFBundleTypeRole: 'Viewer',
       }],
     },
+    // Exclude worktrees, dev tooling and test files from the package.
+    ignore: [
+      /^\/\.claude/,
+      /^\/\.git/,
+      /^\/out/,
+      /^\/src/,
+      /^\/e2e/,
+      /^\/node_modules\/\.cache/,
+      /\.spec\.ts$/,
+      /\.map$/,
+    ],
   },
   hooks: {
     /**
      * Builds the Angular app before packaging so the bundled dist is always
-     * up to date with the current source.
+     * up to date with the current source.  Must run in generateAssets (before
+     * the package step) — preMake fires after packaging and would bundle stale
+     * dist output.
      */
-    preMake: async () => {
+    generateAssets: async () => {
       const { execSync } = require('child_process');
       console.log('[forge] Running ng build…');
       execSync('npm run build', { stdio: 'inherit' });
