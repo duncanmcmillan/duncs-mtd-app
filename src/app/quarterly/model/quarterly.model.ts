@@ -159,8 +159,12 @@ export interface ForeignPropertyExpenses {
   consolidatedExpenses: number | null;
 }
 
-/** Lifecycle status of a quarterly draft. */
-export type DraftStatus = 'draft' | 'submitting' | 'submitted' | 'error';
+/**
+ * Lifecycle status of a quarterly draft.
+ * `'fulfilled'` means the draft was retrieved from HMRC and is shown read-only.
+ * It transitions back to `'draft'` when the user clicks **Amend this submission**.
+ */
+export type DraftStatus = 'draft' | 'submitting' | 'submitted' | 'error' | 'fulfilled';
 
 /**
  * In-progress or submitted quarterly data for one income source in one reporting period.

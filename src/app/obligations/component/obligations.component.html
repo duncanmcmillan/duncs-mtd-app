@@ -108,14 +108,29 @@
               }
             </td>
             <td class="cell-action">
-              <button
-                class="action-btn"
-                [class.action-btn--view]="row.status === 'fulfilled'"
-                [class.action-btn--amend]="row.status !== 'fulfilled'"
-                type="button"
-                [attr.aria-label]="actionLabel(row) + ' — ' + (row.periodStartDate | date:'MMM yyyy')"
-                (click)="onAction(row)"
-              >{{ actionLabel(row) }}</button>
+              @if (row.status !== 'fulfilled') {
+                <button
+                  class="action-btn action-btn--create"
+                  type="button"
+                  [attr.aria-label]="'Create submission for ' + (row.periodStartDate | date:'MMM yyyy')"
+                  (click)="onCreate(row)"
+                >Create</button>
+              } @else {
+                <button
+                  class="action-btn action-btn--view"
+                  type="button"
+                  [attr.aria-label]="'View submission for ' + (row.periodStartDate | date:'MMM yyyy')"
+                  (click)="onView(row)"
+                >View</button>
+                @if (isWithinTaxYear(row)) {
+                  <button
+                    class="action-btn action-btn--amend"
+                    type="button"
+                    [attr.aria-label]="'Amend submission for ' + (row.periodStartDate | date:'MMM yyyy')"
+                    (click)="onAmend(row)"
+                  >Amend</button>
+                }
+              }
             </td>
           </tr>
         }

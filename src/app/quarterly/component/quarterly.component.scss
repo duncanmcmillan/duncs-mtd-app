@@ -139,6 +139,12 @@
     .tab-status-label { color: #15803d; }
   }
 
+  &--fulfilled {
+    border-left-color: #15803d;
+    .tab-status-dot { background: #15803d; }
+    .tab-status-label { color: #15803d; }
+  }
+
   &--error {
     border-left-color: var(--color-error);
     .tab-status-dot { background: var(--color-error); }
@@ -303,6 +309,11 @@
   width: fit-content;
 
   &--submitted {
+    background: rgba(74, 222, 128, 0.15);
+    color: #15803d;
+  }
+
+  &--fulfilled {
     background: rgba(74, 222, 128, 0.15);
     color: #15803d;
   }

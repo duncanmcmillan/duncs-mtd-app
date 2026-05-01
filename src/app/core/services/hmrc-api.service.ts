@@ -101,6 +101,28 @@ export class HmrcApiService {
   }
 
   /**
+   * Makes an authenticated PUT request to an HMRC API endpoint.
+   * Used for amend operations that replace an existing submission.
+   * @param path - The API path to PUT to.
+   * @param body - The request payload (will be JSON-serialised).
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @param apiVersion - HMRC API version string (e.g. `'3.0'`).
+   * @returns The parsed JSON response body (often empty for 204 responses).
+   */
+  async put<T>(path: string, body: unknown, accessToken: string, apiVersion = '1.0'): Promise<T> {
+    const fraudHeaders = await this.fraudPrevention.getHeaders();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${accessToken}`,
+      Accept: `application/vnd.hmrc.${apiVersion}+json`,
+      'Content-Type': 'application/json',
+      ...fraudHeaders,
+    });
+    return firstValueFrom(
+      this.http.put<T>(`${this.baseUrl}${path}`, body, { headers })
+    );
+  }
+
+  /**
    * Initiates the HMRC OAuth 2.0 Authorization Code flow via the Electron
    * IPC bridge. Opens the system browser; resolves when HMRC redirects back
    * to the `mtd-app://` custom protocol URI.

@@ -148,6 +148,15 @@ export const QuarterlyStore = signalStore(
               drafts[key] = savedDrafts[key] ?? buildEmptyDraft(biz, row);
             }
 
+            // Also restore any fulfilled drafts previously saved locally.
+            for (const row of obligationsStore.obligationRows()) {
+              if (row.status !== 'fulfilled') continue;
+              const bid = row.businessId ?? '';
+              if (!bid) continue;
+              const key = draftKey(bid, row.periodStartDate);
+              if (savedDrafts[key]) drafts[key] = savedDrafts[key];
+            }
+
             patchState(store, { drafts, isLoading: false });
           } catch (e: unknown) {
             patchState(store, {
@@ -275,25 +284,53 @@ export const QuarterlyStore = signalStore(
 
           applyToDraft(key, () => ({ status: 'submitting', error: null }));
           try {
+            const isAmend = !!draft.submissionId;
             let submissionId: string;
+
             if (draft.businessType === 'self-employment') {
-              submissionId = await service.submitSelfEmployment(
-                nino, draft.businessId, draft.taxYear,
-                draft.periodStartDate, draft.periodEndDate, token,
-                draft.seIncome, draft.seExpenses, draft.seDisallowableExpenses,
-              );
+              if (isAmend) {
+                await service.amendSelfEmployment(
+                  nino, draft.businessId, draft.taxYear, draft.submissionId!, token,
+                  draft.seIncome, draft.seExpenses, draft.seDisallowableExpenses,
+                );
+                submissionId = draft.submissionId!;
+              } else {
+                submissionId = await service.submitSelfEmployment(
+                  nino, draft.businessId, draft.taxYear,
+                  draft.periodStartDate, draft.periodEndDate, token,
+                  draft.seIncome, draft.seExpenses, draft.seDisallowableExpenses,
+                );
+              }
             } else if (draft.businessType === 'foreign-property') {
-              submissionId = await service.submitForeignProperty(
-                nino, draft.businessId, draft.taxYear,
-                draft.periodStartDate, draft.periodEndDate, token,
-                draft.foreignPropIncome, draft.foreignPropExpenses,
-              );
+              if (isAmend) {
+                await service.amendForeignProperty(
+                  nino, draft.businessId, draft.taxYear, draft.submissionId!,
+                  draft.periodStartDate, draft.periodEndDate, token,
+                  draft.foreignPropIncome, draft.foreignPropExpenses,
+                );
+                submissionId = draft.submissionId!;
+              } else {
+                submissionId = await service.submitForeignProperty(
+                  nino, draft.businessId, draft.taxYear,
+                  draft.periodStartDate, draft.periodEndDate, token,
+                  draft.foreignPropIncome, draft.foreignPropExpenses,
+                );
+              }
             } else {
-              submissionId = await service.submitUkProperty(
-                nino, draft.businessId, draft.taxYear,
-                draft.periodStartDate, draft.periodEndDate, token,
-                draft.propIncome, draft.propExpenses,
-              );
+              if (isAmend) {
+                await service.amendUkProperty(
+                  nino, draft.businessId, draft.taxYear, draft.submissionId!,
+                  draft.periodStartDate, draft.periodEndDate, token,
+                  draft.propIncome, draft.propExpenses,
+                );
+                submissionId = draft.submissionId!;
+              } else {
+                submissionId = await service.submitUkProperty(
+                  nino, draft.businessId, draft.taxYear,
+                  draft.periodStartDate, draft.periodEndDate, token,
+                  draft.propIncome, draft.propExpenses,
+                );
+              }
             }
             const submitted: Partial<QuarterlyDraft> = {
               status: 'submitted',
@@ -491,6 +528,139 @@ export const QuarterlyStore = signalStore(
           } catch (e: unknown) {
             patchState(store, { isLoading: false, error: extractErrorMessage(e, 'Failed to read data source') });
           }
+        },
+
+        /**
+         * Retrieves a fulfilled quarterly submission from HMRC and loads it as a draft.
+         * Finds the submissionId via the list endpoint, retrieves figures, builds a draft
+         * with status `'fulfilled'` (view) or `'draft'` (amend), then saves to localStorage.
+         * @param params - Period, business, and action metadata from Obligations navigation.
+         */
+        async retrieveAndLoadDraft(params: {
+          /** ISO period start date. */
+          periodStart: string;
+          /** HMRC income source identifier. */
+          businessId: string;
+          /** HMRC tax year string, e.g. `'2024-25'`. */
+          taxYear: string;
+          /** Income source type string. */
+          businessType: string;
+          /** Display name for the business. */
+          businessName: string;
+          /** Whether to open in read-only view or editable amend mode. */
+          action: 'view' | 'amend';
+        }): Promise<void> {
+          const token = appStore.accessToken();
+          const nino = appStore.nino();
+          if (!token || !nino) return;
+
+          patchState(store, { isLoading: true, error: null });
+          try {
+            const { periodStart, businessId, taxYear, businessType, businessName, action } = params;
+            const key = draftKey(businessId, periodStart);
+
+            // Find the submissionId by listing periods for this business and tax year.
+            let submissionId: string | null = null;
+            if (businessType === 'self-employment') {
+              const periods = await service.listSEPeriods(nino, businessId, taxYear, token);
+              submissionId = periods.find(p => p.fromDate === periodStart)?.submissionId ?? null;
+            } else if (businessType === 'uk-property') {
+              const periods = await service.listUkPropertyPeriods(nino, businessId, taxYear, token);
+              submissionId = periods.find(p => p.fromDate === periodStart)?.submissionId ?? null;
+            } else {
+              const periods = await service.listForeignPropertyPeriods(nino, businessId, taxYear, token);
+              submissionId = periods.find(p => p.fromDate === periodStart)?.submissionId ?? null;
+            }
+
+            if (!submissionId) {
+              throw new Error(`No submission found for period starting ${periodStart}`);
+            }
+
+            const status = action === 'view' ? 'fulfilled' as const : 'draft' as const;
+            const row = obligationsStore.obligationRows().find(
+              r => r.businessId === businessId && r.periodStartDate === periodStart,
+            );
+            const businesses = bizStore.businesses() ?? [];
+            const biz = businesses.find(b => b.businessId === businessId);
+
+            let draft: QuarterlyDraft;
+
+            if (businessType === 'self-employment') {
+              const data = await service.retrieveSelfEmployment(nino, businessId, taxYear, submissionId, token);
+              draft = {
+                businessId, businessName: businessName || biz?.tradingName || 'Self Employment',
+                businessType: 'self-employment',
+                periodStartDate: periodStart,
+                periodEndDate: row?.periodEndDate ?? '',
+                dueDate: row?.dueDate ?? '',
+                taxYear,
+                seIncome: data.income,
+                seExpenses: data.expenses,
+                seDisallowableExpenses: data.disallowable,
+                propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+                foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
+                confirmed: true,
+                lastSaved: new Date().toISOString(),
+                submissionId,
+                status,
+                error: null,
+              };
+            } else if (businessType === 'uk-property') {
+              const data = await service.retrieveUkProperty(nino, businessId, taxYear, submissionId, token);
+              draft = {
+                businessId, businessName: businessName || biz?.tradingName || 'UK Property',
+                businessType: 'uk-property',
+                periodStartDate: periodStart,
+                periodEndDate: row?.periodEndDate ?? '',
+                dueDate: row?.dueDate ?? '',
+                taxYear,
+                seIncome: emptySEIncome(), seExpenses: emptySEExpenses(), seDisallowableExpenses: emptySEDisallowable(),
+                propIncome: data.income,
+                propExpenses: data.expenses,
+                foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
+                confirmed: true,
+                lastSaved: new Date().toISOString(),
+                submissionId,
+                status,
+                error: null,
+              };
+            } else {
+              const data = await service.retrieveForeignProperty(nino, businessId, taxYear, submissionId, token);
+              draft = {
+                businessId, businessName: businessName || biz?.tradingName || 'Foreign Property',
+                businessType: 'foreign-property',
+                periodStartDate: periodStart,
+                periodEndDate: row?.periodEndDate ?? '',
+                dueDate: row?.dueDate ?? '',
+                taxYear,
+                seIncome: emptySEIncome(), seExpenses: emptySEExpenses(), seDisallowableExpenses: emptySEDisallowable(),
+                propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+                foreignPropIncome: data.income,
+                foreignPropExpenses: data.expenses,
+                confirmed: true,
+                lastSaved: new Date().toISOString(),
+                submissionId,
+                status,
+                error: null,
+              };
+            }
+
+            patchState(store, { drafts: { ...store.drafts(), [key]: draft }, isLoading: false });
+            service.saveDraft(draft);
+          } catch (e: unknown) {
+            patchState(store, {
+              error: extractErrorMessage(e, 'Failed to retrieve quarterly submission'),
+              isLoading: false,
+            });
+          }
+        },
+
+        /**
+         * Switches a fulfilled draft to editable mode so the user can amend it.
+         * @param key - Draft key from {@link draftKey}.
+         */
+        startAmend(key: string): void {
+          applyToDraft(key, () => ({ status: 'draft' }));
         },
       };
     },

@@ -256,6 +256,9 @@
   text-align: right;
   white-space: nowrap;
   padding-right: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
 .action-btn {
@@ -268,12 +271,23 @@
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
 
-  &--amend {
+  &--create {
     background: var(--orange-500);
     color: var(--neutral-0);
     border: 1px solid transparent;
 
     &:hover { background: var(--orange-600); }
+  }
+
+  &--amend {
+    background: transparent;
+    color: var(--orange-600);
+    border: 1px solid var(--orange-400);
+
+    &:hover {
+      background: var(--orange-50, #fff7ed);
+      border-color: var(--orange-500);
+    }
   }
 
   &--view {

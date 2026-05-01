@@ -43,6 +43,14 @@ interface ObligationsNavState {
   periodStart?: string;
   /** Business ID to pre-select within the period. */
   businessId?: string;
+  /** Whether to create, view, or amend. */
+  action?: 'create' | 'view' | 'amend';
+  /** HMRC tax year string, e.g. `'2024-25'`. */
+  taxYear?: string;
+  /** Income source type string. */
+  businessType?: string;
+  /** Display name for the business. */
+  businessName?: string;
 }
 
 /**
@@ -86,13 +94,28 @@ export class QuarterlyComponent implements OnInit {
   });
 
   /**
-   * The currently selected period start date; auto-selects the first period
-   * whenever the period list changes (e.g. after init or seedTestDrafts).
+   * Returns the first period start date as a stable primitive string.
+   * Angular compares primitive signal outputs with `Object.is`, so the
+   * `selectedPeriod` linkedSignal only resets when the string value itself changes
+   * (not whenever the draft array object reference changes).
    */
-  protected readonly selectedPeriod = linkedSignal<string | null>(() => {
-    const list = this.periodList();
-    return list.length > 0 ? list[0].startDate : null;
+  private readonly firstPeriodKey = computed((): string | null => {
+    const seen = new Set<string>();
+    const sorted: string[] = [];
+    for (const d of this.store.draftList()) {
+      if (!seen.has(d.periodStartDate)) { seen.add(d.periodStartDate); sorted.push(d.periodStartDate); }
+    }
+    sorted.sort();
+    return sorted.length > 0 ? sorted[0] : null;
   });
+
+  /**
+   * The currently selected period start date; auto-selects the first period
+   * when the available period set changes (e.g. after init or seedTestDrafts).
+   * Patching a draft (e.g. setConfirmed) does not reset this signal because
+   * the source is a stable primitive string, not an array reference.
+   */
+  protected readonly selectedPeriod = linkedSignal<string | null>(() => this.firstPeriodKey());
 
   /** All drafts for the currently selected period, in draftList order. */
   protected readonly periodDrafts = computed((): QuarterlyDraft[] => {
@@ -102,13 +125,22 @@ export class QuarterlyComponent implements OnInit {
   });
 
   /**
+   * Returns the first draft key for the current period as a stable primitive string.
+   * Keeps `selectedKey` stable across draft patches for the same period.
+   */
+  private readonly firstDraftKeyForPeriod = computed((): string | null => {
+    const period = this.selectedPeriod();
+    if (!period) return null;
+    const match = this.store.draftList().find(d => d.periodStartDate === period);
+    return match ? draftKey(match.businessId, match.periodStartDate) : null;
+  });
+
+  /**
    * The currently selected income-source key within the active period;
    * auto-resets to the first source whenever the active period changes.
+   * Stable across draft patches within the same period.
    */
-  protected readonly selectedKey = linkedSignal<string | null>(() => {
-    const drafts = this.periodDrafts();
-    return drafts.length > 0 ? draftKey(drafts[0].businessId, drafts[0].periodStartDate) : null;
-  });
+  protected readonly selectedKey = linkedSignal<string | null>(() => this.firstDraftKeyForPeriod());
 
   /** The currently selected draft, or `null` when no drafts are loaded. */
   protected readonly selectedDraft = computed((): QuarterlyDraft | null => {
@@ -154,13 +186,24 @@ export class QuarterlyComponent implements OnInit {
 
   /** @inheritdoc */
   ngOnInit(): void {
-    const { periodStart, businessId } = this.navState;
-    void this.store.init().then(() => {
-      if (periodStart) {
+    const { periodStart, businessId, action, taxYear, businessType, businessName } = this.navState;
+    void this.store.init().then(async () => {
+      if ((action === 'view' || action === 'amend') && periodStart && businessId && taxYear) {
+        await this.store.retrieveAndLoadDraft({
+          periodStart,
+          businessId,
+          taxYear,
+          businessType: businessType ?? '',
+          businessName: businessName ?? '',
+          action,
+        });
         this.selectedPeriod.set(periodStart);
-      }
-      if (businessId && periodStart) {
         this.selectedKey.set(draftKey(businessId, periodStart));
+      } else if (periodStart) {
+        this.selectedPeriod.set(periodStart);
+        if (businessId) {
+          this.selectedKey.set(draftKey(businessId, periodStart));
+        }
       }
     });
   }
@@ -191,6 +234,17 @@ export class QuarterlyComponent implements OnInit {
    */
   protected keyFor(draft: QuarterlyDraft): string {
     return draftKey(draft.businessId, draft.periodStartDate);
+  }
+
+  /**
+   * Returns `true` when today falls before 5 April of the year following
+   * the draft's tax year, meaning the amendment window is still open.
+   * @param draft - The draft to check.
+   */
+  protected isWithinTaxYear(draft: QuarterlyDraft): boolean {
+    const endYear = parseInt(draft.taxYear.split('-')[0], 10) + 1;
+    const taxYearEnd = new Date(endYear, 3, 5); // 5 April (month index 3)
+    return Date.now() <= taxYearEnd.getTime();
   }
 
   /**
@@ -296,6 +350,14 @@ export class QuarterlyComponent implements OnInit {
    */
   protected onSubmit(key: string): void {
     void this.store.submitDraft(key);
+  }
+
+  /**
+   * Switches a fulfilled draft into editable amend mode.
+   * @param key - Draft key.
+   */
+  protected onStartAmend(key: string): void {
+    this.store.startAmend(key);
   }
 
   /**

@@ -161,29 +161,74 @@ export class ObligationsComponent implements OnInit {
   }
 
   /**
-   * Returns the label for the action button in a given obligation row.
-   * @param row - The obligation row.
+   * Returns `true` when today falls before the 5 April tax-year-end for the
+   * obligation's tax year, meaning the amendment window is still open.
+   * @param row - The obligation row to check.
    */
-  protected actionLabel(row: ObligationRow): string {
-    return row.status === 'fulfilled' ? 'View' : 'Create / Amend';
+  protected isWithinTaxYear(row: ObligationRow): boolean {
+    const taxYear = this.taxYearFor(row.periodStartDate); // e.g. '2024-25'
+    const endYear = parseInt(taxYear.split('-')[0], 10) + 1; // 2025
+    const taxYearEnd = new Date(endYear, 3, 5); // 5 April (month index 3)
+    return Date.now() <= taxYearEnd.getTime();
   }
 
   /**
-   * Navigates to the appropriate tab for a given obligation row.
-   * ITSA obligations route to the Self Assessment tab; all other income sources
-   * route to the Quarterly Update tab with the period and business pre-selected.
-   * @param row - The obligation row whose action button was clicked.
+   * Navigates to create a new quarterly submission for an open/overdue obligation.
+   * ITSA obligations route to the Self Assessment tab instead.
+   * @param row - The open obligation row.
    */
-  protected onAction(row: ObligationRow): void {
+  protected onCreate(row: ObligationRow): void {
     if (row.typeOfBusiness === 'ITSA') {
       void this.router.navigate(['/self-assessment'], {
         state: { taxYear: this.taxYearFor(row.periodStartDate) },
       });
     } else {
       void this.router.navigate(['/quarterly'], {
-        state: { periodStart: row.periodStartDate, businessId: row.businessId },
+        state: {
+          action: 'create',
+          periodStart: row.periodStartDate,
+          businessId: row.businessId,
+          taxYear: this.taxYearFor(row.periodStartDate),
+          businessType: row.typeOfBusiness,
+          businessName: this.sourceLabel(row.typeOfBusiness),
+        },
       });
     }
+  }
+
+  /**
+   * Navigates to view a fulfilled quarterly submission in read-only mode.
+   * @param row - The fulfilled obligation row.
+   */
+  protected onView(row: ObligationRow): void {
+    void this.router.navigate(['/quarterly'], {
+      state: {
+        action: 'view',
+        periodStart: row.periodStartDate,
+        businessId: row.businessId,
+        taxYear: this.taxYearFor(row.periodStartDate),
+        businessType: row.typeOfBusiness,
+        businessName: this.sourceLabel(row.typeOfBusiness),
+      },
+    });
+  }
+
+  /**
+   * Navigates to amend a fulfilled quarterly submission (edit mode).
+   * Only valid when called within the obligation's tax year.
+   * @param row - The fulfilled obligation row.
+   */
+  protected onAmend(row: ObligationRow): void {
+    void this.router.navigate(['/quarterly'], {
+      state: {
+        action: 'amend',
+        periodStart: row.periodStartDate,
+        businessId: row.businessId,
+        taxYear: this.taxYearFor(row.periodStartDate),
+        businessType: row.typeOfBusiness,
+        businessName: this.sourceLabel(row.typeOfBusiness),
+      },
+    });
   }
 
   /** Loads synthetic test obligations for UI development without authentication. */

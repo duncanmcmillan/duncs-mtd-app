@@ -16,6 +16,13 @@ import {
   ForeignPropertyIncome,
   ForeignPropertyExpenses,
   draftKey,
+  emptySEIncome,
+  emptySEExpenses,
+  emptySEDisallowable,
+  emptyPropIncome,
+  emptyPropExpenses,
+  emptyForeignPropIncome,
+  emptyForeignPropExpenses,
 } from '../model/quarterly.model';
 
 /** Response body from the SE Business API periodic summary create/amend endpoint. */
@@ -28,6 +35,119 @@ interface SelfEmploymentSubmitResponse {
 interface PropertySubmitResponse {
   /** HMRC-assigned identifier for the submitted periodic summary. */
   submissionId: string;
+}
+
+/** A single entry from a period list endpoint. */
+interface PeriodListEntry {
+  /** HMRC-assigned submission identifier. */
+  submissionId: string;
+  /** ISO start date of the period. */
+  fromDate: string;
+  /** ISO end date of the period. */
+  toDate: string;
+}
+
+/** Response body from period list endpoints. */
+interface PeriodListApiResponse {
+  /** Array of period entries. */
+  submissions?: PeriodListEntry[];
+}
+
+/** Raw API response for SE periodic summary retrieve. */
+interface SERetrieveApiResponse {
+  periodIncome?: Partial<{
+    turnover: number; other: number;
+  }>;
+  periodExpenses?: Partial<{
+    costOfGoods: number; paymentsToSubcontractors: number; wagesAndStaffCosts: number;
+    carVanTravelExpenses: number; premisesRunningCosts: number; maintenanceCosts: number;
+    adminCosts: number; businessEntertainmentCosts: number; advertisingCosts: number;
+    interestOnBankOtherLoans: number; financeCharges: number; irrecoverableDebts: number;
+    professionalFees: number; depreciation: number; otherExpenses: number;
+    consolidatedExpenses: number;
+  }>;
+  periodDisallowableExpenses?: Partial<{
+    costOfGoodsDisallowable: number; paymentsToSubcontractorsDisallowable: number;
+    wagesAndStaffCostsDisallowable: number; carVanTravelExpensesDisallowable: number;
+    premisesRunningCostsDisallowable: number; maintenanceCostsDisallowable: number;
+    adminCostsDisallowable: number; businessEntertainmentCostsDisallowable: number;
+    advertisingCostsDisallowable: number; interestOnBankOtherLoansDisallowable: number;
+    financeChargesDisallowable: number; irrecoverableDebtsDisallowable: number;
+    professionalFeesDisallowable: number; depreciationDisallowable: number;
+    otherExpensesDisallowable: number;
+  }>;
+}
+
+/** Raw API response for UK property periodic summary retrieve. */
+interface UkPropertyRetrieveApiResponse {
+  income?: {
+    rentIncome?: { amount?: number; taxDeducted?: number };
+    premiumsOfLeaseGrant?: number;
+    reversePremiums?: number;
+    otherIncome?: number;
+  };
+  expenses?: Partial<{
+    premisesRunningCosts: number; repairsAndMaintenance: number; financialCosts: number;
+    professionalFees: number; costOfServices: number; travelCosts: number;
+    residentialFinancialCost: number; broughtFwdResidentialFinancialCost: number;
+    other: number; consolidatedExpenses: number;
+  }>;
+}
+
+/** Raw API response for foreign property periodic summary retrieve. */
+interface ForeignPropertyRetrieveApiResponse {
+  foreignProperty?: Array<{
+    countryCode: string;
+    income?: {
+      foreignTaxCreditRelief?: boolean;
+      rentIncome?: { rentAmount?: number };
+      premiumsOfLeaseGrant?: number;
+      otherPropertyIncome?: number;
+      foreignTaxPaidOrDeducted?: number;
+      specialWithholdingTaxOrUkTaxPaid?: number;
+    };
+    expenses?: Partial<{
+      premisesRunningCosts: number; repairsAndMaintenance: number; financialCosts: number;
+      professionalFees: number; costOfServices: number; travelCosts: number;
+      other: number; consolidatedExpenses: number;
+    }>;
+  }>;
+}
+
+/** App-level result from SE retrieve. */
+export interface SERetrievedData {
+  /** Income figures retrieved from HMRC. */
+  income: SelfEmploymentIncome;
+  /** Allowable expense figures retrieved from HMRC. */
+  expenses: SelfEmploymentExpenses;
+  /** Disallowable expense figures retrieved from HMRC. */
+  disallowable: SelfEmploymentDisallowableExpenses;
+}
+
+/** App-level result from UK property retrieve. */
+export interface UkPropertyRetrievedData {
+  /** Income figures retrieved from HMRC. */
+  income: UkPropertyIncome;
+  /** Expense figures retrieved from HMRC. */
+  expenses: UkPropertyExpenses;
+}
+
+/** App-level result from foreign property retrieve. */
+export interface ForeignPropertyRetrievedData {
+  /** Income figures retrieved from HMRC. */
+  income: ForeignPropertyIncome;
+  /** Expense figures retrieved from HMRC. */
+  expenses: ForeignPropertyExpenses;
+}
+
+/** A summary reference from a period list endpoint. */
+export interface PeriodSummaryRef {
+  /** HMRC-assigned submission identifier. */
+  submissionId: string;
+  /** ISO start date of the period. */
+  fromDate: string;
+  /** ISO end date of the period. */
+  toDate: string;
 }
 
 const DRAFT_KEY_PREFIX = 'quarterly_draft_';
@@ -138,6 +258,305 @@ export class QuarterlyService {
       '6.0',
     );
     return response.submissionId;
+  }
+
+  // ─── List ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Lists self-employment periodic summary submissions for a given business and tax year.
+   * @param nino - The taxpayer's National Insurance number.
+   * @param businessId - HMRC income source identifier.
+   * @param taxYear - HMRC tax year string, e.g. `'2024-25'`.
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @returns Array of period summary references including submissionId and date range.
+   * @throws `HttpErrorResponse` if the API call fails.
+   */
+  async listSEPeriods(
+    nino: string,
+    businessId: string,
+    taxYear: string,
+    accessToken: string,
+  ): Promise<PeriodSummaryRef[]> {
+    const response = await this.api.get<PeriodListApiResponse>(
+      `/individuals/self-employment/income-summary/${nino}/${taxYear}/${businessId}`,
+      accessToken,
+      '3.0',
+    );
+    return (response.submissions ?? []).map(s => ({
+      submissionId: s.submissionId,
+      fromDate: s.fromDate,
+      toDate: s.toDate,
+    }));
+  }
+
+  /**
+   * Lists UK property periodic summary submissions for a given business and tax year.
+   * @param nino - The taxpayer's National Insurance number.
+   * @param businessId - HMRC income source identifier.
+   * @param taxYear - HMRC tax year string, e.g. `'2024-25'`.
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @returns Array of period summary references.
+   * @throws `HttpErrorResponse` if the API call fails.
+   */
+  async listUkPropertyPeriods(
+    nino: string,
+    businessId: string,
+    taxYear: string,
+    accessToken: string,
+  ): Promise<PeriodSummaryRef[]> {
+    const response = await this.api.get<PeriodListApiResponse>(
+      `/individuals/business/property/uk/${nino}/${taxYear}/${businessId}/period`,
+      accessToken,
+      '4.0',
+    );
+    return (response.submissions ?? []).map(s => ({
+      submissionId: s.submissionId,
+      fromDate: s.fromDate,
+      toDate: s.toDate,
+    }));
+  }
+
+  /**
+   * Lists foreign property periodic summary submissions for a given business and tax year.
+   * @param nino - The taxpayer's National Insurance number.
+   * @param businessId - HMRC income source identifier.
+   * @param taxYear - HMRC tax year string, e.g. `'2024-25'`.
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @returns Array of period summary references.
+   * @throws `HttpErrorResponse` if the API call fails.
+   */
+  async listForeignPropertyPeriods(
+    nino: string,
+    businessId: string,
+    taxYear: string,
+    accessToken: string,
+  ): Promise<PeriodSummaryRef[]> {
+    const response = await this.api.get<PeriodListApiResponse>(
+      `/individuals/business/property/foreign/${nino}/${taxYear}/${businessId}/period`,
+      accessToken,
+      '6.0',
+    );
+    return (response.submissions ?? []).map(s => ({
+      submissionId: s.submissionId,
+      fromDate: s.fromDate,
+      toDate: s.toDate,
+    }));
+  }
+
+  // ─── Retrieve ──────────────────────────────────────────────────────────────
+
+  /**
+   * Retrieves a self-employment periodic summary from HMRC.
+   * @param nino - The taxpayer's National Insurance number.
+   * @param businessId - HMRC income source identifier.
+   * @param taxYear - HMRC tax year string, e.g. `'2024-25'`.
+   * @param submissionId - HMRC submission identifier.
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @returns Mapped income, allowable expenses, and disallowable expenses.
+   * @throws `HttpErrorResponse` if the API call fails.
+   */
+  async retrieveSelfEmployment(
+    nino: string,
+    businessId: string,
+    taxYear: string,
+    submissionId: string,
+    accessToken: string,
+  ): Promise<SERetrievedData> {
+    const r = await this.api.get<SERetrieveApiResponse>(
+      `/individuals/self-employment/income-summary/${nino}/${taxYear}/${businessId}/${submissionId}`,
+      accessToken,
+      '3.0',
+    );
+    const pi = r.periodIncome ?? {};
+    const pe = r.periodExpenses ?? {};
+    const pd = r.periodDisallowableExpenses ?? {};
+    return {
+      income: { ...emptySEIncome(), ...nullify(pi) } as SelfEmploymentIncome,
+      expenses: { ...emptySEExpenses(), ...nullify(pe) } as SelfEmploymentExpenses,
+      disallowable: { ...emptySEDisallowable(), ...nullify(pd) } as SelfEmploymentDisallowableExpenses,
+    };
+  }
+
+  /**
+   * Retrieves a UK property periodic summary from HMRC.
+   * @param nino - The taxpayer's National Insurance number.
+   * @param businessId - HMRC income source identifier.
+   * @param taxYear - HMRC tax year string, e.g. `'2024-25'`.
+   * @param submissionId - HMRC submission identifier.
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @returns Mapped income and expense figures.
+   * @throws `HttpErrorResponse` if the API call fails.
+   */
+  async retrieveUkProperty(
+    nino: string,
+    businessId: string,
+    taxYear: string,
+    submissionId: string,
+    accessToken: string,
+  ): Promise<UkPropertyRetrievedData> {
+    const r = await this.api.get<UkPropertyRetrieveApiResponse>(
+      `/individuals/business/property/uk/${nino}/${taxYear}/${businessId}/period/${submissionId}`,
+      accessToken,
+      '4.0',
+    );
+    const ri = r.income ?? {};
+    const re = r.expenses ?? {};
+    const income: UkPropertyIncome = {
+      ...emptyPropIncome(),
+      rentAmount: ri.rentIncome?.amount ?? null,
+      rentTaxDeducted: ri.rentIncome?.taxDeducted ?? null,
+      premiumsOfLeaseGrant: ri.premiumsOfLeaseGrant ?? null,
+      reversePremiums: ri.reversePremiums ?? null,
+      otherIncome: ri.otherIncome ?? null,
+    };
+    return {
+      income,
+      expenses: { ...emptyPropExpenses(), ...nullify(re) } as UkPropertyExpenses,
+    };
+  }
+
+  /**
+   * Retrieves a foreign property periodic summary from HMRC.
+   * @param nino - The taxpayer's National Insurance number.
+   * @param businessId - HMRC income source identifier.
+   * @param taxYear - HMRC tax year string, e.g. `'2024-25'`.
+   * @param submissionId - HMRC submission identifier.
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @returns Mapped income and expense figures for the first country entry.
+   * @throws `HttpErrorResponse` if the API call fails.
+   */
+  async retrieveForeignProperty(
+    nino: string,
+    businessId: string,
+    taxYear: string,
+    submissionId: string,
+    accessToken: string,
+  ): Promise<ForeignPropertyRetrievedData> {
+    const r = await this.api.get<ForeignPropertyRetrieveApiResponse>(
+      `/individuals/business/property/foreign/${nino}/${taxYear}/${businessId}/period/${submissionId}`,
+      accessToken,
+      '6.0',
+    );
+    const entry = r.foreignProperty?.[0];
+    const ri = entry?.income ?? {};
+    const re = entry?.expenses ?? {};
+    const income: ForeignPropertyIncome = {
+      ...emptyForeignPropIncome(),
+      countryCode: entry?.countryCode ?? '',
+      foreignTaxCreditRelief: ri.foreignTaxCreditRelief ?? false,
+      rentIncome: ri.rentIncome?.rentAmount ?? null,
+      premiumsOfLeaseGrant: ri.premiumsOfLeaseGrant ?? null,
+      otherPropertyIncome: ri.otherPropertyIncome ?? null,
+      foreignTaxPaidOrDeducted: ri.foreignTaxPaidOrDeducted ?? null,
+      specialWithholdingTaxOrUkTaxPaid: ri.specialWithholdingTaxOrUkTaxPaid ?? null,
+    };
+    return {
+      income,
+      expenses: { ...emptyForeignPropExpenses(), ...nullify(re) } as ForeignPropertyExpenses,
+    };
+  }
+
+  // ─── Amend ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Amends a self-employment periodic summary via PUT.
+   * @param nino - The taxpayer's National Insurance number.
+   * @param businessId - HMRC income source identifier.
+   * @param taxYear - HMRC tax year string, e.g. `'2024-25'`.
+   * @param submissionId - HMRC submission identifier to amend.
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @param income - Updated income figures.
+   * @param expenses - Updated allowable expense figures.
+   * @param disallowable - Updated non-allowable expense portions.
+   * @throws `HttpErrorResponse` if the API call fails.
+   */
+  async amendSelfEmployment(
+    nino: string,
+    businessId: string,
+    taxYear: string,
+    submissionId: string,
+    accessToken: string,
+    income: SelfEmploymentIncome,
+    expenses: SelfEmploymentExpenses,
+    disallowable: SelfEmploymentDisallowableExpenses,
+  ): Promise<void> {
+    const body = {
+      periodIncome: omitNulls(income),
+      periodExpenses: omitNulls(expenses),
+      periodDisallowableExpenses: omitNulls(disallowable),
+    };
+    await this.api.put<void>(
+      `/individuals/self-employment/income-summary/${nino}/${taxYear}/${businessId}/${submissionId}`,
+      body,
+      accessToken,
+      '3.0',
+    );
+  }
+
+  /**
+   * Amends a UK property periodic summary via PUT.
+   * @param nino - The taxpayer's National Insurance number.
+   * @param businessId - HMRC income source identifier.
+   * @param taxYear - HMRC tax year string, e.g. `'2024-25'`.
+   * @param submissionId - HMRC submission identifier to amend.
+   * @param periodStartDate - ISO start date of the period.
+   * @param periodEndDate - ISO end date of the period.
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @param income - Updated income figures.
+   * @param expenses - Updated expense figures.
+   * @throws `HttpErrorResponse` if the API call fails.
+   */
+  async amendUkProperty(
+    nino: string,
+    businessId: string,
+    taxYear: string,
+    submissionId: string,
+    periodStartDate: string,
+    periodEndDate: string,
+    accessToken: string,
+    income: UkPropertyIncome,
+    expenses: UkPropertyExpenses,
+  ): Promise<void> {
+    const body = buildPropertyBody(periodStartDate, periodEndDate, income, expenses);
+    await this.api.put<void>(
+      `/individuals/business/property/uk/${nino}/${taxYear}/${businessId}/period/${submissionId}`,
+      body,
+      accessToken,
+      '4.0',
+    );
+  }
+
+  /**
+   * Amends a foreign property periodic summary via PUT.
+   * @param nino - The taxpayer's National Insurance number.
+   * @param businessId - HMRC income source identifier.
+   * @param taxYear - HMRC tax year string, e.g. `'2024-25'`.
+   * @param submissionId - HMRC submission identifier to amend.
+   * @param periodStartDate - ISO start date of the period.
+   * @param periodEndDate - ISO end date of the period.
+   * @param accessToken - A valid HMRC OAuth access token.
+   * @param income - Updated income figures.
+   * @param expenses - Updated expense figures.
+   * @throws `HttpErrorResponse` if the API call fails.
+   */
+  async amendForeignProperty(
+    nino: string,
+    businessId: string,
+    taxYear: string,
+    submissionId: string,
+    periodStartDate: string,
+    periodEndDate: string,
+    accessToken: string,
+    income: ForeignPropertyIncome,
+    expenses: ForeignPropertyExpenses,
+  ): Promise<void> {
+    const body = buildForeignPropertyBody(periodStartDate, periodEndDate, income, expenses);
+    await this.api.put<void>(
+      `/individuals/business/property/foreign/${nino}/${taxYear}/${businessId}/period/${submissionId}`,
+      body,
+      accessToken,
+      '6.0',
+    );
   }
 
   /**
@@ -251,4 +670,14 @@ function omitNulls<T extends object>(obj: T): Partial<T> {
   return Object.fromEntries(
     Object.entries(obj).filter(([, v]) => v !== null),
   ) as Partial<T>;
+}
+
+/**
+ * Converts an object of optional numbers to one where absent keys become `null`.
+ * Used to map partial HMRC API response fields to the app's nullable model types.
+ */
+function nullify<T extends object>(obj: T): { [K in keyof T]: T[K] | null } {
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k, v ?? null]),
+  ) as { [K in keyof T]: T[K] | null };
 }
