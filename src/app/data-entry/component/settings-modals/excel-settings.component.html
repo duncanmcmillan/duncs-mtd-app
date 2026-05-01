@@ -5,6 +5,7 @@
       <button type="button" class="modal__close" aria-label="Close Excel settings" (click)="onCancel()">&#x2715;</button>
     </header>
 
+    <div class="modal__body">
     <div class="modal__fields">
       <mat-form-field appearance="outline">
         <mat-label>File Path</mat-label>
@@ -19,18 +20,6 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Sheet Name</mat-label>
-        <input
-          matInput
-          [value]="form().sheetName"
-          (input)="setField('sheetName', $any($event.target).value)"
-          autocomplete="off"
-          placeholder="Sheet1"
-          aria-required="true"
-        />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
         <mat-label>Date Column</mat-label>
         <input
           matInput
@@ -40,18 +29,80 @@
           placeholder="Quarter End Date"
         />
       </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Self Employment Sheet</mat-label>
+        <input
+          matInput
+          [value]="form().selfEmploymentSheet ?? ''"
+          (input)="setField('selfEmploymentSheet', $any($event.target).value)"
+          autocomplete="off"
+          placeholder="SE-2024"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>UK Property Sheet</mat-label>
+        <input
+          matInput
+          [value]="form().ukPropertySheet ?? ''"
+          (input)="setField('ukPropertySheet', $any($event.target).value)"
+          autocomplete="off"
+          placeholder="UKP-2024"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Foreign Property Sheet</mat-label>
+        <input
+          matInput
+          [value]="form().foreignPropertySheet ?? ''"
+          (input)="setField('foreignPropertySheet', $any($event.target).value)"
+          autocomplete="off"
+          placeholder="FORP-2024"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Claude API Key (for auto-mapping)</mat-label>
+        <input
+          matInput
+          type="password"
+          [value]="claudeKeyForm()"
+          (input)="claudeKeyForm.set($any($event.target).value)"
+          autocomplete="off"
+          placeholder="sk-ant-…"
+        />
+      </mat-form-field>
     </div>
+
+    @if (claudeKeyForm()) {
+      <div class="modal__automap">
+        <button
+          type="button"
+          mat-stroked-button
+          [disabled]="autoMapping()"
+          (click)="onAutoMap()"
+          aria-label="Auto-map columns to MTD fields using Claude"
+        >
+          {{ autoMapping() ? 'Mapping…' : 'Auto-map with Claude' }}
+        </button>
+        @if (autoMapError()) {
+          <p class="modal__error" role="alert" aria-live="polite">{{ autoMapError() }}</p>
+        }
+      </div>
+    }
 
     @if (store.hasError()) {
       <p class="modal__error" role="alert" aria-live="polite">{{ store.error() }}</p>
     }
+    </div>
 
-    <div class="modal__actions">
-      <button type="button" mat-button (click)="onCancel()">Cancel</button>
+    <div class="modal__footer">
+      <button type="button" class="btn btn--ghost" (click)="onCancel()">Cancel</button>
       <button
         type="button"
-        mat-flat-button
-        color="primary"
+        class="btn btn--primary"
         [disabled]="store.isLoading()"
         (click)="onSubmit()"
       >

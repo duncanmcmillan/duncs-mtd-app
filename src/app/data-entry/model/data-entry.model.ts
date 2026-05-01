@@ -7,6 +7,9 @@
 /** Active sub-tab within the Data Entry & Notifications view. */
 export type DataEntryTab = 'data-entry' | 'notifications';
 
+/** UI state for an in-flight or completed test notification send. */
+export type TestNotificationStatus = 'idle' | 'sending' | 'ok' | 'failed';
+
 /** Identifier for the currently open settings modal. */
 export type SettingsModal =
   | 'airtable'
@@ -21,10 +24,14 @@ export interface AirtableSettings {
   apiKey: string;
   /** ID of the AirTable base (e.g. `appXXXXXXXXXXXXXX`). */
   baseId: string;
-  /** ID of the specific table within the base. */
-  tableId: string;
   /** Column header used to identify the period row (e.g. `"Quarter End Date"`). */
   dateColumn: string;
+  /** Table name for self-employment income data. */
+  selfEmploymentTable?: string;
+  /** Table name for UK property income data. */
+  ukPropertyTable?: string;
+  /** Table name for foreign property income data. */
+  foreignPropertyTable?: string;
   /** Maps dotted MTD field paths (e.g. `"se.income.turnover"`) to column header names. */
   fieldMappings: Record<string, string>;
 }
@@ -33,10 +40,14 @@ export interface AirtableSettings {
 export interface ExcelSettings {
   /** Absolute path to the `.xlsx` file on disk. */
   filePath: string;
-  /** Name of the sheet within the workbook to read from. */
-  sheetName: string;
   /** Column header used to identify the period row (e.g. `"Quarter End Date"`). */
   dateColumn: string;
+  /** Worksheet name for self-employment income data (default `'SE-2024'`). */
+  selfEmploymentSheet?: string;
+  /** Worksheet name for UK property income data (default `'UKP-2024'`). */
+  ukPropertySheet?: string;
+  /** Worksheet name for foreign property income data (default `'FORP-2024'`). */
+  foreignPropertySheet?: string;
   /** Maps dotted MTD field paths (e.g. `"se.income.turnover"`) to column header names. */
   fieldMappings: Record<string, string>;
 }
@@ -45,10 +56,18 @@ export interface ExcelSettings {
 export interface GoogleSheetsSettings {
   /** The unique identifier of the Google Spreadsheet. */
   spreadsheetId: string;
-  /** Name of the sheet tab to read from. */
-  sheetName: string;
   /** Google API key with Sheets read access. */
   apiKey: string;
+  /** Column header used to identify the period row (e.g. `"Quarter End Date"`). */
+  dateColumn: string;
+  /** Sheet tab name for self-employment income data (e.g. `'SE-2024'`). */
+  selfEmploymentSheet?: string;
+  /** Sheet tab name for UK property income data (e.g. `'UKP-2024'`). */
+  ukPropertySheet?: string;
+  /** Sheet tab name for foreign property income data (e.g. `'FORP-2024'`). */
+  foreignPropertySheet?: string;
+  /** Maps dotted MTD field paths (e.g. `"se.income.turnover"`) to column header names. */
+  fieldMappings: Record<string, string>;
 }
 
 /** Settings for the Telegram Bot notification channel. */
@@ -85,6 +104,8 @@ export interface DataEntrySettings {
   googleSheetsEnabled: boolean;
   /** Google Sheets connection details (present when googleSheetsEnabled is true). */
   googleSheets?: GoogleSheetsSettings;
+  /** Anthropic API key used by the Claude auto-mapping feature. */
+  claudeApiKey?: string;
 }
 
 /** Persisted settings for all notification channels. */
@@ -99,6 +120,16 @@ export interface NotificationSettings {
   whatsapp?: WhatsAppSettings;
 }
 
+/** Column headers loaded from the active spreadsheet source, grouped by income type. */
+export interface ColumnHeaders {
+  /** Column headers from the self-employment sheet/table. */
+  selfEmployment: string[];
+  /** Column headers from the UK property sheet/table. */
+  ukProperty: string[];
+  /** Column headers from the foreign property sheet/table. */
+  foreignProperty: string[];
+}
+
 /** Full NgRx Signal Store state for the Data Entry & Notifications feature. */
 export interface DataEntryState {
   /** Which sub-tab is currently shown. */
@@ -109,8 +140,12 @@ export interface DataEntryState {
   dataEntry: DataEntrySettings;
   /** Notification channel settings (loaded from / persisted to safeStorage). */
   notifications: NotificationSettings;
+  /** Column headers loaded from the active spreadsheet source. */
+  columnHeaders: ColumnHeaders;
   /** Whether an async operation is in progress. */
   isLoading: boolean;
   /** Current error message, or null if there is no error. */
   error: string | null;
+  /** Status of the most recent test notification sends. */
+  testNotification: { telegram: TestNotificationStatus; whatsapp: TestNotificationStatus };
 }

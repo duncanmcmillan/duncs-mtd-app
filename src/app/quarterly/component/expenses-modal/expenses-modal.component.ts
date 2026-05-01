@@ -26,64 +26,64 @@ interface ExpenseRow<T extends object> {
 
 /** Allowable self-employment expense rows in display order. */
 const SE_EXPENSE_ROWS: ExpenseRow<SelfEmploymentExpenses>[] = [
-  { label: 'Cost of goods', field: 'costOfGoods' },
-  { label: 'Payments to subcontractors', field: 'paymentsToSubcontractors' },
-  { label: 'Wages and staff costs', field: 'wagesAndStaffCosts' },
-  { label: 'Car, van and travel', field: 'carVanTravelExpenses' },
-  { label: 'Premises running costs', field: 'premisesRunningCosts' },
-  { label: 'Repairs and maintenance', field: 'maintenanceCosts' },
-  { label: 'Administration costs', field: 'adminCosts' },
-  { label: 'Business entertainment', field: 'businessEntertainmentCosts' },
-  { label: 'Advertising and marketing', field: 'advertisingCosts' },
-  { label: 'Interest on loans', field: 'interestOnBankOtherLoans' },
-  { label: 'Finance charges', field: 'financeCharges' },
-  { label: 'Irrecoverable (bad) debts', field: 'irrecoverableDebts' },
-  { label: 'Professional fees', field: 'professionalFees' },
+  { label: 'Cost Of Goods', field: 'costOfGoods' },
+  { label: 'Payments To Subcontractors', field: 'paymentsToSubcontractors' },
+  { label: 'Wages And Staff Costs', field: 'wagesAndStaffCosts' },
+  { label: 'Car, Van And Travel', field: 'carVanTravelExpenses' },
+  { label: 'Premises Running Costs', field: 'premisesRunningCosts' },
+  { label: 'Repairs And Maintenance', field: 'maintenanceCosts' },
+  { label: 'Administration Costs', field: 'adminCosts' },
+  { label: 'Business Entertainment', field: 'businessEntertainmentCosts' },
+  { label: 'Advertising And Marketing', field: 'advertisingCosts' },
+  { label: 'Interest On Loans', field: 'interestOnBankOtherLoans' },
+  { label: 'Finance Charges', field: 'financeCharges' },
+  { label: 'Irrecoverable (Bad) Debts', field: 'irrecoverableDebts' },
+  { label: 'Professional Fees', field: 'professionalFees' },
   { label: 'Depreciation', field: 'depreciation' },
-  { label: 'Other expenses', field: 'otherExpenses' },
+  { label: 'Other Expenses', field: 'otherExpenses' },
 ];
 
 /** Non-allowable (disallowable) self-employment expense rows. */
 const SE_DISALLOWABLE_ROWS: ExpenseRow<SelfEmploymentDisallowableExpenses>[] = [
-  { label: 'Cost of goods', field: 'costOfGoodsDisallowable' },
-  { label: 'Payments to subcontractors', field: 'paymentsToSubcontractorsDisallowable' },
-  { label: 'Wages and staff costs', field: 'wagesAndStaffCostsDisallowable' },
-  { label: 'Car, van and travel', field: 'carVanTravelExpensesDisallowable' },
-  { label: 'Premises running costs', field: 'premisesRunningCostsDisallowable' },
-  { label: 'Repairs and maintenance', field: 'maintenanceCostsDisallowable' },
-  { label: 'Administration costs', field: 'adminCostsDisallowable' },
-  { label: 'Business entertainment', field: 'businessEntertainmentCostsDisallowable' },
-  { label: 'Advertising and marketing', field: 'advertisingCostsDisallowable' },
-  { label: 'Interest on loans', field: 'interestOnBankOtherLoansDisallowable' },
-  { label: 'Finance charges', field: 'financeChargesDisallowable' },
-  { label: 'Irrecoverable (bad) debts', field: 'irrecoverableDebtsDisallowable' },
-  { label: 'Professional fees', field: 'professionalFeesDisallowable' },
+  { label: 'Cost Of Goods', field: 'costOfGoodsDisallowable' },
+  { label: 'Payments To Subcontractors', field: 'paymentsToSubcontractorsDisallowable' },
+  { label: 'Wages And Staff Costs', field: 'wagesAndStaffCostsDisallowable' },
+  { label: 'Car, Van And Travel', field: 'carVanTravelExpensesDisallowable' },
+  { label: 'Premises Running Costs', field: 'premisesRunningCostsDisallowable' },
+  { label: 'Repairs And Maintenance', field: 'maintenanceCostsDisallowable' },
+  { label: 'Administration Costs', field: 'adminCostsDisallowable' },
+  { label: 'Business Entertainment', field: 'businessEntertainmentCostsDisallowable' },
+  { label: 'Advertising And Marketing', field: 'advertisingCostsDisallowable' },
+  { label: 'Interest On Loans', field: 'interestOnBankOtherLoansDisallowable' },
+  { label: 'Finance Charges', field: 'financeChargesDisallowable' },
+  { label: 'Irrecoverable (Bad) Debts', field: 'irrecoverableDebtsDisallowable' },
+  { label: 'Professional Fees', field: 'professionalFeesDisallowable' },
   { label: 'Depreciation', field: 'depreciationDisallowable' },
-  { label: 'Other expenses', field: 'otherExpensesDisallowable' },
+  { label: 'Other Expenses', field: 'otherExpensesDisallowable' },
 ];
 
 /** UK property expense rows in display order. */
 const PROP_EXPENSE_ROWS: ExpenseRow<UkPropertyExpenses>[] = [
-  { label: 'Premises running costs', field: 'premisesRunningCosts' },
-  { label: 'Repairs and maintenance', field: 'repairsAndMaintenance' },
-  { label: 'Financial costs (mortgage interest)', field: 'financialCosts' },
-  { label: 'Professional fees', field: 'professionalFees' },
-  { label: 'Cost of services', field: 'costOfServices' },
-  { label: 'Travel costs', field: 'travelCosts' },
-  { label: 'Residential finance cost', field: 'residentialFinancialCost' },
-  { label: 'Brought-forward residential finance cost', field: 'broughtFwdResidentialFinancialCost' },
-  { label: 'Other expenses', field: 'other' },
+  { label: 'Premises Running Costs', field: 'premisesRunningCosts' },
+  { label: 'Repairs And Maintenance', field: 'repairsAndMaintenance' },
+  { label: 'Financial Costs (Mortgage Interest)', field: 'financialCosts' },
+  { label: 'Professional Fees', field: 'professionalFees' },
+  { label: 'Cost Of Services', field: 'costOfServices' },
+  { label: 'Travel Costs', field: 'travelCosts' },
+  { label: 'Residential Finance Cost', field: 'residentialFinancialCost' },
+  { label: 'Brought-Forward Residential Finance Cost', field: 'broughtFwdResidentialFinancialCost' },
+  { label: 'Other Expenses', field: 'other' },
 ];
 
 /** Foreign property expense rows in display order. */
 const FOREIGN_PROP_EXPENSE_ROWS: ExpenseRow<ForeignPropertyExpenses>[] = [
-  { label: 'Premises running costs', field: 'premisesRunningCosts' },
-  { label: 'Repairs and maintenance', field: 'repairsAndMaintenance' },
-  { label: 'Financial costs', field: 'financialCosts' },
-  { label: 'Professional fees', field: 'professionalFees' },
-  { label: 'Cost of services', field: 'costOfServices' },
-  { label: 'Travel costs', field: 'travelCosts' },
-  { label: 'Other expenses', field: 'other' },
+  { label: 'Premises Running Costs', field: 'premisesRunningCosts' },
+  { label: 'Repairs And Maintenance', field: 'repairsAndMaintenance' },
+  { label: 'Financial Costs', field: 'financialCosts' },
+  { label: 'Professional Fees', field: 'professionalFees' },
+  { label: 'Cost Of Services', field: 'costOfServices' },
+  { label: 'Travel Costs', field: 'travelCosts' },
+  { label: 'Other Expenses', field: 'other' },
 ];
 
 /**
@@ -104,18 +104,32 @@ export class ExpensesModalComponent {
   /** @internal */
   protected readonly deStore = inject(DataEntryStore);
 
-  /** `true` when a mappable data-entry method (Excel or AirTable) is active. */
+  /** `true` when a mappable data-entry method (Excel, AirTable, or Google Sheets) is active. */
   protected readonly isMappingActive = computed((): boolean => {
     const de = this.deStore.dataEntry();
-    return de.excelEnabled || de.airtableEnabled;
+    return de.excelEnabled || de.airtableEnabled || de.googleSheetsEnabled;
   });
 
-  /** The active fieldMappings from Excel or AirTable settings, or empty object. */
+  /** The active fieldMappings from the enabled spreadsheet source, or empty object. */
   protected readonly activeMappings = computed((): Record<string, string> => {
     const de = this.deStore.dataEntry();
     if (de.excelEnabled && de.excel?.fieldMappings) return de.excel.fieldMappings;
     if (de.airtableEnabled && de.airtable?.fieldMappings) return de.airtable.fieldMappings;
+    if (de.googleSheetsEnabled && de.googleSheets?.fieldMappings) return de.googleSheets.fieldMappings;
     return {};
+  });
+
+  /**
+   * Column headers for the active expenses draft's income type,
+   * loaded from the active spreadsheet source.
+   */
+  protected readonly activeColumnHeaders = computed((): string[] => {
+    const draft = this.store.activeExpensesDraft();
+    if (!draft) return [];
+    const h = this.deStore.columnHeaders();
+    if (draft.businessType === 'self-employment') return h.selfEmployment;
+    if (draft.businessType === 'uk-property')     return h.ukProperty;
+    return h.foreignProperty;
   });
 
   /** @internal */
@@ -205,7 +219,7 @@ export class ExpensesModalComponent {
   protected async onMappingChange(e: MappingChangeEvent): Promise<void> {
     const de = this.deStore.dataEntry();
     if (de.excelEnabled) {
-      const excel = de.excel ?? { filePath: '', sheetName: '', dateColumn: '', fieldMappings: {} };
+      const excel = de.excel ?? { filePath: '', dateColumn: '', fieldMappings: {} };
       const fieldMappings = { ...excel.fieldMappings };
       if (e.columnName) {
         fieldMappings[e.fieldKey] = e.columnName;
@@ -214,7 +228,7 @@ export class ExpensesModalComponent {
       }
       await this.deStore.saveDataEntry({ ...de, excel: { ...excel, fieldMappings } });
     } else if (de.airtableEnabled) {
-      const airtable = de.airtable ?? { apiKey: '', baseId: '', tableId: '', dateColumn: '', fieldMappings: {} };
+      const airtable = de.airtable ?? { apiKey: '', baseId: '', dateColumn: '', fieldMappings: {} };
       const fieldMappings = { ...airtable.fieldMappings };
       if (e.columnName) {
         fieldMappings[e.fieldKey] = e.columnName;
@@ -222,6 +236,15 @@ export class ExpensesModalComponent {
         delete fieldMappings[e.fieldKey];
       }
       await this.deStore.saveDataEntry({ ...de, airtable: { ...airtable, fieldMappings } });
+    } else if (de.googleSheetsEnabled) {
+      const gs = de.googleSheets ?? { spreadsheetId: '', apiKey: '', dateColumn: '', fieldMappings: {} };
+      const fieldMappings = { ...gs.fieldMappings };
+      if (e.columnName) {
+        fieldMappings[e.fieldKey] = e.columnName;
+      } else {
+        delete fieldMappings[e.fieldKey];
+      }
+      await this.deStore.saveDataEntry({ ...de, googleSheets: { ...gs, fieldMappings } });
     }
   }
 

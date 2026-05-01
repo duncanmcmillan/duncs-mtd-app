@@ -5,43 +5,65 @@
       <button type="button" class="modal__close" aria-label="Close Telegram settings" (click)="onCancel()">&#x2715;</button>
     </header>
 
-    <div class="modal__fields">
-      <mat-form-field appearance="outline">
-        <mat-label>Bot Token</mat-label>
-        <input
-          matInput
-          type="password"
-          [value]="form().botToken"
-          (input)="setField('botToken', $any($event.target).value)"
-          autocomplete="off"
-          placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
-          aria-required="true"
-        />
-      </mat-form-field>
+    <div class="modal__body">
+      <div class="modal__fields">
+        <mat-form-field appearance="outline">
+          <mat-label>Bot Token</mat-label>
+          <input
+            matInput
+            type="password"
+            [value]="form().botToken"
+            (input)="setField('botToken', $any($event.target).value)"
+            autocomplete="off"
+            placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+            aria-required="true"
+          />
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Chat ID</mat-label>
-        <input
-          matInput
-          [value]="form().chatId"
-          (input)="setField('chatId', $any($event.target).value)"
-          autocomplete="off"
-          placeholder="-1001234567890"
-          aria-required="true"
-        />
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Chat ID</mat-label>
+          <input
+            matInput
+            [value]="form().chatId"
+            (input)="setField('chatId', $any($event.target).value)"
+            autocomplete="off"
+            placeholder="-1001234567890"
+            aria-required="true"
+          />
+        </mat-form-field>
+      </div>
+
+      @if (showTestBtn()) {
+        <div class="modal__test">
+          <button
+            type="button"
+            class="btn btn--outline"
+            [class.btn--ok]="testStatus() === 'ok'"
+            [class.btn--failed]="testStatus() === 'failed'"
+            [disabled]="testStatus() === 'sending'"
+            (click)="store.sendTestTelegram(form())"
+            aria-live="polite"
+          >
+            @switch (testStatus()) {
+              @case ('sending') { Sending… }
+              @case ('ok')      { ✓ Message sent }
+              @case ('failed')  { ✗ Failed — check credentials }
+              @default          { Send test message }
+            }
+          </button>
+        </div>
+      }
+
+      @if (store.hasError()) {
+        <p class="modal__error" role="alert" aria-live="polite">{{ store.error() }}</p>
+      }
     </div>
 
-    @if (store.hasError()) {
-      <p class="modal__error" role="alert" aria-live="polite">{{ store.error() }}</p>
-    }
-
-    <div class="modal__actions">
-      <button type="button" mat-button (click)="onCancel()">Cancel</button>
+    <div class="modal__footer">
+      <button type="button" class="btn btn--ghost" (click)="onCancel()">Cancel</button>
       <button
         type="button"
-        mat-flat-button
-        color="primary"
+        class="btn btn--primary"
         [disabled]="store.isLoading()"
         (click)="onSubmit()"
       >

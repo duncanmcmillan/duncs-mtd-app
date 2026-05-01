@@ -43,7 +43,7 @@ describe('DataEntryBannerComponent', () => {
       airtableEnabled: false,
       excelEnabled: true,
       googleSheetsEnabled: false,
-      excel: { filePath: '/income.xlsx', sheetName: 'Q1', dateColumn: '', fieldMappings: {} },
+      excel: { filePath: '/income.xlsx', dateColumn: '', fieldMappings: {} },
     });
     fixture.detectChanges();
 
@@ -60,7 +60,7 @@ describe('DataEntryBannerComponent', () => {
       airtableEnabled: true,
       excelEnabled: false,
       googleSheetsEnabled: false,
-      airtable: { apiKey: 'key', baseId: 'appXXX', tableId: 'tbl1', dateColumn: '', fieldMappings: {} },
+      airtable: { apiKey: 'key', baseId: 'appXXX', dateColumn: '', fieldMappings: {} },
     });
     fixture.detectChanges();
 
@@ -74,7 +74,7 @@ describe('DataEntryBannerComponent', () => {
       airtableEnabled: false,
       excelEnabled: true,
       googleSheetsEnabled: false,
-      excel: { filePath: '/income.xlsx', sheetName: 'Q1', dateColumn: '', fieldMappings: {} },
+      excel: { filePath: '/income.xlsx', dateColumn: '', fieldMappings: {} },
     });
     fixture.detectChanges();
 

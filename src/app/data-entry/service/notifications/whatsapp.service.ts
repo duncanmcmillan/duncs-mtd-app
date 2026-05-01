@@ -1,21 +1,38 @@
 /**
- * @fileoverview Stub service for the WhatsApp (Meta Cloud API) notification channel.
- * Will send messages via the Meta Cloud API. No-op implementation until wired up.
+ * @fileoverview Service for sending messages via the Meta Cloud API (WhatsApp Business).
  */
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { WhatsAppSettings } from '../../model/data-entry.model';
 
 /**
- * Service stub for sending WhatsApp notifications via the Meta Cloud API.
- * Implement `sendMessage()` in a follow-up PR once the notification
- * trigger points and message templates are agreed.
+ * Sends messages to a WhatsApp recipient via the Meta Cloud API.
  */
 @Injectable({ providedIn: 'root' })
 export class WhatsAppService {
+  private readonly http = inject(HttpClient);
+
   /**
-   * Placeholder — sends a WhatsApp message to the configured recipient.
-   * @param message The text to send.
+   * Sends a plain-text WhatsApp message to the configured recipient.
+   * @param settings Meta Cloud API credentials and recipient number.
+   * @param text The message body.
+   * @throws When the HTTP call fails (non-2xx response or network error).
    */
-  async sendMessage(_message: string): Promise<void> {
-    // TODO: implement Meta Cloud API (WhatsApp) call
+  async sendMessage(settings: WhatsAppSettings, text: string): Promise<void> {
+    const url = `https://graph.facebook.com/v21.0/${settings.phoneNumberId}/messages`;
+    const headers = new HttpHeaders({ Authorization: `Bearer ${settings.accessToken}` });
+    await firstValueFrom(
+      this.http.post(
+        url,
+        {
+          messaging_product: 'whatsapp',
+          to: settings.recipientNumber,
+          type: 'text',
+          text: { body: text },
+        },
+        { headers },
+      ),
+    );
   }
 }

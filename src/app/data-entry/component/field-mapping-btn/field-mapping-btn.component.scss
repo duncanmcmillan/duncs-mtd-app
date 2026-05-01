@@ -83,6 +83,41 @@
   }
 }
 
+/* ── Column header dropdown ────────────────────────────────────────────── */
+
+.popover-dropdown {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0;
+  max-height: 140px;
+  overflow-y: auto;
+  border: 1px solid var(--neutral-200);
+  border-radius: 4px;
+  background: var(--neutral-0);
+}
+
+.popover-dropdown-item {
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--neutral-700);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+
+  &:hover {
+    background: var(--color-mapping-bg);
+    color: var(--color-mapping);
+  }
+
+  &[aria-selected='true'] {
+    background: var(--color-mapping-bg);
+    color: var(--color-mapping);
+    font-weight: 400;
+  }
+}
+
 .popover-actions {
   display: flex;
   gap: 6px;

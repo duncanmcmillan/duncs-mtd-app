@@ -44,6 +44,9 @@ export class FieldMappingBtnComponent {
   /** Only renders the button when a mappable method is enabled. */
   readonly active = input<boolean>(false);
 
+  /** Column headers available from the active spreadsheet source for this income type. */
+  readonly columnHeaders = input<string[]>([]);
+
   /** Emitted when the user saves or clears a mapping. */
   readonly mappingChange = output<MappingChangeEvent>();
 
@@ -59,6 +62,14 @@ export class FieldMappingBtnComponent {
   /** Draft value being edited in the popover input. */
   protected readonly draft = signal('');
 
+  /** Column headers filtered by the current draft value (case-insensitive). */
+  protected readonly filtered = computed(() => {
+    const q = this.draft().toLowerCase();
+    const cols = this.columnHeaders();
+    if (!cols.length) return [];
+    return q ? cols.filter(c => c.toLowerCase().includes(q)) : cols;
+  });
+
   /** Toggles the popover open/closed, seeding the draft from the current mapping. */
   protected toggle(): void {
     if (this.open()) {
@@ -67,6 +78,15 @@ export class FieldMappingBtnComponent {
       this.draft.set(this.currentMapping());
       this.open.set(true);
     }
+  }
+
+  /**
+   * Selects a column header from the dropdown, populating the draft input.
+   * Uses mousedown instead of click so it fires before the input blur event.
+   * @param col - The column header to select.
+   */
+  protected selectHeader(col: string): void {
+    this.draft.set(col);
   }
 
   /**

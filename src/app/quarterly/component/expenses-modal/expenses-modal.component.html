@@ -90,6 +90,7 @@
                   [fieldKey]="'se.exp.' + row.field"
                   [mappings]="activeMappings()"
                   [active]="isMappingActive()"
+                  [columnHeaders]="activeColumnHeaders()"
                   (mappingChange)="onMappingChange($event)"
                 />
               </div>
@@ -158,6 +159,7 @@
                   [fieldKey]="'se.dis.' + row.field"
                   [mappings]="activeMappings()"
                   [active]="isMappingActive()"
+                  [columnHeaders]="activeColumnHeaders()"
                   (mappingChange)="onMappingChange($event)"
                 />
               </div>
@@ -202,6 +204,7 @@
                   [fieldKey]="'ukprop.exp.' + row.field"
                   [mappings]="activeMappings()"
                   [active]="isMappingActive()"
+                  [columnHeaders]="activeColumnHeaders()"
                   (mappingChange)="onMappingChange($event)"
                 />
               </div>
@@ -269,6 +272,7 @@
                   [fieldKey]="'fprop.exp.' + row.field"
                   [mappings]="activeMappings()"
                   [active]="isMappingActive()"
+                  [columnHeaders]="activeColumnHeaders()"
                   (mappingChange)="onMappingChange($event)"
                 />
               </div>

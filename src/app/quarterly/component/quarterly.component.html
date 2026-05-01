@@ -195,13 +195,14 @@
                     fieldKey="se.income.turnover"
                     [mappings]="activeMappings()"
                     [active]="isMappingActive()"
+                    [columnHeaders]="activeColumnHeaders()"
                     (mappingChange)="onMappingChange($event)"
                   />
                 </div>
               </div>
               <div class="figure-row">
                 <label class="figure-label" [for]="'se-other-' + keyFor(draft)">
-                  Other income
+                  Other Income
                 </label>
                 <div class="figure-input-wrap">
                   <input
@@ -219,6 +220,7 @@
                     fieldKey="se.income.other"
                     [mappings]="activeMappings()"
                     [active]="isMappingActive()"
+                    [columnHeaders]="activeColumnHeaders()"
                     (mappingChange)="onMappingChange($event)"
                   />
                 </div>
@@ -228,7 +230,7 @@
             @if (draft.businessType === 'uk-property') {
               <div class="figure-row">
                 <label class="figure-label" [for]="'prop-rent-' + keyFor(draft)">
-                  Rent income
+                  Rent Income
                 </label>
                 <div class="figure-input-wrap">
                   <input
@@ -246,13 +248,14 @@
                     fieldKey="ukprop.income.rentAmount"
                     [mappings]="activeMappings()"
                     [active]="isMappingActive()"
+                    [columnHeaders]="activeColumnHeaders()"
                     (mappingChange)="onMappingChange($event)"
                   />
                 </div>
               </div>
               <div class="figure-row">
                 <label class="figure-label" [for]="'prop-other-' + keyFor(draft)">
-                  Other income
+                  Other Income
                 </label>
                 <div class="figure-input-wrap">
                   <input
@@ -270,6 +273,7 @@
                     fieldKey="ukprop.income.otherIncome"
                     [mappings]="activeMappings()"
                     [active]="isMappingActive()"
+                    [columnHeaders]="activeColumnHeaders()"
                     (mappingChange)="onMappingChange($event)"
                   />
                 </div>
@@ -279,7 +283,7 @@
             @if (draft.businessType === 'foreign-property') {
               <div class="figure-row figure-row--country">
                 <label class="figure-label" [for]="'fp-country-' + keyFor(draft)">
-                  Country code
+                  Country Code
                 </label>
                 <input
                   class="figure-input figure-input--country"
@@ -307,7 +311,7 @@
               </div>
               <div class="figure-row">
                 <label class="figure-label" [for]="'fp-rent-' + keyFor(draft)">
-                  Rent income
+                  Rent Income
                 </label>
                 <div class="figure-input-wrap">
                   <input
@@ -322,13 +326,14 @@
                     fieldKey="fprop.income.rentIncome"
                     [mappings]="activeMappings()"
                     [active]="isMappingActive()"
+                    [columnHeaders]="activeColumnHeaders()"
                     (mappingChange)="onMappingChange($event)"
                   />
                 </div>
               </div>
               <div class="figure-row">
                 <label class="figure-label" [for]="'fp-other-' + keyFor(draft)">
-                  Other income
+                  Other Income
                 </label>
                 <div class="figure-input-wrap">
                   <input
@@ -343,13 +348,14 @@
                     fieldKey="fprop.income.otherPropertyIncome"
                     [mappings]="activeMappings()"
                     [active]="isMappingActive()"
+                    [columnHeaders]="activeColumnHeaders()"
                     (mappingChange)="onMappingChange($event)"
                   />
                 </div>
               </div>
               <div class="figure-row">
                 <label class="figure-label" [for]="'fp-tax-' + keyFor(draft)">
-                  Foreign tax paid
+                  Foreign Tax Paid
                 </label>
                 <div class="figure-input-wrap">
                   <input
@@ -364,6 +370,7 @@
                     fieldKey="fprop.income.foreignTaxPaidOrDeducted"
                     [mappings]="activeMappings()"
                     [active]="isMappingActive()"
+                    [columnHeaders]="activeColumnHeaders()"
                     (mappingChange)="onMappingChange($event)"
                   />
                 </div>

@@ -5,54 +5,76 @@
       <button type="button" class="modal__close" aria-label="Close WhatsApp settings" (click)="onCancel()">&#x2715;</button>
     </header>
 
-    <div class="modal__fields">
-      <mat-form-field appearance="outline">
-        <mat-label>Access Token</mat-label>
-        <input
-          matInput
-          type="password"
-          [value]="form().accessToken"
-          (input)="setField('accessToken', $any($event.target).value)"
-          autocomplete="off"
-          aria-required="true"
-        />
-      </mat-form-field>
+    <div class="modal__body">
+      <div class="modal__fields">
+        <mat-form-field appearance="outline">
+          <mat-label>Access Token</mat-label>
+          <input
+            matInput
+            type="password"
+            [value]="form().accessToken"
+            (input)="setField('accessToken', $any($event.target).value)"
+            autocomplete="off"
+            aria-required="true"
+          />
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Phone Number ID</mat-label>
-        <input
-          matInput
-          [value]="form().phoneNumberId"
-          (input)="setField('phoneNumberId', $any($event.target).value)"
-          autocomplete="off"
-          placeholder="123456789012345"
-          aria-required="true"
-        />
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Phone Number ID</mat-label>
+          <input
+            matInput
+            [value]="form().phoneNumberId"
+            (input)="setField('phoneNumberId', $any($event.target).value)"
+            autocomplete="off"
+            placeholder="123456789012345"
+            aria-required="true"
+          />
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Recipient Number</mat-label>
-        <input
-          matInput
-          [value]="form().recipientNumber"
-          (input)="setField('recipientNumber', $any($event.target).value)"
-          autocomplete="off"
-          placeholder="+447911123456"
-          aria-required="true"
-        />
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Recipient Number</mat-label>
+          <input
+            matInput
+            [value]="form().recipientNumber"
+            (input)="setField('recipientNumber', $any($event.target).value)"
+            autocomplete="off"
+            placeholder="+447911123456"
+            aria-required="true"
+          />
+        </mat-form-field>
+      </div>
+
+      @if (showTestBtn()) {
+        <div class="modal__test">
+          <button
+            type="button"
+            class="btn btn--outline"
+            [class.btn--ok]="testStatus() === 'ok'"
+            [class.btn--failed]="testStatus() === 'failed'"
+            [disabled]="testStatus() === 'sending'"
+            (click)="store.sendTestWhatsApp(form())"
+            aria-live="polite"
+          >
+            @switch (testStatus()) {
+              @case ('sending') { Sending… }
+              @case ('ok')      { ✓ Message sent }
+              @case ('failed')  { ✗ Failed — check credentials }
+              @default          { Send test message }
+            }
+          </button>
+        </div>
+      }
+
+      @if (store.hasError()) {
+        <p class="modal__error" role="alert" aria-live="polite">{{ store.error() }}</p>
+      }
     </div>
 
-    @if (store.hasError()) {
-      <p class="modal__error" role="alert" aria-live="polite">{{ store.error() }}</p>
-    }
-
-    <div class="modal__actions">
-      <button type="button" mat-button (click)="onCancel()">Cancel</button>
+    <div class="modal__footer">
+      <button type="button" class="btn btn--ghost" (click)="onCancel()">Cancel</button>
       <button
         type="button"
-        mat-flat-button
-        color="primary"
+        class="btn btn--primary"
         [disabled]="store.isLoading()"
         (click)="onSubmit()"
       >
