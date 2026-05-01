@@ -26,19 +26,21 @@ export class DataEntryBannerComponent {
   readonly refreshClick = output<void>();
 
   /** Which data-entry method is currently active, or `null` if none. */
-  protected readonly activeMethod = computed((): 'excel' | 'airtable' | null => {
+  protected readonly activeMethod = computed((): 'excel' | 'airtable' | 'google-sheets' | null => {
     const de = this.store.dataEntry();
     if (de.excelEnabled) return 'excel';
     if (de.airtableEnabled) return 'airtable';
+    if (de.googleSheetsEnabled) return 'google-sheets';
     return null;
   });
 
   /** Human-readable label for the active method. */
   protected readonly activeLabel = computed((): string => {
     switch (this.activeMethod()) {
-      case 'excel':    return 'Local Excel';
-      case 'airtable': return 'AirTable';
-      default:         return '';
+      case 'excel':         return 'Local Excel';
+      case 'airtable':      return 'AirTable';
+      case 'google-sheets': return 'Google Sheets';
+      default:              return '';
     }
   });
 
@@ -50,6 +52,9 @@ export class DataEntryBannerComponent {
     }
     if (de.airtableEnabled && de.airtable) {
       return `Base: ${de.airtable.baseId}`;
+    }
+    if (de.googleSheetsEnabled && de.googleSheets) {
+      return `Sheet: ${de.googleSheets.spreadsheetId}`;
     }
     return '';
   });
