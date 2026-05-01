@@ -489,12 +489,36 @@ export const QuarterlyStore = signalStore(
 // ─── Private helpers ────────────────────────────────────────────────────────
 
 /**
- * Formats an ISO date string as a human-readable UK date (e.g. "6 Apr 2024").
+ * Formats an ISO date string as a short UK date without year (e.g. "6 Apr").
  * @param iso - ISO date string (YYYY-MM-DD).
  */
-function fmtDate(iso: string): string {
+function fmtDateShort(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+/**
+ * Derives the quarter label (Q1–Q4) from the period start month.
+ * The UK tax year begins in April: Q1=Apr, Q2=Jul, Q3=Oct, Q4=Jan.
+ * @param periodStartDate - ISO date string (YYYY-MM-DD).
+ */
+function quarterLabel(periodStartDate: string): string {
+  const month = new Date(periodStartDate).getMonth(); // 0=Jan
+  if (month === 3)  return 'Q1'; // Apr
+  if (month === 6)  return 'Q2'; // Jul
+  if (month === 9)  return 'Q3'; // Oct
+  if (month === 0)  return 'Q4'; // Jan
+  return 'Q?';
+}
+
+/**
+ * Derives the Final Declaration deadline date string from the HMRC tax year string.
+ * For tax year "2024-25" the deadline is 31 Jan 2026.
+ * @param taxYear - HMRC tax year string e.g. `'2024-25'`.
+ */
+function finalDeclDeadline(taxYear: string): string {
+  const endYear = parseInt(taxYear.split('-')[0], 10) + 1;
+  return `31 Jan ${endYear + 1}`;
 }
 
 /**
@@ -561,30 +585,51 @@ function buildMessage(
     draft.businessType === 'self-employment' ? 'Self Employment'
     : draft.businessType === 'uk-property'   ? 'UK Property'
     : 'Foreign Property';
-  const period = `${fmtDate(draft.periodStartDate)} to ${fmtDate(draft.periodEndDate)}`;
+  const q       = quarterLabel(draft.periodStartDate);
+  const period  = `${q}: ${fmtDateShort(draft.periodStartDate)} – ${fmtDateShort(draft.periodEndDate)} ${new Date(draft.periodEndDate).getFullYear()}`;
+  const deadline = finalDeclDeadline(draft.taxYear);
 
   if (outcome === 'ok') {
-    let financials = '';
+    let income: number;
+    let expenses: number;
     if (draft.businessType === 'self-employment') {
-      const income   = (draft.seIncome.turnover ?? 0) + (draft.seIncome.other ?? 0);
-      const expenses = totalSEExp(draft);
-      const profit   = income - expenses;
-      financials = `\nTurnover: £${fmt(draft.seIncome.turnover ?? 0)}\nExpenses: £${fmt(expenses)}\nNet profit: £${fmt(profit)}`;
+      income   = (draft.seIncome.turnover ?? 0) + (draft.seIncome.other ?? 0);
+      expenses = totalSEExp(draft);
     } else if (draft.businessType === 'uk-property') {
-      const income   = (draft.propIncome.rentAmount ?? 0) + (draft.propIncome.otherIncome ?? 0);
-      const expenses = totalPropExp(draft);
-      const profit   = income - expenses;
-      financials = `\nIncome: £${fmt(income)}\nExpenses: £${fmt(expenses)}\nNet profit: £${fmt(profit)}`;
+      income   = (draft.propIncome.rentAmount ?? 0) + (draft.propIncome.otherIncome ?? 0);
+      expenses = totalPropExp(draft);
     } else {
-      const income   = (draft.foreignPropIncome.rentIncome ?? 0) + (draft.foreignPropIncome.otherPropertyIncome ?? 0);
-      const expenses = totalFPropExp(draft);
-      const profit   = income - expenses;
-      financials = `\nIncome: £${fmt(income)}\nExpenses: £${fmt(expenses)}\nNet profit: £${fmt(profit)}`;
+      income   = (draft.foreignPropIncome.rentIncome ?? 0) + (draft.foreignPropIncome.otherPropertyIncome ?? 0);
+      expenses = totalFPropExp(draft);
     }
-    return `✅ MTD Quarterly Submitted\n\n${draft.businessName} — ${typeLabel}\n${period}\nSubmission: ${submissionId ?? ''}${financials}`;
+    const profit = income - expenses;
+
+    return [
+      `✅ MTD Quarterly Submitted`,
+      ``,
+      `${draft.businessName} — ${typeLabel}`,
+      `${period}`,
+      ``,
+      `Income:   £${fmt(income)}`,
+      `Expenses: £${fmt(expenses)}`,
+      `Profit:   £${fmt(profit)}`,
+      ``,
+      `Submission: ${submissionId ?? ''}`,
+      ``,
+      `Figures can be amended before your Final Declaration, due ${deadline}.`,
+    ].join('\n');
   }
 
-  return `❌ MTD Quarterly Submission Failed\n\n${draft.businessName} — ${typeLabel}\n${period}\n\nError: ${errorMsg ?? 'Unknown error'}`;
+  return [
+    `❌ MTD Quarterly Submission Failed`,
+    ``,
+    `${draft.businessName} — ${typeLabel}`,
+    `${period}`,
+    ``,
+    `Error: ${errorMsg ?? 'Unknown error'}`,
+    ``,
+    `Please correct and resubmit in the app.`,
+  ].join('\n');
 }
 
 /**
