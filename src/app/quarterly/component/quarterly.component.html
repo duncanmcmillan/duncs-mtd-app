@@ -34,6 +34,7 @@
               class="source-tab"
               [class.source-tab--active]="selectedKey() === keyFor(draft)"
               [class.source-tab--submitted]="draft.status === 'submitted'"
+              [class.source-tab--fulfilled]="draft.status === 'fulfilled'"
               [class.source-tab--error]="draft.status === 'error'"
               [class.source-tab--submitting]="draft.status === 'submitting'"
               role="tab"
@@ -52,6 +53,7 @@
                 <span class="tab-status-dot" aria-hidden="true"></span>
                 <span class="tab-status-label">
                   @if (draft.status === 'submitted') { Submitted }
+                  @else if (draft.status === 'fulfilled') { Fulfilled }
                   @else if (draft.status === 'submitting') { Submitting… }
                   @else if (draft.status === 'error') { Error }
                   @else { In Draft }
@@ -114,6 +116,7 @@
       role="tabpanel"
       [id]="'panel-' + keyFor(draft)"
       [class.period-card--submitted]="draft.status === 'submitted'"
+      [class.period-card--fulfilled]="draft.status === 'fulfilled'"
       [attr.aria-label]="draft.businessName + ' — ' + (draft.periodStartDate | date:'MMM yyyy') + ' to ' + (draft.periodEndDate | date:'MMM yyyy')"
     >
 
@@ -132,10 +135,12 @@
           <span
             class="status-badge"
             [class.status-badge--submitted]="draft.status === 'submitted'"
+            [class.status-badge--fulfilled]="draft.status === 'fulfilled'"
             [class.status-badge--error]="draft.status === 'error'"
             [class.status-badge--submitting]="draft.status === 'submitting'"
           >
             @if (draft.status === 'submitted') { Submitted }
+            @else if (draft.status === 'fulfilled') { Fulfilled }
             @else if (draft.status === 'submitting') { Submitting… }
             @else if (draft.status === 'error') { Error }
             @else { Draft (In Progress) }
@@ -189,6 +194,7 @@
                     [id]="'se-turnover-' + keyFor(draft)"
                     [value]="draft.seIncome.turnover ?? ''"
                     [attr.aria-label]="'Turnover for ' + draft.businessName"
+                    [disabled]="draft.status === 'fulfilled'"
                     (input)="onSEIncomeInput(keyFor(draft), 'turnover', $event)"
                   />
                   <app-field-mapping-btn
@@ -214,6 +220,7 @@
                     [id]="'se-other-' + keyFor(draft)"
                     [value]="draft.seIncome.other ?? ''"
                     [attr.aria-label]="'Other income for ' + draft.businessName"
+                    [disabled]="draft.status === 'fulfilled'"
                     (input)="onSEIncomeInput(keyFor(draft), 'other', $event)"
                   />
                   <app-field-mapping-btn
@@ -242,6 +249,7 @@
                     [id]="'prop-rent-' + keyFor(draft)"
                     [value]="draft.propIncome.rentAmount ?? ''"
                     [attr.aria-label]="'Rent income for ' + draft.businessName"
+                    [disabled]="draft.status === 'fulfilled'"
                     (input)="onPropIncomeInput(keyFor(draft), 'rentAmount', $event)"
                   />
                   <app-field-mapping-btn
@@ -267,6 +275,7 @@
                     [id]="'prop-other-' + keyFor(draft)"
                     [value]="draft.propIncome.otherIncome ?? ''"
                     [attr.aria-label]="'Other property income for ' + draft.businessName"
+                    [disabled]="draft.status === 'fulfilled'"
                     (input)="onPropIncomeInput(keyFor(draft), 'otherIncome', $event)"
                   />
                   <app-field-mapping-btn
@@ -293,6 +302,7 @@
                   [id]="'fp-country-' + keyFor(draft)"
                   [value]="draft.foreignPropIncome.countryCode"
                   [attr.aria-label]="'ISO country code for ' + draft.businessName"
+                  [disabled]="draft.status === 'fulfilled'"
                   (input)="onForeignPropCountryCodeInput(keyFor(draft), $event)"
                 />
               </div>
@@ -306,6 +316,7 @@
                   [id]="'fp-ftcr-' + keyFor(draft)"
                   [checked]="draft.foreignPropIncome.foreignTaxCreditRelief"
                   [attr.aria-label]="'Claim Foreign Tax Credit Relief for ' + draft.businessName"
+                  [disabled]="draft.status === 'fulfilled'"
                   (change)="onForeignTaxCreditReliefChange(keyFor(draft), $event)"
                 />
               </div>
@@ -320,6 +331,7 @@
                     [id]="'fp-rent-' + keyFor(draft)"
                     [value]="draft.foreignPropIncome.rentIncome ?? ''"
                     [attr.aria-label]="'Rent income for ' + draft.businessName"
+                    [disabled]="draft.status === 'fulfilled'"
                     (input)="onForeignPropIncomeInput(keyFor(draft), 'rentIncome', $event)"
                   />
                   <app-field-mapping-btn
@@ -342,6 +354,7 @@
                     [id]="'fp-other-' + keyFor(draft)"
                     [value]="draft.foreignPropIncome.otherPropertyIncome ?? ''"
                     [attr.aria-label]="'Other income for ' + draft.businessName"
+                    [disabled]="draft.status === 'fulfilled'"
                     (input)="onForeignPropIncomeInput(keyFor(draft), 'otherPropertyIncome', $event)"
                   />
                   <app-field-mapping-btn
@@ -364,6 +377,7 @@
                     [id]="'fp-tax-' + keyFor(draft)"
                     [value]="draft.foreignPropIncome.foreignTaxPaidOrDeducted ?? ''"
                     [attr.aria-label]="'Foreign tax paid for ' + draft.businessName"
+                    [disabled]="draft.status === 'fulfilled'"
                     (input)="onForeignPropIncomeInput(keyFor(draft), 'foreignTaxPaidOrDeducted', $event)"
                   />
                   <app-field-mapping-btn
@@ -417,7 +431,7 @@
             type="checkbox"
             class="confirm-checkbox"
             [checked]="draft.confirmed"
-            [disabled]="draft.status === 'submitted' || draft.status === 'submitting'"
+            [disabled]="draft.status === 'submitted' || draft.status === 'submitting' || draft.status === 'fulfilled'"
             (change)="onConfirmChange(keyFor(draft), $event)"
           />
           <span>
@@ -444,16 +458,37 @@
           <p class="status-message status-message--error" role="alert">{{ draft.error }}</p>
         }
 
-        @if (draft.status === 'submitted') {
-          <p class="status-message status-message--success">
-            Successfully submitted.
-            @if (draft.submissionId) {
+        @if (draft.status === 'submitted' || draft.status === 'fulfilled') {
+          @if (draft.submissionId) {
+            <p class="status-message status-message--success">
+              @if (draft.status === 'fulfilled') { Submission retrieved from HMRC. }
+              @else { Successfully submitted. }
               Submission ID: <code>{{ draft.submissionId }}</code>
-            }
-          </p>
+            </p>
+          } @else if (draft.status === 'fulfilled') {
+            <p class="status-message status-message--info">
+              This period was submitted to HMRC. To view or amend the figures, use the
+              <strong>View</strong> or <strong>Amend</strong> button on the Obligations tab.
+            </p>
+          } @else {
+            <p class="status-message status-message--success">Successfully submitted.</p>
+          }
         }
 
-        @if (draft.status !== 'submitted') {
+        @if (draft.status === 'fulfilled' && draft.submissionId) {
+          <div class="action-buttons" aria-live="polite">
+            @if (isWithinTaxYear(draft)) {
+              <button
+                class="btn btn--outline"
+                type="button"
+                [attr.aria-label]="'Amend this submission for ' + draft.businessName"
+                (click)="onStartAmend(keyFor(draft))"
+              >Amend this submission</button>
+            }
+          </div>
+        }
+
+        @if (draft.status !== 'submitted' && draft.status !== 'fulfilled') {
           <div class="action-buttons" aria-live="polite">
             <button
               class="btn btn--primary"

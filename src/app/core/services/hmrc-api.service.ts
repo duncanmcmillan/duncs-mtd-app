@@ -102,10 +102,12 @@ export class HmrcApiService {
 
   /**
    * Makes an authenticated PUT request to an HMRC API endpoint.
-   * @param path - The API path to put to.
+   * Used for amend operations that replace an existing submission.
+   * @param path - The API path to PUT to.
    * @param body - The request payload (will be JSON-serialised).
    * @param accessToken - A valid HMRC OAuth access token.
-   * @returns The parsed JSON response body.
+   * @param apiVersion - HMRC API version string (e.g. `'3.0'`).
+   * @returns The parsed JSON response body (often empty for 204 responses).
    */
   async put<T>(path: string, body: unknown, accessToken: string, apiVersion = '1.0'): Promise<T> {
     const fraudHeaders = await this.fraudPrevention.getHeaders();

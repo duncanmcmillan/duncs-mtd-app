@@ -4,10 +4,9 @@
  */
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withComputed, withMethods, patchState } from '@ngrx/signals';
-import { ObligationsService } from '../service/obligations.service';
+import { ObligationsService, obligationDateWindows } from '../service/obligations.service';
 import { ObligationRow, ObligationsState } from '../model/obligations.model';
 import { AppStore, extractErrorMessage, ObligationsResponse } from '../../core';
-import { BusinessSourcesStore } from '../../business-sources';
 
 const initialState: ObligationsState = {
   isLoading: false,
@@ -41,26 +40,49 @@ export const ObligationsStore = signalStore(
       );
     }),
   })),
-  withMethods((store, service = inject(ObligationsService), appStore = inject(AppStore), bizStore = inject(BusinessSourcesStore)) => ({
+  withMethods((store, service = inject(ObligationsService), appStore = inject(AppStore)) => ({
     /**
-     * Fetches obligations from the HMRC API using the current session tokens and NINO.
-     * No-op when the user is not authenticated or NINO is unavailable.
+     * Fetches obligations for all income sources across the previous and current
+     * UK tax years (two API calls, merged). No-op when not authenticated.
      */
     async loadObligations(): Promise<void> {
       const token = appStore.accessToken();
       const nino = appStore.nino();
       if (!token || !nino) return;
 
-      // Use first known business source; fall back to self-employment if none loaded yet.
-      const businesses = bizStore.businesses();
-      const firstBiz = businesses?.[0];
-      const typeOfBusiness = firstBiz?.typeOfBusiness ?? 'self-employment';
-      const businessId = firstBiz?.businessId;
-
       patchState(store, { isLoading: true, error: null });
       try {
-        const rawResponse = await service.fetchObligations(nino, token, typeOfBusiness, businessId);
-        patchState(store, { rawResponse, isLoading: false });
+        // Two calls — one per tax year — because HMRC enforces a 366-day maximum.
+        // No typeOfBusiness filter so all income source types are returned together.
+        const windows = obligationDateWindows();
+        const [prev, curr] = await Promise.all(
+          windows.map(([from, to]) => service.fetchObligations(nino, token, from, to)),
+        );
+
+        // Merge the two responses, de-duplicating by businessId + periodStartDate.
+        const seen = new Set<string>();
+        const merged: ObligationsResponse = { obligations: [] };
+        for (const response of [prev, curr]) {
+          for (const group of response.obligations) {
+            for (const detail of group.obligationDetails) {
+              const dedupeKey = `${group.businessId ?? ''}_${detail.periodStartDate}`;
+              if (!seen.has(dedupeKey)) {
+                seen.add(dedupeKey);
+                // Find or create the merged group for this businessId.
+                let mergedGroup = merged.obligations.find(
+                  g => g.businessId === group.businessId && g.typeOfBusiness === group.typeOfBusiness,
+                );
+                if (!mergedGroup) {
+                  mergedGroup = { ...group, obligationDetails: [] };
+                  merged.obligations.push(mergedGroup);
+                }
+                mergedGroup.obligationDetails.push(detail);
+              }
+            }
+          }
+        }
+
+        patchState(store, { rawResponse: merged, isLoading: false });
       } catch (e: unknown) {
         patchState(store, {
           error: extractErrorMessage(e, 'Failed to load obligations'),

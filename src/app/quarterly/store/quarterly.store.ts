@@ -113,39 +113,44 @@ export const QuarterlyStore = signalStore(
       return {
         /**
          * Loads business sources and obligations if not already fetched, then
-         * builds one draft per open obligation period from persisted + fresh data.
-         * No-op when the user is not authenticated.
+         * builds one draft per obligation period (open or fulfilled) from persisted
+         * + fresh data. When not authenticated, still builds from any seeded or
+         * cached obligation data so the Quarterly tab mirrors the Obligations tab.
          */
         async init(): Promise<void> {
-          const token = appStore.accessToken();
-          const nino = appStore.nino();
-          if (!token || !nino) {
-            patchState(store, { isLoading: false });
-            return;
-          }
-
           patchState(store, { isLoading: true, error: null });
           try {
-            if (!bizStore.businesses()) {
-              await bizStore.loadBusinessSources();
-            }
-            if (!obligationsStore.rawResponse()) {
-              await obligationsStore.loadObligations();
+            const token = appStore.accessToken();
+            const nino = appStore.nino();
+
+            // Only make live API calls when authenticated.
+            if (token && nino) {
+              if (!bizStore.businesses()) {
+                await bizStore.loadBusinessSources();
+              }
+              if (!obligationsStore.rawResponse()) {
+                await obligationsStore.loadObligations();
+              }
             }
 
             const businesses = bizStore.businesses() ?? [];
             const savedDrafts = service.loadAllDrafts();
 
-            // Build one draft per open obligation, merging with any saved draft.
+            // Build one draft per obligation period, mirroring every row in the
+            // Obligations tab. The business lookup enriches the draft (trading name,
+            // accounting type) but is not required — if the businessId is absent from
+            // the BD response the draft is still created from the obligation row itself.
             const drafts: Record<string, QuarterlyDraft> = {};
             for (const row of obligationsStore.obligationRows()) {
-              if (row.status !== 'open') continue;
               const bid = row.businessId ?? '';
-              if (!bid) continue;
-              const biz = businesses.find(b => b.businessId === bid);
-              if (!biz) continue;
+              if (!bid) continue; // no businessId → non-quarterlyobligation (e.g. ITSA)
+              const biz = businesses.find(b => b.businessId === bid) ?? null;
               const key = draftKey(bid, row.periodStartDate);
-              drafts[key] = savedDrafts[key] ?? buildEmptyDraft(biz, row);
+              if (row.status === 'open') {
+                drafts[key] = savedDrafts[key] ?? buildEmptyDraft(biz, row);
+              } else if (row.status === 'fulfilled') {
+                drafts[key] = savedDrafts[key] ?? { ...buildEmptyDraft(biz, row), status: 'fulfilled' as const };
+              }
             }
 
             patchState(store, { drafts, isLoading: false });
@@ -275,25 +280,53 @@ export const QuarterlyStore = signalStore(
 
           applyToDraft(key, () => ({ status: 'submitting', error: null }));
           try {
+            const isAmend = !!draft.submissionId;
             let submissionId: string;
+
             if (draft.businessType === 'self-employment') {
-              submissionId = await service.submitSelfEmployment(
-                nino, draft.businessId, draft.taxYear,
-                draft.periodStartDate, draft.periodEndDate, token,
-                draft.seIncome, draft.seExpenses, draft.seDisallowableExpenses,
-              );
+              if (isAmend) {
+                await service.amendSelfEmployment(
+                  nino, draft.businessId, draft.taxYear, draft.submissionId!, token,
+                  draft.seIncome, draft.seExpenses, draft.seDisallowableExpenses,
+                );
+                submissionId = draft.submissionId!;
+              } else {
+                submissionId = await service.submitSelfEmployment(
+                  nino, draft.businessId, draft.taxYear,
+                  draft.periodStartDate, draft.periodEndDate, token,
+                  draft.seIncome, draft.seExpenses, draft.seDisallowableExpenses,
+                );
+              }
             } else if (draft.businessType === 'foreign-property') {
-              submissionId = await service.submitForeignProperty(
-                nino, draft.businessId, draft.taxYear,
-                draft.periodStartDate, draft.periodEndDate, token,
-                draft.foreignPropIncome, draft.foreignPropExpenses,
-              );
+              if (isAmend) {
+                await service.amendForeignProperty(
+                  nino, draft.businessId, draft.taxYear, draft.submissionId!,
+                  draft.periodStartDate, draft.periodEndDate, token,
+                  draft.foreignPropIncome, draft.foreignPropExpenses,
+                );
+                submissionId = draft.submissionId!;
+              } else {
+                submissionId = await service.submitForeignProperty(
+                  nino, draft.businessId, draft.taxYear,
+                  draft.periodStartDate, draft.periodEndDate, token,
+                  draft.foreignPropIncome, draft.foreignPropExpenses,
+                );
+              }
             } else {
-              submissionId = await service.submitUkProperty(
-                nino, draft.businessId, draft.taxYear,
-                draft.periodStartDate, draft.periodEndDate, token,
-                draft.propIncome, draft.propExpenses,
-              );
+              if (isAmend) {
+                await service.amendUkProperty(
+                  nino, draft.businessId, draft.taxYear, draft.submissionId!,
+                  draft.periodStartDate, draft.periodEndDate, token,
+                  draft.propIncome, draft.propExpenses,
+                );
+                submissionId = draft.submissionId!;
+              } else {
+                submissionId = await service.submitUkProperty(
+                  nino, draft.businessId, draft.taxYear,
+                  draft.periodStartDate, draft.periodEndDate, token,
+                  draft.propIncome, draft.propExpenses,
+                );
+              }
             }
             const submitted: Partial<QuarterlyDraft> = {
               status: 'submitted',
@@ -491,6 +524,139 @@ export const QuarterlyStore = signalStore(
           } catch (e: unknown) {
             patchState(store, { isLoading: false, error: extractErrorMessage(e, 'Failed to read data source') });
           }
+        },
+
+        /**
+         * Retrieves a fulfilled quarterly submission from HMRC and loads it as a draft.
+         * Finds the submissionId via the list endpoint, retrieves figures, builds a draft
+         * with status `'fulfilled'` (view) or `'draft'` (amend), then saves to localStorage.
+         * @param params - Period, business, and action metadata from Obligations navigation.
+         */
+        async retrieveAndLoadDraft(params: {
+          /** ISO period start date. */
+          periodStart: string;
+          /** HMRC income source identifier. */
+          businessId: string;
+          /** HMRC tax year string, e.g. `'2024-25'`. */
+          taxYear: string;
+          /** Income source type string. */
+          businessType: string;
+          /** Display name for the business. */
+          businessName: string;
+          /** Whether to open in read-only view or editable amend mode. */
+          action: 'view' | 'amend';
+        }): Promise<void> {
+          const token = appStore.accessToken();
+          const nino = appStore.nino();
+          if (!token || !nino) return;
+
+          patchState(store, { isLoading: true, error: null });
+          try {
+            const { periodStart, businessId, taxYear, businessType, businessName, action } = params;
+            const key = draftKey(businessId, periodStart);
+
+            // Find the submissionId by listing periods for this business and tax year.
+            let submissionId: string | null = null;
+            if (businessType === 'self-employment') {
+              const periods = await service.listSEPeriods(nino, businessId, taxYear, token);
+              submissionId = periods.find(p => p.fromDate === periodStart)?.submissionId ?? null;
+            } else if (businessType === 'uk-property') {
+              const periods = await service.listUkPropertyPeriods(nino, businessId, taxYear, token);
+              submissionId = periods.find(p => p.fromDate === periodStart)?.submissionId ?? null;
+            } else {
+              const periods = await service.listForeignPropertyPeriods(nino, businessId, taxYear, token);
+              submissionId = periods.find(p => p.fromDate === periodStart)?.submissionId ?? null;
+            }
+
+            if (!submissionId) {
+              throw new Error(`No submission found for period starting ${periodStart}`);
+            }
+
+            const status = action === 'view' ? 'fulfilled' as const : 'draft' as const;
+            const row = obligationsStore.obligationRows().find(
+              r => r.businessId === businessId && r.periodStartDate === periodStart,
+            );
+            const businesses = bizStore.businesses() ?? [];
+            const biz = businesses.find(b => b.businessId === businessId);
+
+            let draft: QuarterlyDraft;
+
+            if (businessType === 'self-employment') {
+              const data = await service.retrieveSelfEmployment(nino, businessId, taxYear, submissionId, token);
+              draft = {
+                businessId, businessName: businessName || biz?.tradingName || 'Self Employment',
+                businessType: 'self-employment',
+                periodStartDate: periodStart,
+                periodEndDate: row?.periodEndDate ?? '',
+                dueDate: row?.dueDate ?? '',
+                taxYear,
+                seIncome: data.income,
+                seExpenses: data.expenses,
+                seDisallowableExpenses: data.disallowable,
+                propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+                foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
+                confirmed: true,
+                lastSaved: new Date().toISOString(),
+                submissionId,
+                status,
+                error: null,
+              };
+            } else if (businessType === 'uk-property') {
+              const data = await service.retrieveUkProperty(nino, businessId, taxYear, submissionId, token);
+              draft = {
+                businessId, businessName: businessName || biz?.tradingName || 'UK Property',
+                businessType: 'uk-property',
+                periodStartDate: periodStart,
+                periodEndDate: row?.periodEndDate ?? '',
+                dueDate: row?.dueDate ?? '',
+                taxYear,
+                seIncome: emptySEIncome(), seExpenses: emptySEExpenses(), seDisallowableExpenses: emptySEDisallowable(),
+                propIncome: data.income,
+                propExpenses: data.expenses,
+                foreignPropIncome: emptyForeignPropIncome(), foreignPropExpenses: emptyForeignPropExpenses(),
+                confirmed: true,
+                lastSaved: new Date().toISOString(),
+                submissionId,
+                status,
+                error: null,
+              };
+            } else {
+              const data = await service.retrieveForeignProperty(nino, businessId, taxYear, submissionId, token);
+              draft = {
+                businessId, businessName: businessName || biz?.tradingName || 'Foreign Property',
+                businessType: 'foreign-property',
+                periodStartDate: periodStart,
+                periodEndDate: row?.periodEndDate ?? '',
+                dueDate: row?.dueDate ?? '',
+                taxYear,
+                seIncome: emptySEIncome(), seExpenses: emptySEExpenses(), seDisallowableExpenses: emptySEDisallowable(),
+                propIncome: emptyPropIncome(), propExpenses: emptyPropExpenses(),
+                foreignPropIncome: data.income,
+                foreignPropExpenses: data.expenses,
+                confirmed: true,
+                lastSaved: new Date().toISOString(),
+                submissionId,
+                status,
+                error: null,
+              };
+            }
+
+            patchState(store, { drafts: { ...store.drafts(), [key]: draft }, isLoading: false });
+            service.saveDraft(draft);
+          } catch (e: unknown) {
+            patchState(store, {
+              error: extractErrorMessage(e, 'Failed to retrieve quarterly submission'),
+              isLoading: false,
+            });
+          }
+        },
+
+        /**
+         * Switches a fulfilled draft to editable mode so the user can amend it.
+         * @param key - Draft key from {@link draftKey}.
+         */
+        startAmend(key: string): void {
+          applyToDraft(key, () => ({ status: 'draft' }));
         },
       };
     },
@@ -698,22 +864,24 @@ function applyMappedValues(
 }
 
 /**
- * Creates a blank draft for an income source and open obligation period.
- * @param biz - The income source returned by the Business Details API.
- * @param row - The open obligation row.
+ * Creates a blank draft for an income source and obligation period.
+ * When `biz` is `null` (business not yet loaded from BD API) the draft is
+ * built from the obligation row directly so no period is ever silently dropped.
+ * @param biz - The income source from the Business Details API, or `null`.
+ * @param row - The obligation row.
  */
-function buildEmptyDraft(biz: BusinessSourceItem, row: ObligationRow): QuarterlyDraft {
-  const t = biz.typeOfBusiness;
+function buildEmptyDraft(biz: BusinessSourceItem | null, row: ObligationRow): QuarterlyDraft {
+  const t = biz?.typeOfBusiness ?? row.typeOfBusiness;
   const businessType: 'self-employment' | 'uk-property' | 'foreign-property' =
     t === 'self-employment' ? 'self-employment'
     : t === 'foreign-property' ? 'foreign-property'
     : 'uk-property';
-  const businessName = biz.tradingName
+  const businessName = biz?.tradingName
     ?? (businessType === 'self-employment' ? 'Self Employment'
        : businessType === 'foreign-property' ? 'Foreign Property'
        : 'UK Property');
   return {
-    businessId: biz.businessId,
+    businessId: biz?.businessId ?? (row.businessId ?? ''),
     businessName,
     businessType,
     periodStartDate: row.periodStartDate,
