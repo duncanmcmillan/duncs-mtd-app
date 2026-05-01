@@ -603,6 +603,10 @@
       border-radius: 3px;
     }
   }
+
+  &--info {
+    color: var(--neutral-600);
+  }
 }
 
 .action-buttons {

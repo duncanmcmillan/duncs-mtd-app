@@ -459,16 +459,23 @@
         }
 
         @if (draft.status === 'submitted' || draft.status === 'fulfilled') {
-          <p class="status-message status-message--success">
-            @if (draft.status === 'fulfilled') { Submission retrieved from HMRC. }
-            @else { Successfully submitted. }
-            @if (draft.submissionId) {
+          @if (draft.submissionId) {
+            <p class="status-message status-message--success">
+              @if (draft.status === 'fulfilled') { Submission retrieved from HMRC. }
+              @else { Successfully submitted. }
               Submission ID: <code>{{ draft.submissionId }}</code>
-            }
-          </p>
+            </p>
+          } @else if (draft.status === 'fulfilled') {
+            <p class="status-message status-message--info">
+              This period was submitted to HMRC. To view or amend the figures, use the
+              <strong>View</strong> or <strong>Amend</strong> button on the Obligations tab.
+            </p>
+          } @else {
+            <p class="status-message status-message--success">Successfully submitted.</p>
+          }
         }
 
-        @if (draft.status === 'fulfilled') {
+        @if (draft.status === 'fulfilled' && draft.submissionId) {
           <div class="action-buttons" aria-live="polite">
             @if (isWithinTaxYear(draft)) {
               <button

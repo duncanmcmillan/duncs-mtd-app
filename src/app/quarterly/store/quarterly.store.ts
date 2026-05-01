@@ -113,48 +113,44 @@ export const QuarterlyStore = signalStore(
       return {
         /**
          * Loads business sources and obligations if not already fetched, then
-         * builds one draft per open obligation period from persisted + fresh data.
-         * No-op when the user is not authenticated.
+         * builds one draft per obligation period (open or fulfilled) from persisted
+         * + fresh data. When not authenticated, still builds from any seeded or
+         * cached obligation data so the Quarterly tab mirrors the Obligations tab.
          */
         async init(): Promise<void> {
-          const token = appStore.accessToken();
-          const nino = appStore.nino();
-          if (!token || !nino) {
-            patchState(store, { isLoading: false });
-            return;
-          }
-
           patchState(store, { isLoading: true, error: null });
           try {
-            if (!bizStore.businesses()) {
-              await bizStore.loadBusinessSources();
-            }
-            if (!obligationsStore.rawResponse()) {
-              await obligationsStore.loadObligations();
+            const token = appStore.accessToken();
+            const nino = appStore.nino();
+
+            // Only make live API calls when authenticated.
+            if (token && nino) {
+              if (!bizStore.businesses()) {
+                await bizStore.loadBusinessSources();
+              }
+              if (!obligationsStore.rawResponse()) {
+                await obligationsStore.loadObligations();
+              }
             }
 
             const businesses = bizStore.businesses() ?? [];
             const savedDrafts = service.loadAllDrafts();
 
-            // Build one draft per open obligation, merging with any saved draft.
+            // Build one draft per obligation period, mirroring every row in the
+            // Obligations tab. The business lookup enriches the draft (trading name,
+            // accounting type) but is not required — if the businessId is absent from
+            // the BD response the draft is still created from the obligation row itself.
             const drafts: Record<string, QuarterlyDraft> = {};
             for (const row of obligationsStore.obligationRows()) {
-              if (row.status !== 'open') continue;
               const bid = row.businessId ?? '';
-              if (!bid) continue;
-              const biz = businesses.find(b => b.businessId === bid);
-              if (!biz) continue;
+              if (!bid) continue; // no businessId → non-quarterlyobligation (e.g. ITSA)
+              const biz = businesses.find(b => b.businessId === bid) ?? null;
               const key = draftKey(bid, row.periodStartDate);
-              drafts[key] = savedDrafts[key] ?? buildEmptyDraft(biz, row);
-            }
-
-            // Also restore any fulfilled drafts previously saved locally.
-            for (const row of obligationsStore.obligationRows()) {
-              if (row.status !== 'fulfilled') continue;
-              const bid = row.businessId ?? '';
-              if (!bid) continue;
-              const key = draftKey(bid, row.periodStartDate);
-              if (savedDrafts[key]) drafts[key] = savedDrafts[key];
+              if (row.status === 'open') {
+                drafts[key] = savedDrafts[key] ?? buildEmptyDraft(biz, row);
+              } else if (row.status === 'fulfilled') {
+                drafts[key] = savedDrafts[key] ?? { ...buildEmptyDraft(biz, row), status: 'fulfilled' as const };
+              }
             }
 
             patchState(store, { drafts, isLoading: false });
@@ -868,22 +864,24 @@ function applyMappedValues(
 }
 
 /**
- * Creates a blank draft for an income source and open obligation period.
- * @param biz - The income source returned by the Business Details API.
- * @param row - The open obligation row.
+ * Creates a blank draft for an income source and obligation period.
+ * When `biz` is `null` (business not yet loaded from BD API) the draft is
+ * built from the obligation row directly so no period is ever silently dropped.
+ * @param biz - The income source from the Business Details API, or `null`.
+ * @param row - The obligation row.
  */
-function buildEmptyDraft(biz: BusinessSourceItem, row: ObligationRow): QuarterlyDraft {
-  const t = biz.typeOfBusiness;
+function buildEmptyDraft(biz: BusinessSourceItem | null, row: ObligationRow): QuarterlyDraft {
+  const t = biz?.typeOfBusiness ?? row.typeOfBusiness;
   const businessType: 'self-employment' | 'uk-property' | 'foreign-property' =
     t === 'self-employment' ? 'self-employment'
     : t === 'foreign-property' ? 'foreign-property'
     : 'uk-property';
-  const businessName = biz.tradingName
+  const businessName = biz?.tradingName
     ?? (businessType === 'self-employment' ? 'Self Employment'
        : businessType === 'foreign-property' ? 'Foreign Property'
        : 'UK Property');
   return {
-    businessId: biz.businessId,
+    businessId: biz?.businessId ?? (row.businessId ?? ''),
     businessName,
     businessType,
     periodStartDate: row.periodStartDate,
