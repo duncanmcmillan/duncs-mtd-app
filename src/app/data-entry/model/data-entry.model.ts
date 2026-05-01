@@ -56,10 +56,18 @@ export interface ExcelSettings {
 export interface GoogleSheetsSettings {
   /** The unique identifier of the Google Spreadsheet. */
   spreadsheetId: string;
-  /** Name of the sheet tab to read from. */
-  sheetName: string;
   /** Google API key with Sheets read access. */
   apiKey: string;
+  /** Column header used to identify the period row (e.g. `"Quarter End Date"`). */
+  dateColumn: string;
+  /** Sheet tab name for self-employment income data (e.g. `'SE-2024'`). */
+  selfEmploymentSheet?: string;
+  /** Sheet tab name for UK property income data (e.g. `'UKP-2024'`). */
+  ukPropertySheet?: string;
+  /** Sheet tab name for foreign property income data (e.g. `'FORP-2024'`). */
+  foreignPropertySheet?: string;
+  /** Maps dotted MTD field paths (e.g. `"se.income.turnover"`) to column header names. */
+  fieldMappings: Record<string, string>;
 }
 
 /** Settings for the Telegram Bot notification channel. */

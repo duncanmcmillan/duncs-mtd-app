@@ -9,6 +9,7 @@ import { extractErrorMessage } from '../../core';
 import { SettingsService } from '../service/settings.service';
 import { ExcelService } from '../service/data-entry/excel.service';
 import { AirtableService } from '../service/data-entry/airtable.service';
+import { GoogleSheetsService } from '../service/data-entry/google-sheets.service';
 import { TelegramService } from '../service/notifications/telegram.service';
 import { WhatsAppService } from '../service/notifications/whatsapp.service';
 import {
@@ -62,6 +63,7 @@ export const DataEntryStore = signalStore(
     settingsService = inject(SettingsService),
     excelService = inject(ExcelService),
     airtableService = inject(AirtableService),
+    googleSheetsService = inject(GoogleSheetsService),
     telegramService = inject(TelegramService),
     whatsappService = inject(WhatsAppService),
   ) => {
@@ -92,6 +94,18 @@ export const DataEntryStore = signalStore(
             selfEmploymentTable  ? airtableService.readHeaders(apiKey, baseId, selfEmploymentTable)  : Promise.resolve([]),
             ukPropertyTable      ? airtableService.readHeaders(apiKey, baseId, ukPropertyTable)      : Promise.resolve([]),
             foreignPropertyTable ? airtableService.readHeaders(apiKey, baseId, foreignPropertyTable) : Promise.resolve([]),
+          ]);
+          if (tasks[0].status === 'fulfilled') result.selfEmployment = tasks[0].value;
+          if (tasks[1].status === 'fulfilled') result.ukProperty     = tasks[1].value;
+          if (tasks[2].status === 'fulfilled') result.foreignProperty = tasks[2].value;
+        }
+      } else if (de.googleSheetsEnabled && de.googleSheets) {
+        const { spreadsheetId, apiKey, selfEmploymentSheet, ukPropertySheet, foreignPropertySheet } = de.googleSheets;
+        if (spreadsheetId && apiKey) {
+          const tasks = await Promise.allSettled([
+            selfEmploymentSheet  ? googleSheetsService.readHeaders(spreadsheetId, apiKey, selfEmploymentSheet)  : Promise.resolve([]),
+            ukPropertySheet      ? googleSheetsService.readHeaders(spreadsheetId, apiKey, ukPropertySheet)      : Promise.resolve([]),
+            foreignPropertySheet ? googleSheetsService.readHeaders(spreadsheetId, apiKey, foreignPropertySheet) : Promise.resolve([]),
           ]);
           if (tasks[0].status === 'fulfilled') result.selfEmployment = tasks[0].value;
           if (tasks[1].status === 'fulfilled') result.ukProperty     = tasks[1].value;

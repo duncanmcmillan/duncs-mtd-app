@@ -14,6 +14,7 @@ import { QuarterlyService } from '../service/quarterly.service';
 import { DataEntryStore } from '../../data-entry';
 import { ExcelService } from '../../data-entry/service/data-entry/excel.service';
 import { AirtableService } from '../../data-entry/service/data-entry/airtable.service';
+import { GoogleSheetsService } from '../../data-entry/service/data-entry/google-sheets.service';
 import { TelegramService } from '../../data-entry/service/notifications/telegram.service';
 import { WhatsAppService } from '../../data-entry/service/notifications/whatsapp.service';
 import {
@@ -76,6 +77,7 @@ export const QuarterlyStore = signalStore(
       obligationsStore = inject(ObligationsStore),
       excelService = inject(ExcelService),
       airtableService = inject(AirtableService),
+      googleSheetsService = inject(GoogleSheetsService),
       deStore = inject(DataEntryStore),
       telegramService = inject(TelegramService),
       whatsappService = inject(WhatsAppService),
@@ -466,6 +468,15 @@ export const QuarterlyStore = signalStore(
               : de.airtable.foreignPropertyTable;
             if (apiKey && baseId && tableName && dateColumn) {
               valuesPromise = airtableService.readRow({ apiKey, baseId, tableId: tableName, dateColumn, periodEndDate: draft.periodEndDate, fieldMappings });
+            }
+          } else if (de.googleSheetsEnabled && de.googleSheets) {
+            const { spreadsheetId, apiKey, dateColumn, fieldMappings } = de.googleSheets;
+            const sheetName =
+              draft.businessType === 'self-employment' ? de.googleSheets.selfEmploymentSheet
+              : draft.businessType === 'uk-property'   ? de.googleSheets.ukPropertySheet
+              : de.googleSheets.foreignPropertySheet;
+            if (spreadsheetId && apiKey && sheetName && dateColumn) {
+              valuesPromise = googleSheetsService.readRow({ spreadsheetId, sheetName, apiKey, dateColumn, periodEndDate: draft.periodEndDate, fieldMappings });
             }
           }
 

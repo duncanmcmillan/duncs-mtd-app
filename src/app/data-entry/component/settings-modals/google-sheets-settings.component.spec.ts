@@ -34,9 +34,10 @@ describe('GoogleSheetsSettingsComponent', () => {
     expect(title.textContent?.trim()).toContain('Google Sheets Settings');
   });
 
-  it('renders three input fields', () => {
+  it('renders all required input fields', () => {
     const inputs: NodeList = fixture.nativeElement.querySelectorAll('input[matInput]');
-    expect(inputs.length).toBe(3);
+    // spreadsheetId, apiKey, dateColumn, selfEmploymentSheet, ukPropertySheet, foreignPropertySheet, Claude API key
+    expect(inputs.length).toBe(7);
   });
 
   it('renders cancel and save buttons', () => {
