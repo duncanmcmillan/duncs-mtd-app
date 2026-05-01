@@ -234,71 +234,118 @@
   border-radius: 4px;
 }
 
-/* ── Tax summary table ───────────────────────────────────────────────── */
+/* ── SA form sections ────────────────────────────────────────────────── */
 
-.summary-table {
+.sa-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 580px;
+}
+
+.sa-section {
+  border: 1px solid var(--neutral-200);
+  border-radius: 6px;
+  overflow: hidden;
+
+  &--computation {
+    border-color: var(--neutral-300);
+  }
+}
+
+.sa-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  background: var(--neutral-50);
+  border-bottom: 1px solid var(--neutral-200);
+
+  .sa-section--computation & {
+    background: var(--neutral-100);
+    border-bottom-color: var(--neutral-300);
+  }
+}
+
+.sa-form-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--neutral-600);
+  background: var(--neutral-200);
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.sa-section-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--neutral-600);
+}
+
+.sa-table {
   width: 100%;
-  max-width: 560px;
   border-collapse: collapse;
   font-size: 13px;
 
   td {
-    padding: 10px 16px 10px 0;
+    padding: 9px 14px;
     border-bottom: 1px solid var(--neutral-100);
     vertical-align: middle;
     color: var(--neutral-600);
     font-weight: 300;
   }
 
-  tbody:last-child tr:last-child td {
+  tr:last-child td {
     border-bottom: none;
   }
 }
 
-.section-heading-row td {
+.sa-box-ref {
+  width: 52px;
+  font-family: var(--font-mono, monospace);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
   color: var(--neutral-400);
-  padding-top: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--neutral-200);
+  padding-right: 4px !important;
+  white-space: nowrap;
 }
 
-.subtotal-row td {
-  font-weight: 400;
-  color: var(--neutral-700);
-  border-top: 1px solid var(--neutral-200);
-  border-bottom: 1px solid var(--neutral-200);
-}
-
-.taxable-row td {
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--neutral-800);
-  padding-top: 14px;
-  padding-bottom: 14px;
-  border-bottom: 2px solid var(--neutral-300);
-}
-
-.total-tax-row td {
-  font-weight: 500;
-  font-size: 15px;
-  color: var(--neutral-800);
-  padding-top: 14px;
-  padding-bottom: 14px;
-}
-
-.cell-amount {
+.sa-amount {
   text-align: right;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  padding-right: 0;
 
   &--deduction {
     color: var(--neutral-500);
   }
+}
+
+.sa-row--subtotal td {
+  font-weight: 400;
+  color: var(--neutral-700);
+  border-top: 1px solid var(--neutral-200);
+  border-bottom: 1px solid var(--neutral-200) !important;
+}
+
+.sa-row--taxable td {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--neutral-800);
+  padding-top: 11px !important;
+  padding-bottom: 11px !important;
+  border-top: 2px solid var(--neutral-300);
+  border-bottom: 2px solid var(--neutral-300) !important;
+}
+
+.sa-row--total td {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--neutral-800);
+  padding-top: 11px !important;
+  padding-bottom: 11px !important;
+  border-top: 1px solid var(--neutral-200);
 }
 
 /* ── Crystallised confirmation ───────────────────────────────────────── */
