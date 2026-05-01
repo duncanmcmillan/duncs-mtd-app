@@ -237,10 +237,17 @@
 /* ── SA form sections ────────────────────────────────────────────────── */
 
 .sa-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+  max-width: 900px;
+}
+
+.sa-col {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 580px;
 }
 
 .sa-section {
@@ -276,6 +283,30 @@
   background: var(--neutral-200);
   padding: 2px 7px;
   border-radius: 3px;
+
+  /* SA103F Self Employment — HMRC green */
+  &--se {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  /* SA105 UK Property — purple */
+  &--ukprop {
+    background: #f3e8ff;
+    color: #6b21a8;
+  }
+
+  /* SA106 Foreign Property — blue */
+  &--fprop {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  /* SA100 Main return — HMRC olive green */
+  &--sa100 {
+    background: #d1fae5;
+    color: #065f46;
+  }
 }
 
 .sa-section-title {

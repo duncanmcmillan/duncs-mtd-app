@@ -92,147 +92,159 @@
         }
       </div>
 
-      <!-- Per-supplement sections -->
+      <!-- Two-column layout: income sources left, computation + actions right -->
       <div class="sa-sections">
-        <caption class="sr-only">Tax calculation for {{ calc.taxYear }}</caption>
+        <span class="sr-only">Tax calculation for {{ calc.taxYear }}</span>
 
-        <!-- SA103F · Self Employment -->
-        @if (calc.selfEmploymentIncome != null) {
-          <div class="sa-section">
-            <div class="sa-section-header">
-              <span class="sa-form-badge">SA103F</span>
-              <span class="sa-section-title">Self Employment</span>
+        <!-- Left column: income supplement sections -->
+        <div class="sa-col sa-col--sources">
+
+          <!-- SA103F · Self Employment -->
+          @if (calc.selfEmploymentIncome != null) {
+            <div class="sa-section">
+              <div class="sa-section-header">
+                <span class="sa-form-badge sa-form-badge--se">SA103F</span>
+                <span class="sa-section-title">Self Employment</span>
+              </div>
+              <table class="sa-table" aria-label="Self employment — SA103F">
+                <tbody>
+                  <tr>
+                    <td class="sa-box-ref" aria-label="Box FSE47">FSE47</td>
+                    <td>Net business profit</td>
+                    <td class="sa-amount">{{ calc.selfEmploymentIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <table class="sa-table" aria-label="Self employment — SA103F">
+          }
+
+          <!-- SA105 · UK Property -->
+          @if (calc.ukPropertyIncome != null) {
+            <div class="sa-section">
+              <div class="sa-section-header">
+                <span class="sa-form-badge sa-form-badge--ukprop">SA105</span>
+                <span class="sa-section-title">UK Property</span>
+              </div>
+              <table class="sa-table" aria-label="UK property — SA105">
+                <tbody>
+                  <tr>
+                    <td class="sa-box-ref" aria-label="Box PRO40">PRO40</td>
+                    <td>Taxable profit for the year</td>
+                    <td class="sa-amount">{{ calc.ukPropertyIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          }
+
+          <!-- SA106 · Foreign Property -->
+          @if (calc.foreignPropertyIncome != null) {
+            <div class="sa-section">
+              <div class="sa-section-header">
+                <span class="sa-form-badge sa-form-badge--fprop">SA106</span>
+                <span class="sa-section-title">Foreign Property</span>
+              </div>
+              <table class="sa-table" aria-label="Foreign property — SA106">
+                <tbody>
+                  <tr>
+                    <td class="sa-box-ref" aria-label="Box FOR18">FOR18</td>
+                    <td>Net profit or loss</td>
+                    <td class="sa-amount">{{ calc.foreignPropertyIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          }
+
+        </div><!-- /sa-col--sources -->
+
+        <!-- Right column: SA100 computation + action buttons -->
+        <div class="sa-col sa-col--computation">
+
+          <!-- SA100 · Tax Computation -->
+          <div class="sa-section sa-section--computation">
+            <div class="sa-section-header">
+              <span class="sa-form-badge sa-form-badge--sa100">SA100</span>
+              <span class="sa-section-title">Tax Computation</span>
+            </div>
+            <table class="sa-table" aria-label="Tax computation — SA100">
               <tbody>
-                <tr>
-                  <td class="sa-box-ref" aria-label="Box FSE47">FSE47</td>
-                  <td>Net business profit</td>
-                  <td class="sa-amount">{{ calc.selfEmploymentIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
-                </tr>
+                @if (calc.ukDividendIncome != null) {
+                  <tr>
+                    <td class="sa-box-ref" aria-label="Box INC4">INC4</td>
+                    <td>Dividends from UK companies</td>
+                    <td class="sa-amount">{{ calc.ukDividendIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
+                  </tr>
+                }
+                @if (calc.totalIncomeReceived != null) {
+                  <tr class="sa-row--subtotal">
+                    <td class="sa-box-ref"></td>
+                    <td>Total income received</td>
+                    <td class="sa-amount">{{ calc.totalIncomeReceived | currency:'GBP':'symbol':'1.2-2' }}</td>
+                  </tr>
+                }
+                @if (calc.personalAllowance != null) {
+                  <tr>
+                    <td class="sa-box-ref"></td>
+                    <td>Personal allowance</td>
+                    <td class="sa-amount sa-amount--deduction">({{ calc.personalAllowance | currency:'GBP':'symbol':'1.2-2' }})</td>
+                  </tr>
+                }
+                @if (calc.totalAllowancesAndDeductions != null) {
+                  <tr class="sa-row--subtotal">
+                    <td class="sa-box-ref"></td>
+                    <td>Total allowances and deductions</td>
+                    <td class="sa-amount sa-amount--deduction">({{ calc.totalAllowancesAndDeductions | currency:'GBP':'symbol':'1.2-2' }})</td>
+                  </tr>
+                }
+                @if (calc.totalTaxableIncome != null) {
+                  <tr class="sa-row--taxable">
+                    <td class="sa-box-ref"></td>
+                    <td>Total taxable income</td>
+                    <td class="sa-amount">{{ calc.totalTaxableIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
+                  </tr>
+                }
+                @if (calc.incomeTaxDue != null) {
+                  <tr>
+                    <td class="sa-box-ref"></td>
+                    <td>Income tax due</td>
+                    <td class="sa-amount">{{ calc.incomeTaxDue | currency:'GBP':'symbol':'1.2-2' }}</td>
+                  </tr>
+                }
+                @if (calc.totalNic != null) {
+                  <tr>
+                    <td class="sa-box-ref"></td>
+                    <td>National Insurance contributions</td>
+                    <td class="sa-amount">{{ calc.totalNic | currency:'GBP':'symbol':'1.2-2' }}</td>
+                  </tr>
+                }
+                @if (calc.totalTaxDue != null) {
+                  <tr class="sa-row--total">
+                    <td class="sa-box-ref"></td>
+                    <td>Total tax due</td>
+                    <td class="sa-amount">{{ calc.totalTaxDue | currency:'GBP':'symbol':'1.2-2' }}</td>
+                  </tr>
+                }
               </tbody>
             </table>
-          </div>
-        }
+          </div><!-- /sa-section--computation -->
 
-        <!-- SA105 · UK Property -->
-        @if (calc.ukPropertyIncome != null) {
-          <div class="sa-section">
-            <div class="sa-section-header">
-              <span class="sa-form-badge">SA105</span>
-              <span class="sa-section-title">UK Property</span>
+          <!-- Action buttons sit below SA100 in the right column -->
+          @if (!calc.crystallised) {
+            <div class="panel-actions">
+              <button class="btn btn--primary" type="button" (click)="onSubmit()">
+                Submit Final Declaration
+              </button>
+              <button class="btn btn--outline" type="button" (click)="onReset()">
+                Recalculate
+              </button>
             </div>
-            <table class="sa-table" aria-label="UK property — SA105">
-              <tbody>
-                <tr>
-                  <td class="sa-box-ref" aria-label="Box PRO40">PRO40</td>
-                  <td>Taxable profit for the year</td>
-                  <td class="sa-amount">{{ calc.ukPropertyIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        }
+          }
 
-        <!-- SA106 · Foreign Property -->
-        @if (calc.foreignPropertyIncome != null) {
-          <div class="sa-section">
-            <div class="sa-section-header">
-              <span class="sa-form-badge">SA106</span>
-              <span class="sa-section-title">Foreign Property</span>
-            </div>
-            <table class="sa-table" aria-label="Foreign property — SA106">
-              <tbody>
-                <tr>
-                  <td class="sa-box-ref" aria-label="Box FOR18">FOR18</td>
-                  <td>Net profit or loss</td>
-                  <td class="sa-amount">{{ calc.foreignPropertyIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        }
+        </div><!-- /sa-col--computation -->
 
-        <!-- SA100 · Tax Computation -->
-        <div class="sa-section sa-section--computation">
-          <div class="sa-section-header">
-            <span class="sa-form-badge">SA100</span>
-            <span class="sa-section-title">Tax Computation</span>
-          </div>
-          <table class="sa-table" aria-label="Tax computation — SA100">
-            <tbody>
-              @if (calc.ukDividendIncome != null) {
-                <tr>
-                  <td class="sa-box-ref" aria-label="Box INC4">INC4</td>
-                  <td>Dividends from UK companies</td>
-                  <td class="sa-amount">{{ calc.ukDividendIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
-                </tr>
-              }
-              @if (calc.totalIncomeReceived != null) {
-                <tr class="sa-row--subtotal">
-                  <td class="sa-box-ref"></td>
-                  <td>Total income received</td>
-                  <td class="sa-amount">{{ calc.totalIncomeReceived | currency:'GBP':'symbol':'1.2-2' }}</td>
-                </tr>
-              }
-              @if (calc.personalAllowance != null) {
-                <tr>
-                  <td class="sa-box-ref"></td>
-                  <td>Personal allowance</td>
-                  <td class="sa-amount sa-amount--deduction">({{ calc.personalAllowance | currency:'GBP':'symbol':'1.2-2' }})</td>
-                </tr>
-              }
-              @if (calc.totalAllowancesAndDeductions != null) {
-                <tr class="sa-row--subtotal">
-                  <td class="sa-box-ref"></td>
-                  <td>Total allowances and deductions</td>
-                  <td class="sa-amount sa-amount--deduction">({{ calc.totalAllowancesAndDeductions | currency:'GBP':'symbol':'1.2-2' }})</td>
-                </tr>
-              }
-              @if (calc.totalTaxableIncome != null) {
-                <tr class="sa-row--taxable">
-                  <td class="sa-box-ref"></td>
-                  <td>Total taxable income</td>
-                  <td class="sa-amount">{{ calc.totalTaxableIncome | currency:'GBP':'symbol':'1.2-2' }}</td>
-                </tr>
-              }
-              @if (calc.incomeTaxDue != null) {
-                <tr>
-                  <td class="sa-box-ref"></td>
-                  <td>Income tax due</td>
-                  <td class="sa-amount">{{ calc.incomeTaxDue | currency:'GBP':'symbol':'1.2-2' }}</td>
-                </tr>
-              }
-              @if (calc.totalNic != null) {
-                <tr>
-                  <td class="sa-box-ref"></td>
-                  <td>National Insurance contributions</td>
-                  <td class="sa-amount">{{ calc.totalNic | currency:'GBP':'symbol':'1.2-2' }}</td>
-                </tr>
-              }
-              @if (calc.totalTaxDue != null) {
-                <tr class="sa-row--total">
-                  <td class="sa-box-ref"></td>
-                  <td>Total tax due</td>
-                  <td class="sa-amount">{{ calc.totalTaxDue | currency:'GBP':'symbol':'1.2-2' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
       </div><!-- /sa-sections -->
 
-      <!-- Actions -->
-      @if (!calc.crystallised) {
-        <div class="panel-actions">
-          <button class="btn btn--primary" type="button" (click)="onSubmit()">
-            Submit Final Declaration
-          </button>
-          <button class="btn btn--outline" type="button" (click)="onReset()">
-            Recalculate
-          </button>
-        </div>
-      }
     </section>
   }
 
