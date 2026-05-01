@@ -19,10 +19,6 @@ export const routes: Routes = [
     loadChildren: () => import('./self-assessment/self-assessment.routes').then(m => m.SELF_ASSESSMENT_ROUTES),
   },
   {
-    path: 'records',
-    loadChildren: () => import('./records/records.routes').then(m => m.RECORDS_ROUTES),
-  },
-  {
     path: 'income-adjustments',
     loadChildren: () => import('./income-adjustments/income-adjustments.routes').then(m => m.INCOME_ADJUSTMENTS_ROUTES),
   },
